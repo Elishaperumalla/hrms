@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+
+    {% if object %}
+        Edit Company
+    {% else %}
+        Add Company
+    {% endif %}
+
+    - HRMS
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="mb-4">
+
+        <a
+            href="{% url 'company_list' %}"
+            class="text-decoration-none"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Companies
+        </a>
+
+        <h3 class="fw-bold mt-3 mb-1">
+
+            {% if object %}
+                Edit Company
+            {% else %}
+                Add Company
+            {% endif %}
+
+        </h3>
+
+        <p class="text-muted mb-0">
+            Enter the company's official information.
+        </p>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-4">
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="alert alert-danger">
+
+                        {{ form.non_field_errors }}
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- BASIC INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    Basic Information
+                </h6>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Company Name
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.name }}
+
+                        {% if form.name.errors %}
+                            <div class="text-danger small">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Legal Name
+                        </label>
+
+                        {{ form.legal_name }}
+
+                        {% if form.legal_name.errors %}
+                            <div class="text-danger small">
+                                {{ form.legal_name.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        {{ form.email }}
+
+                        {% if form.email.errors %}
+                            <div class="text-danger small">
+                                {{ form.email.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Phone
+                        </label>
+
+                        {{ form.phone }}
+
+                        {% if form.phone.errors %}
+                            <div class="text-danger small">
+                                {{ form.phone.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Website
+                        </label>
+
+                        {{ form.website }}
+
+                        {% if form.website.errors %}
+                            <div class="text-danger small">
+                                {{ form.website.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ADDRESS -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>
+
+                    Address
+
+                </h6>
+
+
+                <div class="row">
+
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        {{ form.address }}
+
+                    </div>
+
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            City
+                        </label>
+
+                        {{ form.city }}
+
+                    </div>
+
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            State
+                        </label>
+
+                        {{ form.state }}
+
+                    </div>
+
+
+                    <div class="col-md-2 mb-3">
+
+                        <label class="form-label">
+                            Country
+                        </label>
+
+                        {{ form.country }}
+
+                    </div>
+
+
+                    <div class="col-md-2 mb-3">
+
+                        <label class="form-label">
+                            Postal Code
+                        </label>
+
+                        {{ form.postal_code }}
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- OTHER -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-info-circle me-2 text-primary"></i>
+
+                    Additional Information
+
+                </h6>
+
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Company Logo
+                        </label>
+
+                        {{ form.logo }}
+
+                    </div>
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Established Date
+                        </label>
+
+                        {{ form.established_date }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-check mb-4">
+
+                    {{ form.is_active }}
+
+                    <label class="form-check-label">
+                        Company is active
+                    </label>
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        {% if object %}
+                            Update Company
+                        {% else %}
+                            Create Company
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'company_list' %}"
+                        class="btn btn-light"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

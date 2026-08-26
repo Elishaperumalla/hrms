@@ -1,0 +1,834 @@
+{% extends "base.html" %}
+
+{% block title %}
+    My Profile - HRMS
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+
+    <!-- PAGE HEADER -->
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                My Profile
+            </h3>
+
+            <p class="text-muted mb-0">
+                Manage your personal information and account settings.
+            </p>
+
+        </div>
+
+
+        <div class="mt-3 mt-md-0">
+
+            <a
+                href="#personal-information"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-pencil-square me-1"></i>
+                Edit Profile
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- PROFILE HEADER -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body p-4">
+
+
+            <div class="row align-items-center">
+
+
+                <!-- AVATAR -->
+
+                <div class="col-auto">
+
+                    <div class="profile-avatar">
+
+                        {{ user.first_name|first|default:user.username|first|upper }}
+
+                    </div>
+
+                </div>
+
+
+                <!-- USER INFORMATION -->
+
+                <div class="col">
+
+                    <h4 class="fw-bold mb-1">
+
+                        {{ user.get_full_name|default:user.username }}
+
+                    </h4>
+
+
+                    <p class="text-muted mb-2">
+
+                        @{{ user.username }}
+
+                    </p>
+
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <span class="badge bg-primary-subtle text-primary">
+
+                            <i class="bi bi-person-badge me-1"></i>
+
+                            {{ user.get_role_display }}
+
+                        </span>
+
+
+                        {% if user.is_active %}
+
+                            <span class="badge bg-success-subtle text-success">
+
+                                <i class="bi bi-check-circle me-1"></i>
+
+                                Active
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-danger-subtle text-danger">
+
+                                <i class="bi bi-x-circle me-1"></i>
+
+                                Inactive
+
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACCOUNT STATUS -->
+
+                <div class="col-12 col-md-auto mt-3 mt-md-0">
+
+                    <div class="text-md-end">
+
+                        <small class="text-muted d-block">
+                            Account
+                        </small>
+
+                        <span class="fw-semibold">
+
+                            {% if user.is_active %}
+                                Active
+                            {% else %}
+                                Disabled
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="row g-4">
+
+
+        <!-- LEFT COLUMN -->
+
+        <div class="col-lg-8">
+
+
+            <!-- PERSONAL INFORMATION -->
+
+            <div
+                class="card dashboard-card mb-4"
+                id="personal-information"
+            >
+
+                <div class="card-header bg-white border-0 pt-4 px-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="profile-section-icon">
+
+                            <i class="bi bi-person"></i>
+
+                        </div>
+
+                        <div class="ms-3">
+
+                            <h5 class="fw-bold mb-0">
+                                Personal Information
+                            </h5>
+
+                            <small class="text-muted">
+                                Your basic personal details
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-4">
+
+
+                    <div class="row g-4">
+
+
+                        <!-- FIRST NAME -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                First Name
+                            </label>
+
+                            <div class="profile-value">
+
+                                {{ user.first_name|default:"Not provided" }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LAST NAME -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Last Name
+                            </label>
+
+                            <div class="profile-value">
+
+                                {{ user.last_name|default:"Not provided" }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- USERNAME -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Username
+                            </label>
+
+                            <div class="profile-value">
+
+                                {{ user.username }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Email Address
+                            </label>
+
+                            <div class="profile-value">
+
+                                <i class="bi bi-envelope me-2 text-muted"></i>
+
+                                {{ user.email|default:"Not provided" }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PHONE -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Phone Number
+                            </label>
+
+                            <div class="profile-value">
+
+                                <i class="bi bi-telephone me-2 text-muted"></i>
+
+                                {{ user.phone|default:"Not provided" }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ROLE -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Account Role
+                            </label>
+
+                            <div class="profile-value">
+
+                                {{ user.get_role_display }}
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- WORK INFORMATION -->
+
+            <div class="card dashboard-card mb-4">
+
+
+                <div class="card-header bg-white border-0 pt-4 px-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="profile-section-icon">
+
+                            <i class="bi bi-briefcase"></i>
+
+                        </div>
+
+                        <div class="ms-3">
+
+                            <h5 class="fw-bold mb-0">
+                                Work Information
+                            </h5>
+
+                            <small class="text-muted">
+                                Your organization and employment details
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-4">
+
+
+                    <div class="row g-4">
+
+
+                        <!-- EMPLOYEE ID -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Employee ID
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee %}
+                                    {{ employee.employee_id }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not assigned
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DEPARTMENT -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Department
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee and employee.department %}
+                                    {{ employee.department.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not assigned
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DESIGNATION -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Designation
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee and employee.designation %}
+                                    {{ employee.designation.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not assigned
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- JOINING DATE -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Joining Date
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee and employee.joining_date %}
+                                    {{ employee.joining_date|date:"d M Y" }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not available
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- MANAGER -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Reporting Manager
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee and employee.manager %}
+                                    {{ employee.manager.user.get_full_name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not assigned
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LOCATION -->
+
+                        <div class="col-md-6">
+
+                            <label class="profile-label">
+                                Work Location
+                            </label>
+
+                            <div class="profile-value">
+
+                                {% if employee and employee.branch %}
+                                    {{ employee.branch.name }}
+                                {% else %}
+                                    <span class="text-muted">
+                                        Not assigned
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ACCOUNT INFORMATION -->
+
+            <div class="card dashboard-card mb-4">
+
+
+                <div class="card-header bg-white border-0 pt-4 px-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="profile-section-icon">
+
+                            <i class="bi bi-shield-check"></i>
+
+                        </div>
+
+                        <div class="ms-3">
+
+                            <h5 class="fw-bold mb-0">
+                                Account & Security
+                            </h5>
+
+                            <small class="text-muted">
+                                Manage your account security
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-4">
+
+
+                    <div class="security-item">
+
+                        <div>
+
+                            <h6 class="fw-semibold mb-1">
+                                Password
+                            </h6>
+
+                            <small class="text-muted">
+                                Keep your password secure and updated.
+                            </small>
+
+                        </div>
+
+
+                        <a
+                            href="{% url 'change_password' %}"
+                            class="btn btn-outline-primary btn-sm"
+                        >
+
+                            <i class="bi bi-key me-1"></i>
+
+                            Change Password
+
+                        </a>
+
+                    </div>
+
+
+                    <hr>
+
+
+                    <div class="security-item">
+
+                        <div>
+
+                            <h6 class="fw-semibold mb-1">
+                                Account Status
+                            </h6>
+
+                            <small class="text-muted">
+                                Your HRMS account is currently
+                                {% if user.is_active %}
+                                    active.
+                                {% else %}
+                                    disabled.
+                                {% endif %}
+                            </small>
+
+                        </div>
+
+
+                        {% if user.is_active %}
+
+                            <span class="badge bg-success">
+                                Active
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-danger">
+                                Disabled
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <hr>
+
+
+                    <div class="security-item">
+
+                        <div>
+
+                            <h6 class="fw-semibold mb-1">
+                                Last Login
+                            </h6>
+
+                            <small class="text-muted">
+
+                                {% if user.last_login %}
+
+                                    {{ user.last_login|date:"d M Y, h:i A" }}
+
+                                {% else %}
+
+                                    No previous login information
+
+                                {% endif %}
+
+                            </small>
+
+                        </div>
+
+
+                        <i class="bi bi-clock-history text-muted fs-5"></i>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- RIGHT COLUMN -->
+
+        <div class="col-lg-4">
+
+
+            <!-- QUICK ACTIONS -->
+
+            <div class="card dashboard-card mb-4">
+
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-4">
+                        Quick Actions
+                    </h5>
+
+
+                    <div class="d-grid gap-2">
+
+
+                        <a
+                            href="#personal-information"
+                            class="btn btn-primary"
+                        >
+
+                            <i class="bi bi-pencil-square me-2"></i>
+
+                            Edit Profile
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'change_password' %}"
+                            class="btn btn-outline-primary"
+                        >
+
+                            <i class="bi bi-shield-lock me-2"></i>
+
+                            Change Password
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'dashboard' %}"
+                            class="btn btn-light"
+                        >
+
+                            <i class="bi bi-grid-1x2 me-2"></i>
+
+                            Back to Dashboard
+
+                        </a>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PROFILE COMPLETION -->
+
+            <div class="card dashboard-card mb-4">
+
+                <div class="card-body p-4">
+
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <h6 class="fw-bold mb-0">
+                            Profile Completion
+                        </h6>
+
+                        <span class="fw-semibold text-primary">
+                            {{ profile_completion|default:"0" }}%
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="progress"
+                        style="height: 8px;"
+                    >
+
+                        <div
+                            class="progress-bar"
+                            role="progressbar"
+                            style="width: 0%;"
+                        ></div>
+
+                    </div>
+
+
+                    <small class="text-muted d-block mt-3">
+
+                        Complete your profile to keep your HRMS
+                        information up to date.
+
+                    </small>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ACCOUNT DETAILS -->
+
+            <div class="card dashboard-card">
+
+                <div class="card-body p-4">
+
+
+                    <h6 class="fw-bold mb-4">
+                        Account Details
+                    </h6>
+
+
+                    <div class="small">
+
+
+                        <div class="d-flex justify-content-between mb-3">
+
+                            <span class="text-muted">
+                                Username
+                            </span>
+
+                            <span class="fw-semibold">
+                                {{ user.username }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="d-flex justify-content-between mb-3">
+
+                            <span class="text-muted">
+                                Role
+                            </span>
+
+                            <span class="fw-semibold">
+                                {{ user.get_role_display }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="d-flex justify-content-between">
+
+                            <span class="text-muted">
+                                Joined
+                            </span>
+
+                            <span class="fw-semibold">
+
+                                {{ user.date_joined|date:"d M Y" }}
+
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+{% endblock %}

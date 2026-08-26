@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}HR Dashboard | HRMS{% endblock %}
+
+{% block content %}
+
+<h2 class="fw-bold">
+    HR Dashboard
+</h2>
+
+<p class="text-muted">
+    Welcome, {{ user.get_full_name|default:user.username }}.
+</p>
+
+<div class="alert alert-primary">
+    HR management features will appear here.
+</div>
+
+{% endblock %}

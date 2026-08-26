@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+    {% if object %}
+        Edit Department
+    {% else %}
+        Add Department
+    {% endif %}
+
+    - HRMS
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="mb-4">
+
+        <a
+            href="{% url 'department_list' %}"
+            class="text-decoration-none"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Departments
+        </a>
+
+
+        <h3 class="fw-bold mt-3 mb-1">
+
+            {% if object %}
+                Edit Department
+            {% else %}
+                Add Department
+            {% endif %}
+
+        </h3>
+
+
+        <p class="text-muted mb-0">
+            Configure department information for your organization.
+        </p>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="alert alert-danger">
+
+                        {{ form.non_field_errors }}
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- ORGANIZATION INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-building me-2 text-primary"></i>
+
+                    Organization Information
+
+                </h6>
+
+
+                <div class="row">
+
+                    <!-- COMPANY -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Company
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+
+                        {{ form.company }}
+
+
+                        {% if form.company.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.company.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- DEPARTMENT NAME -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Department Name
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+
+                        {{ form.name }}
+
+
+                        {% if form.name.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.name.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- CODE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Department Code
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+
+                        {{ form.code }}
+
+
+                        {% if form.code.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.code.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                        <small class="text-muted">
+
+                            Example: IT, HR, FIN, SALES
+
+                        </small>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label d-block">
+
+                            Status
+
+                        </label>
+
+
+                        <div class="form-check mt-2">
+
+                            {{ form.is_active }}
+
+
+                            <label class="form-check-label">
+
+                                Department is active
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- DESCRIPTION -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-card-text me-2 text-primary"></i>
+
+                    Description
+
+                </h6>
+
+
+                <div class="mb-4">
+
+                    <label class="form-label">
+
+                        Department Description
+
+                    </label>
+
+
+                    {{ form.description }}
+
+
+                    {% if form.description.errors %}
+
+                        <div class="text-danger small mt-1">
+
+                            {{ form.description.errors }}
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+
+                        {% if object %}
+
+                            Update Department
+
+                        {% else %}
+
+                            Create Department
+
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'department_list' %}"
+                        class="btn btn-light"
+                    >
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

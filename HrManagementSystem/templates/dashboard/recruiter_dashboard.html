@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiter Dashboard | HRMS{% endblock %}
+
+{% block content %}
+
+<h2 class="fw-bold">
+    Recruiter Dashboard
+</h2>
+
+<p class="text-muted">
+    Welcome, {{ user.get_full_name|default:user.username }}.
+</p>
+
+<div class="alert alert-primary">
+    Recruitment management features will appear here.
+</div>
+
+{% endblock %}

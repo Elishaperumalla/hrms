@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}
+Employee Dashboard - HRMS
+{% endblock %}
+
+
+{% block page_title %}
+Employee Dashboard
+{% endblock %}
+
+
+{% block content %}
+
+<div class="mb-4">
+
+    <h3 class="fw-bold">
+        Welcome, {{ request.user.first_name|default:request.user.username }} 👋
+    </h3>
+
+    <p class="text-muted">
+        Here's what's happening with your work today.
+    </p>
+
+</div>
+
+
+<div class="row g-4">
+
+
+    <!-- Attendance -->
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="card dashboard-card p-3">
+
+            <div class="d-flex justify-content-between">
+
+                <div>
+
+                    <p class="text-muted mb-1">
+                        Attendance
+                    </p>
+
+                    <h3 class="fw-bold mb-0">
+                        Present
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon">
+
+                    <i class="bi bi-clock"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Leave -->
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="card dashboard-card p-3">
+
+            <div class="d-flex justify-content-between">
+
+                <div>
+
+                    <p class="text-muted mb-1">
+                        Leave Balance
+                    </p>
+
+                    <h3 class="fw-bold mb-0">
+                        12
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Payroll -->
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="card dashboard-card p-3">
+
+            <div class="d-flex justify-content-between">
+
+                <div>
+
+                    <p class="text-muted mb-1">
+                        Last Salary
+                    </p>
+
+                    <h3 class="fw-bold mb-0">
+                        ₹0
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Performance -->
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="card dashboard-card p-3">
+
+            <div class="d-flex justify-content-between">
+
+                <div>
+
+                    <p class="text-muted mb-1">
+                        Performance
+                    </p>
+
+                    <h3 class="fw-bold mb-0">
+                        N/A
+                    </h3>
+
+                </div>
+
+                <div class="stat-icon">
+
+                    <i class="bi bi-graph-up"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<div class="row g-4 mt-1">
+
+
+    <!-- Quick Actions -->
+
+    <div class="col-lg-8">
+
+        <div class="card dashboard-card">
+
+            <div class="card-body">
+
+                <h5 class="fw-bold mb-3">
+                    Quick Actions
+                </h5>
+
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <button class="btn btn-primary">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        Apply Leave
+                    </button>
+
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-clock me-1"></i>
+                        View Attendance
+                    </button>
+
+                    <button class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        View Payslip
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Profile -->
+
+    <div class="col-lg-4">
+
+        <div class="card dashboard-card">
+
+            <div class="card-body">
+
+                <h5 class="fw-bold mb-3">
+                    My Profile
+                </h5>
+
+                <p class="mb-1">
+
+                    <strong>Name:</strong>
+
+                    {{ request.user.get_full_name }}
+
+                </p>
+
+                <p class="mb-1">
+
+                    <strong>Email:</strong>
+
+                    {{ request.user.email }}
+
+                </p>
+
+                <p class="mb-0">
+
+                    <strong>Role:</strong>
+
+                    {{ request.user.role }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

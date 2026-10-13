@@ -1,19 +1,1062 @@
 {% extends "base.html" %}
 
-{% block title %}HR Dashboard | HRMS{% endblock %}
+{% block title %}
+    HR Dashboard | HRMS
+{% endblock %}
+
 
 {% block content %}
 
-<h2 class="fw-bold">
-    HR Dashboard
-</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<p class="text-muted">
-    Welcome, {{ user.get_full_name|default:user.username }}.
-</p>
+    <div>
 
-<div class="alert alert-primary">
-    HR management features will appear here.
+        <h2 class="fw-bold mb-1">
+            HR Dashboard
+        </h2>
+
+        <p class="text-muted mb-0">
+            Welcome,
+            {{ user.get_full_name|default:user.username }}.
+        </p>
+
+    </div>
+
 </div>
+
+
+<!-- COMPANY WORKFORCE -->
+
+<div class="row g-4 mb-4">
+    <!-- TOTAL -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="ALL"
+            role="button"
+            tabindex="0"
+            title="Show all employees"
+        >
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Total Workforce
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ total_employees }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Your branch workforce
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-people"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ACTIVE -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="ACTIVE"
+            role="button"
+            tabindex="0"
+            title="Show active employees"
+        >
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Active Employees
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ active_employees }}
+                        </h3>
+
+                        <small class="text-success">
+                            Currently active
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-person-check"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ON LEAVE -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="ON_LEAVE"
+            role="button"
+            tabindex="0"
+            title="Show employees currently on leave"
+        >
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            On Leave
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ on_leave_employees }}
+                        </h3>
+
+                        <small class="text-warning">
+                            Currently on approved leave
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-calendar-x"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BENCH -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="BENCH"
+            role="button"
+            tabindex="0"
+            title="Show employees currently on bench"
+        >
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Bench
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ bench_employees }}
+                        </h3>
+
+                        <small class="text-info">
+                            Currently on bench
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-person-dash"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ORGANIZATION SUMMARY -->
+
+<div class="row g-4 mb-4">
+
+
+    <!-- MANAGERS -->
+
+    <div class="col-lg-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="MANAGER"
+            role="button"
+            tabindex="0"
+            title="Show managers"
+        >
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Managers
+                        </p>
+
+                        <h3 class="fw-bold mb-1">
+                            {{ total_managers }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Managers in your branch
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-person-workspace"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- HR -->
+
+    <div class="col-lg-6">
+
+        <div
+            class="card dashboard-card h-100 hr-filter-card"
+            data-filter="HR_ADMIN"
+            role="button"
+            tabindex="0"
+            title="Show HR administrators"
+        >
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            HR Administrators
+                        </p>
+
+                        <h3 class="fw-bold mb-1">
+                            {{ total_hr }}
+                        </h3>
+
+                        <small class="text-muted">
+                            HR administrators in your branch
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+
+                        <i class="bi bi-person-badge"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+ <!-- COMPANY EMPLOYEES -->
+
+<div
+    class="card dashboard-card mb-4"
+    id="companyEmployeesSection"
+>
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <div>
+
+                <h5 class="fw-bold mb-1">
+                    Company Employees
+                </h5>
+
+                <p
+                    class="text-muted mb-0"
+                    id="employeeFilterDescription"
+                >
+                    Current workforce status.
+                </p>
+
+            </div>
+
+            <span
+                class="badge bg-primary px-3 py-2"
+                id="employeeCountBadge"
+            >
+                {{ total_employees }} Employees
+            </span>
+
+        </div>
+
+
+        {% if company_employees %}
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle mb-0"
+                id="companyEmployeesTable"
+            >
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Employee
+                        </th>
+
+                        <th>
+                            Department
+                        </th>
+
+                        <th>
+                            Designation
+                        </th>
+
+                        <th>
+                            Role
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for employee in company_employees %}
+
+                    <tr
+                        class="employee-row"
+                        data-role="{{ employee.role }}"
+                        data-status="{% if employee.is_currently_on_leave %}ON_LEAVE{% elif employee.employment_status == 'BENCH' %}BENCH{% elif employee.employment_status == 'ACTIVE' %}ACTIVE{% else %}OTHER{% endif %}"
+                    >
+
+                        <!-- EMPLOYEE -->
+
+                        <td>
+
+                            <div class="d-flex align-items-center">
+
+                                <div
+                                    class="rounded-circle
+                                           bg-primary
+                                           bg-opacity-10
+                                           text-primary
+                                           d-flex
+                                           align-items-center
+                                           justify-content-center
+                                           me-3"
+                                    style="width:42px;height:42px;"
+                                >
+
+                                    <i class="bi bi-person-fill"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <div class="fw-semibold">
+
+                                        {{ employee }}
+
+                                        {% if employee.id == current_employee.pk %}
+
+                                        <span class="badge bg-info ms-1">
+                                            You
+                                        </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                    {% if employee.employee_id %}
+
+                                    <small class="text-muted">
+                                        {{ employee.employee_id }}
+                                    </small>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- DEPARTMENT -->
+
+                        <td>
+
+                            {% if employee.department %}
+
+                                {{ employee.department.name }}
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Not assigned
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- DESIGNATION -->
+
+                        <td>
+
+                            {% if employee.designation %}
+
+                                {{ employee.designation.name|default:employee.designation }}
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Not assigned
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ROLE -->
+
+                        <td>
+
+                            {% if employee.role == "HR_ADMIN" %}
+
+                                <span class="badge bg-primary">
+                                    HR Admin
+                                </span>
+
+                            {% elif employee.role == "MANAGER" %}
+
+                                <span class="badge bg-secondary">
+                                    Manager
+                                </span>
+
+                            {% elif employee.role == "EMPLOYEE" %}
+
+                                <span class="badge bg-light text-dark border">
+                                    Employee
+                                </span>
+
+                            {% else %}
+
+                                {{ employee.get_role_display }}
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if employee.is_currently_on_leave %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    <i class="bi bi-calendar-x me-1"></i>
+
+                                    On Leave
+
+                                </span>
+
+                            {% elif employee.employment_status == "BENCH" %}
+
+                                <span class="badge bg-info text-dark">
+
+                                    <i class="bi bi-person-dash me-1"></i>
+
+                                    Bench
+
+                                </span>
+
+                            {% elif employee.employment_status == "ACTIVE" %}
+
+                                <span class="badge bg-success">
+
+                                    <i class="bi bi-check-circle me-1"></i>
+
+                                    Active
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    {{ employee.get_employment_status_display }}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- NO FILTER RESULTS -->
+
+        <div
+            class="text-center py-5 d-none"
+            id="noFilteredEmployees"
+        >
+
+            <i class="bi bi-funnel fs-1 text-muted"></i>
+
+            <h6
+                class="fw-semibold mt-3"
+                id="noFilteredEmployeesTitle"
+            >
+                No employees found
+            </h6>
+
+            <p
+                class="text-muted small mb-0"
+                id="noFilteredEmployeesText"
+            >
+                No employees match the selected filter.
+            </p>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5">
+
+            <i class="bi bi-people fs-1 text-muted"></i>
+
+            <h6 class="fw-semibold mt-3">
+                No employees found
+            </h6>
+
+            <p class="text-muted small mb-0">
+                Employees in your branch will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- HR QUICK ACTIONS -->
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <h5 class="fw-bold mb-3">
+            HR Management
+        </h5>
+
+        <div class="row g-3">
+
+
+            <div class="col-md-4">
+
+                <a
+                    href="{% url 'employee_list' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+
+                    <i class="bi bi-people me-2"></i>
+
+                    Manage Employees
+
+                </a>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <a
+                    href="{% url 'leave_list' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+
+                    <i class="bi bi-calendar-check me-2"></i>
+
+                    Leave Management
+
+                </a>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <a
+                    href="{% url 'attendance_list' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+
+                    <i class="bi bi-clock me-2"></i>
+
+                    Attendance
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- HR DASHBOARD FILTER STYLES -->
+
+<style>
+
+    .hr-filter-card {
+        cursor: pointer;
+        transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .hr-filter-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .hr-filter-card.filter-active {
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.35);
+    }
+
+    .employee-row {
+        transition: opacity 0.15s ease;
+    }
+
+</style>
+
+
+<!-- HR DASHBOARD FILTER SCRIPT -->
+ 
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const filterCards = document.querySelectorAll(
+        ".hr-filter-card"
+    );
+
+    const employeeRows = document.querySelectorAll(
+        ".employee-row"
+    );
+
+    const employeeCountBadge =
+        document.getElementById(
+            "employeeCountBadge"
+        );
+
+    const employeeFilterDescription =
+        document.getElementById(
+            "employeeFilterDescription"
+        );
+
+    const noFilteredEmployees =
+        document.getElementById(
+            "noFilteredEmployees"
+        );
+
+    const noFilteredEmployeesTitle =
+        document.getElementById(
+            "noFilteredEmployeesTitle"
+        );
+
+    const noFilteredEmployeesText =
+        document.getElementById(
+            "noFilteredEmployeesText"
+        );
+
+    const companyEmployeesSection =
+        document.getElementById(
+            "companyEmployeesSection"
+        );
+
+
+    if (!filterCards.length || !employeeRows.length) {
+        return;
+    }
+
+
+    const filterDescriptions = {
+
+        "ALL":
+            "Current workforce status.",
+
+        "ACTIVE":
+            "Currently active employees.",
+
+        "ON_LEAVE":
+            "Employees currently on approved leave.",
+
+        "BENCH":
+            "Employees currently on bench.",
+
+        "MANAGER":
+            "Managers in your branch.",
+
+        "HR_ADMIN":
+            "HR administrators in your branch."
+
+    };
+
+
+    const noResultMessages = {
+
+        "ALL": [
+            "No employees found",
+            "There are no employees in your branch."
+        ],
+
+        "ACTIVE": [
+            "No active employees found",
+            "There are no currently active employees."
+        ],
+
+        "ON_LEAVE": [
+            "No employees on leave",
+            "There are no employees currently on approved leave."
+        ],
+
+        "BENCH": [
+            "No employees on bench",
+            "There are no employees currently on bench."
+        ],
+
+        "MANAGER": [
+            "No managers found",
+            "There are no managers in your branch."
+        ],
+
+        "HR_ADMIN": [
+            "No HR administrators found",
+            "There are no HR administrators in your branch."
+        ]
+
+    };
+
+
+    function matchesFilter(row, filter) {
+
+        const role =
+            row.dataset.role;
+
+        const status =
+            row.dataset.status;
+
+
+        if (filter === "ALL") {
+            return true;
+        }
+
+
+        if (filter === "ACTIVE") {
+            return status === "ACTIVE";
+        }
+
+
+        if (filter === "ON_LEAVE") {
+            return status === "ON_LEAVE";
+        }
+
+
+        if (filter === "BENCH") {
+            return status === "BENCH";
+        }
+
+
+        if (filter === "MANAGER") {
+            return role === "MANAGER";
+        }
+
+
+        if (filter === "HR_ADMIN") {
+            return role === "HR_ADMIN";
+        }
+
+
+        return false;
+    }
+
+
+    function applyFilter(filter) {
+
+        let visibleCount = 0;
+
+
+        employeeRows.forEach(function (row) {
+
+            const shouldShow =
+                matchesFilter(
+                    row,
+                    filter
+                );
+
+
+            if (shouldShow) {
+
+                row.classList.remove(
+                    "d-none"
+                );
+
+                visibleCount++;
+
+            } else {
+
+                row.classList.add(
+                    "d-none"
+                );
+
+            }
+
+        });
+
+
+        /*
+         * Update employee count badge.
+         */
+
+        employeeCountBadge.textContent =
+            visibleCount +
+            (
+                visibleCount === 1
+                    ? " Employee"
+                    : " Employees"
+            );
+
+
+        /*
+         * Update description.
+         */
+
+        employeeFilterDescription.textContent =
+            filterDescriptions[filter] ||
+            "Current workforce status.";
+
+
+        /*
+         * Show / hide empty state.
+         */
+
+        if (visibleCount === 0) {
+
+            noFilteredEmployees.classList.remove(
+                "d-none"
+            );
+
+
+            const messages =
+                noResultMessages[filter] ||
+                noResultMessages["ALL"];
+
+
+            noFilteredEmployeesTitle.textContent =
+                messages[0];
+
+            noFilteredEmployeesText.textContent =
+                messages[1];
+
+        } else {
+
+            noFilteredEmployees.classList.add(
+                "d-none"
+            );
+
+        }
+
+
+        /*
+         * Highlight selected dashboard card.
+         */
+
+        filterCards.forEach(function (card) {
+
+            if (
+                card.dataset.filter === filter
+            ) {
+
+                card.classList.add(
+                    "filter-active"
+                );
+
+            } else {
+
+                card.classList.remove(
+                    "filter-active"
+                );
+
+            }
+
+        });
+
+
+        /*
+         * Scroll smoothly to employee table.
+         */
+
+        if (companyEmployeesSection) {
+
+            companyEmployeesSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        }
+
+    }
+
+
+    filterCards.forEach(function (card) {
+
+        card.addEventListener(
+            "click",
+            function () {
+
+                const filter =
+                    card.dataset.filter ||
+                    "ALL";
+
+                applyFilter(filter);
+
+            }
+        );
+
+
+        /*
+         * Keyboard accessibility.
+         */
+
+        card.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+
+                    event.preventDefault();
+
+                    const filter =
+                        card.dataset.filter ||
+                        "ALL";
+
+                    applyFilter(filter);
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /*
+     * Default filter.
+     *
+     * Total Workforce is selected when
+     * the dashboard initially loads.
+     */
+
+    // applyFilter("ALL");
+
+});
+
+</script>
+
 
 {% endblock %}

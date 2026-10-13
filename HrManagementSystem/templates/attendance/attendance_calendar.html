@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}
+Attendance Calendar - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                Attendance Calendar
+            </h3>
+
+            <p class="text-muted mb-0">
+                Monthly attendance overview.
+            </p>
+
+        </div>
+
+        {% if can_manage_attendance %}
+
+            <a
+                href="{% url 'attendance_create' %}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-plus-circle me-1"></i>
+                Mark Attendance
+            </a>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MONTH NAVIGATION -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <!-- PREVIOUS -->
+
+                {% if month == 1 %}
+
+                    <a
+                        href="?year={{ year|add:-1 }}&month=12"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+
+                {% else %}
+
+                    <a
+                        href="?year={{ year }}&month={{ month|add:-1 }}"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+
+                {% endif %}
+
+
+                <div class="text-center">
+
+                    <h5 class="fw-bold mb-0">
+                        {{ month_name }} {{ year }}
+                    </h5>
+
+                </div>
+
+
+                <!-- NEXT -->
+
+                {% if month == 12 %}
+
+                    <a
+                        href="?year={{ year|add:1 }}&month=1"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+
+                {% else %}
+
+                    <a
+                        href="?year={{ year }}&month={{ month|add:1 }}"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- LEGEND -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap gap-3">
+
+                <span>
+                    <span class="badge bg-success">P</span>
+                    Present
+                </span>
+
+                <span>
+                    <span class="badge bg-danger">A</span>
+                    Absent
+                </span>
+
+                <span>
+                    <span class="badge bg-warning text-dark">HD</span>
+                    Half Day
+                </span>
+
+                <span>
+                    <span class="badge bg-info">L</span>
+                    Leave
+                </span>
+
+                <span>
+                    <span class="badge bg-primary">H</span>
+                    Holiday
+                </span>
+
+                <span>
+                    <span class="badge bg-secondary">WO</span>
+                    Week Off
+                </span>
+
+                <span>
+                    <span class="badge bg-light text-dark border">—</span>
+                    Not Marked
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- CALENDAR -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered align-middle text-center">
+
+                    <thead>
+
+                        <tr>
+
+                            <th
+                                class="text-start"
+                                style="min-width: 220px;"
+                            >
+                                Employee
+                            </th>
+
+                            {% for day in calendar_days %}
+
+                                <th
+                                    {% if day.is_today %}
+                                        class="table-primary"
+                                    {% endif %}
+                                >
+
+                                    <div class="fw-bold">
+                                        {{ day.number }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ day.weekday }}
+                                    </small>
+
+                                </th>
+
+                            {% endfor %}
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for row in employee_rows %}
+
+                            <tr>
+
+                                <td class="text-start">
+
+                                    <div class="fw-semibold">
+                                        {{ row.employee.get_full_name }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ row.employee.employee_id }}
+                                    </small>
+
+                                </td>
+
+
+                                {% for item in row.days %}
+
+                                    <td
+                                        {% if item.day.is_today %}
+                                            class="table-primary"
+                                        {% endif %}
+                                        style="min-width: 48px;"
+                                    >
+
+                                        {% if item.record %}
+
+                                            <a
+                                                href="{% url 'attendance_detail' item.record.pk %}"
+                                                class="text-decoration-none"
+                                            >
+
+                                                {% if item.record.status == "PRESENT" %}
+
+                                                    <span
+                                                        class="badge bg-success"
+                                                        title="Present"
+                                                    >
+                                                        P
+                                                    </span>
+
+                                                {% elif item.record.status == "ABSENT" %}
+
+                                                    <span
+                                                        class="badge bg-danger"
+                                                        title="Absent"
+                                                    >
+                                                        A
+                                                    </span>
+
+                                                {% elif item.record.status == "HALF_DAY" %}
+
+                                                    <span
+                                                        class="badge bg-warning text-dark"
+                                                        title="Half Day"
+                                                    >
+                                                        HD
+                                                    </span>
+
+                                                {% elif item.record.status == "ON_LEAVE" %}
+
+                                                    <span
+                                                        class="badge bg-info"
+                                                        title="On Leave"
+                                                    >
+                                                        L
+                                                    </span>
+
+                                                {% elif item.record.status == "HOLIDAY" %}
+
+                                                    <span
+                                                        class="badge bg-primary"
+                                                        title="Holiday"
+                                                    >
+                                                        H
+                                                    </span>
+
+                                                {% elif item.record.status == "WEEK_OFF" %}
+
+                                                    <span
+                                                        class="badge bg-secondary"
+                                                        title="Week Off"
+                                                    >
+                                                        WO
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </a>
+
+                                        {% elif can_manage_attendance %}
+
+                                            <a
+                                                href="{% url 'attendance_create' %}?employee={{ row.employee.pk }}&date={{ item.day.date|date:'Y-m-d' }}"
+                                                class="text-muted text-decoration-none"
+                                                title="Mark attendance"
+                                            >
+                                                <i class="bi bi-plus-circle"></i>
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+                                                —
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                {% endfor %}
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="{{ calendar_days|length|add:1 }}"
+                                    class="py-5 text-muted"
+                                >
+
+                                    <i class="bi bi-people fs-1"></i>
+
+                                    <p class="mt-2 mb-0">
+                                        No employees found.
+                                    </p>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

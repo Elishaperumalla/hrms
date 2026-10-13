@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ employee.get_full_name }} - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+            <a
+                href="{% url 'employee_list' %}"
+                class="text-decoration-none"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Employees
+            </a>
+
+            <h3 class="fw-bold mt-3 mb-1">
+                Employee Profile
+            </h3>
+
+            <p class="text-muted mb-0">
+                Complete employee information and HR records.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            {% if current_employee.role == "HR_ADMIN" %}     
+
+            <a
+                href="{% url 'employee_update' employee.pk %}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-pencil me-1"></i>
+                Edit
+            </a>
+            <a
+                href="{% url 'employee_delete' employee.pk %}"
+                class="btn btn-outline-danger"
+            >
+                <i class="bi bi-trash me-1"></i>
+                Delete
+            </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- PROFILE HEADER -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body p-4">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-8">
+
+                    <div class="d-flex align-items-center">
+
+                        {% if employee.profile_photo %}
+
+                            <img
+                                src="{{ employee.profile_photo.url }}"
+                                alt="{{ employee.get_full_name }}"
+                                class="rounded-circle me-4"
+                                width="100"
+                                height="100"
+                                style="object-fit: cover;"
+                            >
+
+                        {% else %}
+
+                            <div
+                                class="user-avatar me-4"
+                                style="
+                                    width:100px;
+                                    height:100px;
+                                    font-size:32px;
+                                "
+                            >
+                                {{ employee.first_name|first|upper }}
+                            </div>
+
+                        {% endif %}
+
+
+                        <div>
+
+                            <h3 class="fw-bold mb-1">
+                                {{ employee.get_full_name }}
+                            </h3>
+
+                            <p class="text-muted mb-2">
+                                {{ employee.employee_id }}
+                            </p>
+
+                            <div class="d-flex flex-wrap gap-2">
+
+                                {% if employee.designation and employee.role %}
+
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        {{ employee.designation.name }} | {{ employee.role|title }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                {% if employee.department %}
+
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        {{ employee.department.name }}
+                                    </span>
+
+                                {% endif %}
+
+                                {% if employee.employment_status == "ACTIVE" %}
+
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Active
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">
+                                        {{ employee.get_employment_status_display }}
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4 mt-4 mt-md-0">
+
+                    <div class="row text-center">
+
+                        <div class="col-6">
+
+                            <small class="text-muted d-block">
+                                Joining Date
+                            </small>
+
+                            <strong>
+                                {{ employee.joining_date|date:"d M Y" }}
+                            </strong>
+
+                        </div>
+
+                        <div class="col-6">
+
+                            <small class="text-muted d-block">
+                                Employment
+                            </small>
+
+                            <strong>
+                                {{ employee.get_employment_type_display }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- QUICK ACTIONS -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <a
+                href="{% url 'employee_documents' employee.pk %}"
+                class="text-decoration-none"
+            >
+
+                <div class="card dashboard-card h-100">
+
+                    <div class="card-body">
+
+                        <div class="stat-icon mb-3">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+
+                        <h6 class="fw-bold">
+                            Documents
+                        </h6>
+
+                        <p class="text-muted small mb-0">
+                            Manage employee documents.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <a
+                href="{% url 'employee_assets' employee.pk %}"
+                class="text-decoration-none"
+            >
+
+                <div class="card dashboard-card h-100">
+
+                    <div class="card-body">
+
+                        <div class="stat-icon mb-3">
+                            <i class="bi bi-laptop"></i>
+                        </div>
+
+                        <h6 class="fw-bold">
+                            Assets
+                        </h6>
+
+                        <p class="text-muted small mb-0">
+                            View assigned company assets.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card dashboard-card h-100">
+
+                <div class="card-body">
+
+                    <div class="stat-icon mb-3">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+
+                    <h6 class="fw-bold">
+                        Joining Date
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        {{ employee.joining_date|date:"d F Y" }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PERSONAL INFORMATION -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-person text-primary me-2"></i>
+                Personal Information
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        First Name
+                    </small>
+                    <strong>
+                        {{ employee.first_name }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Middle Name
+                    </small>
+                    <strong>
+                        {{ employee.middle_name|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Last Name
+                    </small>
+                    <strong>
+                        {{ employee.last_name }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Date of Birth
+                    </small>
+                    <strong>
+                        {{ employee.date_of_birth|date:"d M Y"|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Gender
+                    </small>
+                    <strong>
+                        {{ employee.get_gender_display|default:"—" }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CONTACT -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-telephone text-primary me-2"></i>
+                Contact Information
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Email
+                    </small>
+
+                    <strong>
+                        {{ employee.email|default:"—" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Phone
+                    </small>
+
+                    <strong>
+                        {{ employee.phone|default:"—" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Alternate Phone
+                    </small>
+
+                    <strong>
+                        {{ employee.alternate_phone|default:"—" }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADDRESS -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-geo-alt text-primary me-2"></i>
+                Address
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            <p class="mb-2">
+                {{ employee.address|default:"Address not provided." }}
+            </p>
+
+            <span class="text-muted">
+
+                {{ employee.city|default:"" }}
+
+                {% if employee.state %}
+                    , {{ employee.state }}
+                {% endif %}
+
+                {% if employee.country %}
+                    , {{ employee.country }}
+                {% endif %}
+
+                {% if employee.postal_code %}
+                    - {{ employee.postal_code }}
+                {% endif %}
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ORGANIZATION -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-building text-primary me-2"></i>
+                Organization
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">Company</small>
+                    <strong>
+                        {{ employee.company.name|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">Department</small>
+                    <strong>
+                        {{ employee.department.name|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">Designation</small>
+                    <strong>
+                        {{ employee.designation.name|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">Branch</small>
+                    <strong>
+                        {{ employee.branch.name|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">Work Location</small>
+                    <strong>
+                        {{ employee.work_location.name|default:"—" }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- EMPLOYMENT -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-briefcase text-primary me-2"></i>
+                Employment Information
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Employment Type
+                    </small>
+                    <strong>
+                        {{ employee.get_employment_type_display }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Status
+                    </small>
+                    <strong>
+                        {{ employee.get_employment_status_display }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Joining Date
+                    </small>
+                    <strong>
+                        {{ employee.joining_date|date:"d M Y" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Confirmation Date
+                    </small>
+                    <strong>
+                        {{ employee.confirmation_date|date:"d M Y"|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Resignation Date
+                    </small>
+                    <strong>
+                        {{ employee.resignation_date|date:"d M Y"|default:"—" }}
+                    </strong>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <small class="text-muted d-block">
+                        Termination Date
+                    </small>
+                    <strong>
+                        {{ employee.termination_date|date:"d M Y"|default:"—" }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- REPORTING -->
+
+    <div class="card dashboard-card mb-5">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold">
+                <i class="bi bi-diagram-3 text-primary me-2"></i>
+                Reporting Structure
+            </h5>
+
+        </div>
+
+        <div class="card-body px-4">
+
+            {% if employee.reporting_manager %}
+
+                <div class="d-flex align-items-center">
+
+                    <div class="user-avatar me-3">
+                        {{ employee.reporting_manager.first_name|first|upper }}
+                    </div>
+
+                    <div>
+                        <small class="text-muted d-block">
+                            Reporting to
+                        </small>
+                        <strong>
+                            {{ employee.reporting_manager.get_full_name }}
+                            <span class="badge bg-warning text-dark">
+                            {{ employee.reporting_manager.role}}
+                            </span>
+                        </strong>
+
+                        
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No reporting manager assigned.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

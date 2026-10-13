@@ -21,10 +21,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('account/',include("account.urls")),
+    path("admin/", admin.site.urls),
+    path("account/",include("account.urls")),
     path("",include("dashboard.urls")),
     path("organization/",include("organization.urls")),
+    path("leaves/",include("leaves.urls")),
+    path("employees/",include("employees.urls")),
+    path("attendance/",include("attendance.urls")),
+    path("payroll/",include("payroll.urls")),
+    path("recruitment/", include("recruitment.urls")),
+    path("performance/", include("performance.urls")),
+    path("reports/", include("reports.urls")),
+
+   
 
 ]
 if settings.DEBUG:
@@ -32,3 +41,8 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
+
+handler400 = "account.views.bad_request"
+handler403 = "account.views.permission_denied"
+handler404 = "account.views.page_not_found"
+handler500 = "account.views.server_error"

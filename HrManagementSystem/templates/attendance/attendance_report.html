@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}
+Attendance Report - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                Attendance Report
+            </h3>
+
+            <p class="text-muted mb-0">
+                Monthly attendance summary for {{ month_name }} {{ selected_year }}.
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'attendance_dashboard' %}"
+            class="btn btn-light border"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Dashboard
+        </a>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- FILTER -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body">
+
+            <form
+                method="GET"
+                class="row g-3 align-items-end"
+            >
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Month
+                    </label>
+
+                    <select
+                        name="month"
+                        class="form-select"
+                    >
+
+                        {% for month_number in "123456789101112"|make_list %}
+
+                        {% endfor %}
+
+                        <option
+                            value="1"
+                            {% if selected_month == 1 %}selected{% endif %}
+                        >
+                            January
+                        </option>
+
+                        <option
+                            value="2"
+                            {% if selected_month == 2 %}selected{% endif %}
+                        >
+                            February
+                        </option>
+
+                        <option
+                            value="3"
+                            {% if selected_month == 3 %}selected{% endif %}
+                        >
+                            March
+                        </option>
+
+                        <option
+                            value="4"
+                            {% if selected_month == 4 %}selected{% endif %}
+                        >
+                            April
+                        </option>
+
+                        <option
+                            value="5"
+                            {% if selected_month == 5 %}selected{% endif %}
+                        >
+                            May
+                        </option>
+
+                        <option
+                            value="6"
+                            {% if selected_month == 6 %}selected{% endif %}
+                        >
+                            June
+                        </option>
+
+                        <option
+                            value="7"
+                            {% if selected_month == 7 %}selected{% endif %}
+                        >
+                            July
+                        </option>
+
+                        <option
+                            value="8"
+                            {% if selected_month == 8 %}selected{% endif %}
+                        >
+                            August
+                        </option>
+
+                        <option
+                            value="9"
+                            {% if selected_month == 9 %}selected{% endif %}
+                        >
+                            September
+                        </option>
+
+                        <option
+                            value="10"
+                            {% if selected_month == 10 %}selected{% endif %}
+                        >
+                            October
+                        </option>
+
+                        <option
+                            value="11"
+                            {% if selected_month == 11 %}selected{% endif %}
+                        >
+                            November
+                        </option>
+
+                        <option
+                            value="12"
+                            {% if selected_month == 12 %}selected{% endif %}
+                        >
+                            December
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Year
+                    </label>
+
+                    <input
+                        type="number"
+                        name="year"
+                        value="{{ selected_year }}"
+                        class="form-control"
+                        min="2000"
+                        max="2100"
+                    >
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Employee
+                    </label>
+
+                    <select
+                        name="employee"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Employees
+                        </option>
+
+                        {% for employee in employees %}
+
+                            <option
+                                value="{{ employee.pk }}"
+                                {% if selected_employee|stringformat:"s" == employee.pk|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ employee.get_full_name }}
+                                — {{ employee.employee_id }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-2 d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary flex-grow-1"
+                    >
+                        <i class="bi bi-filter me-1"></i>
+                        Apply
+                    </button>
+
+                    <a
+                        href="{% url 'attendance_report' %}"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- SUMMARY -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+
+            <h5 class="fw-bold mb-0">
+                {{ month_name }} {{ selected_year }} Summary
+            </h5>
+
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Employee</th>
+                            <th>Total</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Half Day</th>
+                            <th>Leave</th>
+                            <th>Holiday</th>
+                            <th>Week Off</th>
+                            <th>Late</th>
+                            <th>Work Hours</th>
+                            <th>Overtime</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for row in summary %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ row.employee__first_name }}
+                                        {{ row.employee__last_name }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ row.employee__employee_id }}
+                                    </small>
+
+                                </td>
+
+
+                                <td>
+                                    {{ row.total_days }}
+                                </td>
+
+
+                                <td>
+
+                                    <span class="text-success fw-semibold">
+                                        {{ row.present_days }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="text-danger fw-semibold">
+                                        {{ row.absent_days }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+                                    {{ row.half_days }}
+                                </td>
+
+
+                                <td>
+                                    {{ row.leave_days }}
+                                </td>
+
+
+                                <td>
+                                    {{ row.holiday_days }}
+                                </td>
+
+
+                                <td>
+                                    {{ row.week_off_days }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if row.late_days %}
+
+                                        <span class="text-warning fw-semibold">
+                                            {{ row.late_days }}
+                                        </span>
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if row.total_work_hours %}
+
+                                        {{ row.total_work_hours|floatformat:2 }}
+
+                                    {% else %}
+
+                                        0.00
+
+                                    {% endif %}
+
+                                    hrs
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if row.total_overtime %}
+
+                                        {{ row.total_overtime|floatformat:2 }}
+
+                                    {% else %}
+
+                                        0.00
+
+                                    {% endif %}
+
+                                    hrs
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="11"
+                                    class="text-center py-5"
+                                >
+
+                                    <i class="bi bi-bar-chart fs-1 text-muted"></i>
+
+                                    <p class="text-muted mt-2 mb-0">
+                                        No attendance data found for this period.
+                                    </p>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

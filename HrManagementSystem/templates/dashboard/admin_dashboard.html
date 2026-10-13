@@ -16,7 +16,8 @@
         </h2>
 
         <p class="text-muted mb-0">
-            Welcome back, {{ user.get_full_name|default:user.username }}.
+            Welcome back,
+            {{ user.get_full_name|default:user.username }}.
         </p>
 
     </div>
@@ -24,14 +25,16 @@
 </div>
 
 
-<!-- STAT CARDS -->
+<!-- STATISTICS -->
 
 <div class="row g-4 mb-4">
 
 
+    <!-- TOTAL EMPLOYEES -->
+
     <div class="col-xl-3 col-md-6">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
@@ -40,12 +43,16 @@
                     <div>
 
                         <p class="text-muted mb-1">
-                            Total Employees
+                            Total Workforce
                         </p>
 
                         <h3 class="fw-bold mb-0">
-                            0
+                            {{ total_employees }}
                         </h3>
+
+                        <small class="text-muted">
+                            HR, managers and employees
+                        </small>
 
                     </div>
 
@@ -62,10 +69,11 @@
     </div>
 
 
+    <!-- ACTIVE EMPLOYEES -->
 
     <div class="col-xl-3 col-md-6">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
@@ -74,12 +82,16 @@
                     <div>
 
                         <p class="text-muted mb-1">
-                            Present Today
+                            Active Employees
                         </p>
 
                         <h3 class="fw-bold mb-0">
-                            0
+                            {{ active_employees }}
                         </h3>
+
+                        <small class="text-muted">
+                            Currently active
+                        </small>
 
                     </div>
 
@@ -96,10 +108,11 @@
     </div>
 
 
+    <!-- ON LEAVE -->
 
     <div class="col-xl-3 col-md-6">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
@@ -112,8 +125,12 @@
                         </p>
 
                         <h3 class="fw-bold mb-0">
-                            0
+                            {{ on_leave_employees }}
                         </h3>
+
+                        <small class="text-muted">
+                            Currently on leave
+                        </small>
 
                     </div>
 
@@ -130,10 +147,11 @@
     </div>
 
 
+    <!-- DEPARTMENTS -->
 
     <div class="col-xl-3 col-md-6">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
@@ -146,8 +164,12 @@
                         </p>
 
                         <h3 class="fw-bold mb-0">
-                            0
+                            {{ total_departments }}
                         </h3>
+
+                        <small class="text-muted">
+                            {{ active_departments }} active
+                        </small>
 
                     </div>
 
@@ -166,34 +188,40 @@
 </div>
 
 
-<!-- SECOND ROW -->
+<!-- WORKFORCE SUMMARY -->
 
-<div class="row g-4">
+<div class="row g-4 mb-4">
 
 
-    <div class="col-lg-8">
+    <!-- HR -->
 
-        <div class="card dashboard-card">
+    <div class="col-lg-4">
+
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
-                <h5 class="fw-bold">
-                    Attendance Overview
-                </h5>
+                <div class="d-flex justify-content-between">
 
-                <p class="text-muted">
-                    Attendance analytics will appear here.
-                </p>
+                    <div>
 
-                <div
-                    class="d-flex justify-content-center align-items-center"
-                    style="height: 250px;"
-                >
+                        <p class="text-muted mb-1">
+                            HR Administrators
+                        </p>
 
-                    <i
-                        class="bi bi-bar-chart-line"
-                        style="font-size: 60px; color: #2563eb;"
-                    ></i>
+                        <h3 class="fw-bold mb-0">
+                            {{ active_hr }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Active HR administrators
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
 
                 </div>
 
@@ -204,34 +232,76 @@
     </div>
 
 
+    <!-- MANAGERS -->
 
     <div class="col-lg-4">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
-                <h5 class="fw-bold mb-3">
-                    Quick Actions
-                </h5>
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Managers
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ active_managers }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Active managers
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
-                <button class="btn btn-primary w-100 mb-2">
-                    <i class="bi bi-person-plus me-2"></i>
-                    Add Employee
-                </button>
+    <!-- COMPANIES -->
 
+    <div class="col-lg-4">
 
-                <button class="btn btn-outline-primary w-100 mb-2">
-                    <i class="bi bi-building me-2"></i>
-                    Add Department
-                </button>
+        <div class="card dashboard-card h-100">
 
+            <div class="card-body">
 
-                <button class="btn btn-outline-primary w-100">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    Generate Report
-                </button>
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Companies
+                        </p>
+
+                        <h3 class="fw-bold mb-0">
+                            {{ total_companies }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Companies in the system
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+                        <i class="bi bi-buildings"></i>
+                    </div>
+
+                </div>
 
             </div>
 
@@ -240,5 +310,593 @@
     </div>
 
 </div>
+
+
+<!-- DEPARTMENT MANAGEMENT -->
+
+<div class="card dashboard-card mb-4">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <div>
+
+                <h5 class="fw-bold mb-1">
+                    Department Management
+                </h5>
+
+                <p class="text-muted mb-0">
+                    Manage departments and view workforce distribution.
+                </p>
+
+            </div>
+
+            <a
+                href="{% url 'department_create' %}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-plus-lg me-1"></i>
+                Add Department
+            </a>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Department
+                        </th>
+
+                        <th>
+                            Code
+                        </th>
+
+                        <th>
+                            Employees
+                        </th>
+
+                        <th>
+                            Managers
+                        </th>
+
+                        <th>
+                            HR
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th class="text-end">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in department_data %}
+
+                    <tr>
+
+                        <td>
+
+                            <div class="fw-semibold">
+                                {{ item.department.name }}
+                            </div>
+
+                            {% if item.department.description %}
+
+                            <small class="text-muted">
+                                {{ item.department.description|truncatechars:60 }}
+                            </small>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="badge bg-light text-dark border">
+                                {{ item.department.code }}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="fw-bold">
+                                {{ item.employee_count }}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="fw-bold">
+                                {{ item.manager_count }}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="fw-bold">
+                                {{ item.hr_count }}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            {% if item.department.is_active %}
+
+                                <span class="badge bg-success">
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+                                    Inactive
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td class="text-end">
+
+                            <a
+                                href="{% url 'department_update' item.department.pk %}"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'department_delete' item.department.pk %}"
+                                class="btn btn-sm btn-outline-danger"
+                            >
+                                <i class="bi bi-trash"></i>
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="text-center text-muted py-4"
+                        >
+
+                            <i class="bi bi-building fs-2 d-block mb-2"></i>
+
+                            No departments found.
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- BRANCHES + WORK LOCATIONS -->
+
+<div class="row g-4 mb-4">
+
+
+    <!-- BRANCHES -->
+
+    <div class="col-lg-7">
+
+        <div class="card dashboard-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+
+                        <h5 class="fw-bold mb-1">
+                            Company Branches
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            {{ active_branches }} active branches
+                            · {{ total_branches }} total
+                        </p>
+
+                    </div>
+
+                    <a
+                        href="{% url 'branch_create' %}"
+                        class="btn btn-primary btn-sm"
+                    >
+                        <i class="bi bi-plus-lg me-1"></i>
+                        Add Branch
+                    </a>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Branch
+                                </th>
+
+                                <th>
+                                    Location
+                                </th>
+
+                                <th>
+                                    Employees
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for branch in branches %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ branch.name }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ branch.code }}
+                                    </small>
+
+                                    {% if branch.is_head_office %}
+
+                                    <span class="badge bg-primary ms-1">
+                                        Head Office
+                                    </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if branch.city %}
+
+                                        {{ branch.city }}
+
+                                        {% if branch.state %}
+                                            , {{ branch.state }}
+                                        {% endif %}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not specified
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="fw-bold">
+                                        {{ branch.employee_count }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if branch.is_active %}
+
+                                        <span class="badge bg-success">
+                                            Active
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            Inactive
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'branch_update' branch.pk %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="text-center text-muted py-4"
+                                >
+                                    No branches found.
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- WORK LOCATIONS -->
+
+    <div class="col-lg-5">
+
+        <div class="card dashboard-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+
+                        <h5 class="fw-bold mb-1">
+                            Work Locations
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            {{ active_locations }} active locations
+                            · {{ total_locations }} total
+                        </p>
+
+                    </div>
+
+                    <a
+                        href="{% url 'work_location_create' %}"
+                        class="btn btn-primary btn-sm"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                        Add Location
+                    </a>
+
+                </div>
+
+
+                {% for location in work_locations %}
+
+                <div class="border rounded p-3 mb-2">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <div class="fw-semibold">
+                                {{ location.name }}
+                            </div>
+
+                            <small class="text-muted">
+
+                                {{ location.get_location_type_display }}
+
+                                {% if location.city %}
+                                    · {{ location.city }}
+                                {% endif %}
+
+                            </small>
+
+                        </div>
+
+
+                        {% if location.is_active %}
+
+                            <span class="badge bg-success align-self-start">
+                                Active
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-secondary align-self-start">
+                                Inactive
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="mt-2">
+
+                        <small class="text-muted">
+
+                            <i class="bi bi-people me-1"></i>
+
+                            {{ location.employee_count }}
+                            employees
+
+                        </small>
+
+                    </div>
+
+
+                    <div class="mt-2">
+
+                        <a
+                            href="{% url 'work_location_update' location.pk %}"
+                            class="btn btn-sm btn-outline-primary"
+                        >
+                            <i class="bi bi-pencil me-1"></i>
+                            Edit
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                {% empty %}
+
+                <div class="text-center text-muted py-4">
+
+                    <i class="bi bi-geo-alt fs-2 d-block mb-2"></i>
+
+                    No work locations found.
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- QUICK ACTIONS -->
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <h5 class="fw-bold mb-3">
+            Quick Actions
+        </h5>
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+
+                <a
+                    href="{% url 'department_create' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+                    <i class="bi bi-building me-2"></i>
+                    Add Department
+                </a>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <a
+                    href="{% url 'branch_create' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    Add Branch
+                </a>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <a
+                    href="{% url 'work_location_create' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+                    <i class="bi bi-geo-alt me-2"></i>
+                    Add Location
+                </a>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <a
+                    href="{% url 'employee_list' %}"
+                    class="btn btn-outline-primary w-100"
+                >
+                    <i class="bi bi-people me-2"></i>
+                    Employees
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 {% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Approval{% endblock %}
+
+{% block content %}
+<div class="alert alert-info border-0">
+
+    <div class="d-flex align-items-center">
+
+        <i class="bi bi-info-circle fs-4 me-2"></i>
+
+        <div>
+
+            <strong>
+                Current Approval Stage
+            </strong>
+
+            <div class="small">
+                {{ leave_request.get_approval_stage_display }}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-7">
+
+        <div class="card dashboard-card">
+
+            <div class="card-body p-4">
+
+                <h3 class="fw-bold mb-1">
+                    Review Leave Request
+                </h3>
+
+                <p class="text-muted mb-4">
+                    {{ leave_request.employee.get_full_name }}
+                    -
+                    {{ leave_request.leave_type.name }}
+                </p>
+
+
+                <div class="alert alert-light border">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <strong>Start</strong><br>
+                            {{ leave_request.start_date }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <strong>End</strong><br>
+                            {{ leave_request.end_date }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <strong>Days</strong><br>
+                            {{ leave_request.total_days }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <form method="POST">
+
+                    {% csrf_token %}
+
+                    {% for field in form %}
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% for error in field.errors %}
+
+                                <div class="text-danger small">
+                                    {{ error }}
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endfor %}
+
+
+                    <div class="d-flex justify-content-end gap-2">
+
+                        <a
+                            href="{% url 'leave_detail' leave_request.pk %}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Cancel
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            <i class="bi bi-check-circle me-1"></i>
+                            Submit Decision
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

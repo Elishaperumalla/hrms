@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Payslips{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-receipt me-2"></i>
+                Payslips
+            </h2>
+
+            <p class="text-muted mb-0">
+                View and manage generated employee payslips.
+            </p>
+        </div>
+
+        <a href="{% url 'payroll:payroll_dashboard' %}"
+           class="btn btn-outline-secondary">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Payroll Dashboard
+
+        </a>
+
+    </div>
+
+
+    {% if payslips %}
+
+        <!-- Payslip Table -->
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-header bg-white border-0 py-3">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Generated Payslips
+                    </h5>
+
+                    <span class="badge bg-primary">
+                        {{ payslips|length }} Payslip{{ payslips|length|pluralize }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="ps-4">
+                                    Payslip No.
+                                </th>
+
+                                <th>
+                                    Employee
+                                </th>
+
+                                <th>
+                                    Employee ID
+                                </th>
+
+                                <th>
+                                    Period
+                                </th>
+
+                                <th>
+                                    Gross Salary
+                                </th>
+
+                                <th>
+                                    Deductions
+                                </th>
+
+                                <th>
+                                    Net Salary
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for payslip in payslips %}
+
+                            <tr>
+
+                                <!-- Payslip Number -->
+                                <td class="ps-4">
+
+                                    <span class="fw-semibold">
+                                        {{ payslip.payslip_number }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Employee -->
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ payslip.payroll_record.employee.get_full_name }}
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Employee ID -->
+                                <td>
+
+                                    <span class="text-muted">
+                                        {{ payslip.payroll_record.employee.employee_id }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Period -->
+                                <td>
+
+                                    {{ payslip.payroll_record.period.display_name }}
+
+                                </td>
+
+
+                                <!-- Gross -->
+                                <td>
+
+                                    ₹{{ payslip.payroll_record.gross_salary|floatformat:2 }}
+
+                                </td>
+
+
+                                <!-- Deductions -->
+                                <td>
+
+                                    ₹{{ payslip.payroll_record.total_deductions|floatformat:2 }}
+
+                                </td>
+
+
+                                <!-- Net -->
+                                <td>
+
+                                    <span class="fw-bold text-success">
+
+                                        ₹{{ payslip.payroll_record.net_salary|floatformat:2 }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- Status -->
+                                <td>
+
+                                    {% if payslip.payroll_record.status == "PAID" %}
+
+                                        <span class="badge bg-success">
+                                            Paid
+                                        </span>
+
+                                    {% elif payslip.payroll_record.status == "PROCESSED" %}
+
+                                        <span class="badge bg-primary">
+                                            Processed
+                                        </span>
+
+                                    {% elif payslip.payroll_record.status == "HOLD" %}
+
+                                        <span class="badge bg-warning text-dark">
+                                            Hold
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            {{ payslip.payroll_record.status|default:"Draft" }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- Actions -->
+                                <td class="text-end pe-4">
+
+                                    <div class="btn-group">
+
+                                        <a href="{% url 'payroll:payslip_detail' payslip.pk %}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="View Payslip">
+
+                                            <i class="bi bi-eye"></i>
+
+                                        </a>
+
+
+                                        <a href="{% url 'payroll:payslip_print' payslip.pk %}"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-secondary"
+                                           title="Print Payslip">
+
+                                            <i class="bi bi-printer"></i>
+
+                                        </a>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    {% else %}
+
+        <!-- Empty State -->
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <div class="mb-4">
+
+                    <i class="bi bi-receipt"
+                       style="font-size: 4rem; opacity: 0.35;"></i>
+
+                </div>
+
+
+                <h4 class="fw-bold mb-2">
+                    No Payslips Available
+                </h4>
+
+
+                <p class="text-muted mb-4">
+
+                    There are currently no generated payslips
+                    available for your account.
+
+                </p>
+
+
+                <a href="{% url 'payroll:payroll_dashboard' %}"
+                   class="btn btn-primary">
+
+                    <i class="bi bi-arrow-left me-1"></i>
+
+                    Back to Payroll
+
+                </a>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

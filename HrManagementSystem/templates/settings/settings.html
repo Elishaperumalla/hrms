@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Settings | HRMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-gear me-2 text-primary"></i>Settings
+            </h3>
+            <p class="text-muted mb-0">
+                Manage your HRMS configuration and personal preferences.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'company_settings' %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 settings-card">
+                    <div class="card-body p-4">
+
+                        <div class="settings-card-icon settings-company-icon">
+                            <i class="bi bi-building fs-3"></i>
+                        </div>
+
+                        <h5 class="fw-bold settings-card-title mb-2">
+                            Company Settings
+                        </h5>
+
+                        <p class="text-muted mb-4">
+                            Manage company information, contact details, address,
+                            branding and organization preferences.
+                        </p>
+
+                        <span class="text-primary fw-semibold">
+                            Manage Company
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'system_settings' %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 settings-card">
+                    <div class="card-body p-4">
+
+                        <div class="settings-card-icon settings-system-icon">
+                            <i class="bi bi-sliders fs-3"></i>
+                        </div>
+
+                        <h5 class="fw-bold settings-card-title mb-2">
+                            System Settings
+                        </h5>
+
+                        <p class="text-muted mb-4">
+                            Configure application behavior, security, notifications,
+                            localization and system preferences.
+                        </p>
+
+                        <span class="text-success fw-semibold">
+                            Manage System
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'profile' %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 settings-card">
+                    <div class="card-body p-4">
+
+                        <div class="settings-card-icon settings-account-icon">
+                            <i class="bi bi-person-gear fs-3"></i>
+                        </div>
+
+                        <h5 class="fw-bold settings-card-title mb-2">
+                            Account Settings
+                        </h5>
+
+                        <p class="text-muted mb-4">
+                            Manage your profile information, password and personal
+                            account preferences.
+                        </p>
+
+                        <span class="text-warning fw-semibold">
+                            Manage Account
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- APPEARANCE -->
+
+    <div class="card border-0 shadow-sm mt-4 appearance-card">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="settings-section-icon me-3">
+                        <i class="bi bi-palette"></i>
+                    </div>
+
+                    <div>
+
+                        <h5 class="fw-bold mb-1">
+                            Appearance
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Choose how HRMS looks on your device.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="theme-options"
+                    role="group"
+                    aria-label="Theme selection"
+                >
+
+                    <button
+                        type="button"
+                        class="theme-option"
+                        id="themeLight"
+                    >
+                        <i class="bi bi-sun-fill"></i>
+                        <span>Light</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="theme-option"
+                        id="themeDark"
+                    >
+                        <i class="bi bi-moon-stars-fill"></i>
+                        <span>Dark</span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="theme-option"
+                        id="themeSystem"
+                    >
+                        <i class="bi bi-display"></i>
+                        <span>System</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- QUICK SETTINGS -->
+
+    <div class="card border-0 shadow-sm mt-4 quick-settings-card">
+
+        <div class="card-header border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div class="settings-section-icon me-3">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Quick Settings
+                    </h5>
+
+                    <small class="text-muted">
+                        Frequently used account actions
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4 pt-0">
+
+            <div class="row g-3">
+
+
+                <div class="col-lg-4 col-md-6">
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="quick-setting-item"
+                    >
+
+                        <div class="quick-setting-icon">
+                            <i class="bi bi-person"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="fw-semibold settings-item-title">
+                                My Profile
+                            </div>
+
+                            <small class="text-muted">
+                                View and update your profile
+                            </small>
+
+                        </div>
+
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+
+                    </a>
+
+                </div>
+
+
+                <div class="col-lg-4 col-md-6">
+
+                    <a
+                        href="{% url 'change_password' %}"
+                        class="quick-setting-item"
+                    >
+
+                        <div class="quick-setting-icon">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="fw-semibold settings-item-title">
+                                Change Password
+                            </div>
+
+                            <small class="text-muted">
+                                Update your account password
+                            </small>
+
+                        </div>
+
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+
+                    </a>
+
+                </div>
+
+
+                <div class="col-lg-4 col-md-6">
+
+                    <a
+                        href="{% url 'company_settings' %}"
+                        class="quick-setting-item"
+                    >
+
+                        <div class="quick-setting-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+
+                        <div>
+                            
+
+                            <div class="fw-semibold settings-item-title">
+                                Company Configuration
+                            </div>
+
+                            <small class="text-muted">
+                                Manage company preferences
+                            </small>
+
+                        </div>
+
+                        <i class="bi bi-chevron-right ms-auto text-muted"></i>
+
+                    </a>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

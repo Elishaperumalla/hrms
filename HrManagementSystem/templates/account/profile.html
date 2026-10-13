@@ -155,6 +155,16 @@
 
 
 
+    <!--
+        IMPORTANT:
+        Employee is taken from the view when available.
+        If the view does not send "employee", we directly
+        use the Employee profile linked to the logged-in user.
+    -->
+
+    {% with profile_employee=employee|default:user.employee_profile %}
+
+
     <div class="row g-4">
 
 
@@ -353,148 +363,399 @@
                 <div class="card-body p-4">
 
 
-                    <div class="row g-4">
+                    {% if profile_employee %}
+
+                        <div class="row g-4">
 
 
-                        <!-- EMPLOYEE ID -->
+                            <!-- EMPLOYEE ID -->
 
-                        <div class="col-md-6">
+                            <div class="col-md-6">
 
-                            <label class="profile-label">
-                                Employee ID
-                            </label>
+                                <label class="profile-label">
+                                    Employee ID
+                                </label>
 
-                            <div class="profile-value">
+                                <div class="profile-value">
 
-                                {% if employee %}
-                                    {{ employee.employee_id }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not assigned
-                                    </span>
-                                {% endif %}
+                                    {{ profile_employee.employee_id|default:"Not assigned" }}
+
+                                </div>
 
                             </div>
+
+
+                            <!-- EMPLOYEE ROLE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Employee Role
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {{ profile_employee.get_role_display|default:"Not assigned" }}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- COMPANY -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Company
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.company %}
+
+                                        {{ profile_employee.company.name }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DEPARTMENT -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Department
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.department %}
+
+                                        {{ profile_employee.department.name }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DESIGNATION -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Designation
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.designation %}
+
+                                        {{ profile_employee.designation.name }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- BRANCH -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Branch
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.branch %}
+
+                                        {{ profile_employee.branch.name }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- WORK LOCATION -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Work Location
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.work_location %}
+
+                                        {{ profile_employee.work_location.name }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- EMPLOYMENT TYPE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Employment Type
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.employment_type %}
+
+                                        {{ profile_employee.get_employment_type_display }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- EMPLOYMENT STATUS -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Employment Status
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.employment_status %}
+
+                                        {{ profile_employee.get_employment_status_display }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- JOINING DATE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Joining Date
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.joining_date %}
+
+                                        {{ profile_employee.joining_date|date:"d M Y" }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not available
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- CONFIRMATION DATE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Confirmation Date
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.confirmation_date %}
+
+                                        {{ profile_employee.confirmation_date|date:"d M Y" }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not available
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- REPORTING MANAGER -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Reporting Manager
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.reporting_manager %}
+
+                                        {% if profile_employee.reporting_manager.user %}
+
+                                            {{ profile_employee.reporting_manager.user.get_full_name }}
+
+                                        {% else %}
+
+                                            {{ profile_employee.reporting_manager.get_full_name }}
+
+                                        {% endif %}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- RESIGNATION DATE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Resignation Date
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.resignation_date %}
+
+                                        {{ profile_employee.resignation_date|date:"d M Y" }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not applicable
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- TERMINATION DATE -->
+
+                            <div class="col-md-6">
+
+                                <label class="profile-label">
+                                    Termination Date
+                                </label>
+
+                                <div class="profile-value">
+
+                                    {% if profile_employee.termination_date %}
+
+                                        {{ profile_employee.termination_date|date:"d M Y" }}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            Not applicable
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
 
                         </div>
 
 
-                        <!-- DEPARTMENT -->
+                    {% else %}
 
-                        <div class="col-md-6">
+                        <!-- NO EMPLOYEE PROFILE -->
 
-                            <label class="profile-label">
-                                Department
-                            </label>
+                        <div class="text-center py-4">
 
-                            <div class="profile-value">
+                            <i class="bi bi-person-x fs-1 text-muted"></i>
 
-                                {% if employee and employee.department %}
-                                    {{ employee.department.name }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not assigned
-                                    </span>
-                                {% endif %}
+                            <h6 class="fw-semibold mt-3">
+                                Work information not available
+                            </h6>
 
-                            </div>
+                            <p class="text-muted mb-0">
+                                Your employee profile has not been assigned yet.
+                            </p>
 
                         </div>
 
-
-                        <!-- DESIGNATION -->
-
-                        <div class="col-md-6">
-
-                            <label class="profile-label">
-                                Designation
-                            </label>
-
-                            <div class="profile-value">
-
-                                {% if employee and employee.designation %}
-                                    {{ employee.designation.name }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not assigned
-                                    </span>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- JOINING DATE -->
-
-                        <div class="col-md-6">
-
-                            <label class="profile-label">
-                                Joining Date
-                            </label>
-
-                            <div class="profile-value">
-
-                                {% if employee and employee.joining_date %}
-                                    {{ employee.joining_date|date:"d M Y" }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not available
-                                    </span>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- MANAGER -->
-
-                        <div class="col-md-6">
-
-                            <label class="profile-label">
-                                Reporting Manager
-                            </label>
-
-                            <div class="profile-value">
-
-                                {% if employee and employee.manager %}
-                                    {{ employee.manager.user.get_full_name }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not assigned
-                                    </span>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- LOCATION -->
-
-                        <div class="col-md-6">
-
-                            <label class="profile-label">
-                                Work Location
-                            </label>
-
-                            <div class="profile-value">
-
-                                {% if employee and employee.branch %}
-                                    {{ employee.branch.name }}
-                                {% else %}
-                                    <span class="text-muted">
-                                        Not assigned
-                                    </span>
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                    </div>
+                    {% endif %}
 
 
                 </div>
@@ -579,12 +840,15 @@
                             </h6>
 
                             <small class="text-muted">
+
                                 Your HRMS account is currently
+
                                 {% if user.is_active %}
                                     active.
                                 {% else %}
                                     disabled.
                                 {% endif %}
+
                             </small>
 
                         </div>
@@ -726,7 +990,9 @@
                         </h6>
 
                         <span class="fw-semibold text-primary">
+
                             {{ profile_completion|default:"0" }}%
+
                         </span>
 
                     </div>
@@ -740,7 +1006,10 @@
                         <div
                             class="progress-bar"
                             role="progressbar"
-                            style="width: 0%;"
+                            style="width: {{ profile_completion|default:'0' }}%;"
+                            aria-valuenow="{{ profile_completion|default:'0' }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
                         ></div>
 
                     </div>
@@ -828,6 +1097,9 @@
 
 
     </div>
+
+
+    {% endwith %}
 
 </div>
 

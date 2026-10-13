@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Upload Employee Document - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <div class="d-flex align-items-center mb-4">
+
+        <div>
+
+            <a
+                href="{% url 'employee_documents' employee.pk %}"
+                class="text-decoration-none"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Documents
+            </a>
+
+            <h3 class="fw-bold mt-3 mb-1">
+                Upload Document
+            </h3>
+
+            <p class="text-muted mb-0">
+                Upload a document for {{ employee.get_full_name }}.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-8">
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+
+                {% endif %}
+
+
+                <div class="card dashboard-card mb-4">
+
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+
+                        <h5 class="fw-bold mb-1">
+
+                            <i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>
+
+                            Document Information
+
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body p-4">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Document Name
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            {{ form.name }}
+
+                            {% if form.name.errors %}
+                                <div class="text-danger small">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Document Type
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            {{ form.document_type }}
+
+                            {% if form.document_type.errors %}
+                                <div class="text-danger small">
+                                    {{ form.document_type.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Description
+                            </label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+                                <div class="text-danger small">
+                                    {{ form.description.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Document File
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            {{ form.document_file }}
+
+                            {% if form.document_file.errors %}
+                                <div class="text-danger small">
+                                    {{ form.document_file.errors }}
+                                </div>
+                            {% endif %}
+
+                            <div class="form-text">
+                                Upload PDF, JPG, PNG or other supported document formats.
+                            </div>
+
+                        </div>
+
+
+                        {% if form.is_verified %}
+
+                            <div class="form-check mb-3">
+
+                                {{ form.is_verified }}
+
+                                <label class="form-check-label">
+                                    Mark as verified
+                                </label>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="d-flex justify-content-end gap-2 mb-5">
+
+                    <a
+                        href="{% url 'employee_documents' employee.pk %}"
+                        class="btn btn-light"
+                    >
+                        Cancel
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-upload me-1"></i>
+                        Upload Document
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

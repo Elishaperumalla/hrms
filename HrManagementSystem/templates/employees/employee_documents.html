@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Employee Documents - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <a
+                href="{% url 'employee_detail' employee.pk %}"
+                class="text-decoration-none"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Employee Profile
+            </a>
+
+            <h3 class="fw-bold mt-3 mb-1">
+                Employee Documents
+            </h3>
+
+            <p class="text-muted mb-0">
+                {{ employee.get_full_name }} · {{ employee.employee_id }}
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'employee_document_create' employee.pk %}"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-file-earmark-plus me-1"></i>
+            Upload Document
+        </a>
+
+    </div>
+
+
+    <!-- DOCUMENTS -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-0">
+
+            {% if documents %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="ps-4">
+                                    Document
+                                </th>
+
+                                <th>
+                                    Type
+                                </th>
+
+                                <th>
+                                    Uploaded
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for document in documents %}
+
+                                <tr>
+
+                                    <td class="ps-4">
+
+                                        <div class="d-flex align-items-center">
+
+                                            <div class="stat-icon me-3">
+
+                                                <i class="bi bi-file-earmark-text"></i>
+
+                                            </div>
+
+                                            <div>
+
+                                                <div class="fw-semibold">
+                                                    {{ document.name }}
+                                                </div>
+
+                                                {% if document.description %}
+
+                                                    <small class="text-muted">
+                                                        {{ document.description|truncatechars:60 }}
+                                                    </small>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ document.get_document_type_display }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ document.created_at|date:"d M Y" }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if document.is_verified %}
+
+                                            <span class="badge bg-success-subtle text-success">
+
+                                                <i class="bi bi-check-circle me-1"></i>
+
+                                                Verified
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-warning-subtle text-warning-emphasis">
+
+                                                Pending
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td class="text-end pe-4">
+
+                                        {% if document.document_file %}
+
+                                            <a
+                                                href="{{ document.document_file.url }}"
+                                                target="_blank"
+                                                class="btn btn-sm btn-outline-primary"
+                                            >
+                                                <i class="bi bi-eye me-1"></i>
+                                                View
+                                            </a>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <div
+                        class="stat-icon mx-auto mb-3"
+                        style="width:70px;height:70px;"
+                    >
+                        <i class="bi bi-file-earmark fs-3"></i>
+                    </div>
+
+
+                    <h5 class="fw-bold">
+                        No documents
+                    </h5>
+
+
+                    <p class="text-muted">
+                        No documents have been uploaded for this employee.
+                    </p>
+
+
+                    <a
+                        href="{% url 'employee_document_create' employee.pk %}"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-upload me-1"></i>
+                        Upload Document
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,14 +1,25 @@
 from django import forms
-from django.contrib.auth.forms import (AuthenticationForm,UserCreationForm,PasswordChangeForm,SetPasswordForm)
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    UserCreationForm,
+    SetPasswordForm,
+    PasswordChangeForm,
+)
+
 from .models import User
 
 
+# ============================================================
+# LOGIN
+# ============================================================
+
 class LoginForm(AuthenticationForm):
+
     username = forms.CharField(
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter username",
+                "placeholder": "Username",
                 "autocomplete": "username",
             }
         )
@@ -18,40 +29,65 @@ class LoginForm(AuthenticationForm):
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter password",
+                "placeholder": "Password",
                 "autocomplete": "current-password",
             }
         )
     )
 
 
+# ============================================================
+# REGISTER
+# ============================================================
+# Kept for compatibility.
+# Public registration is disabled in account/views.py.
+# HRMS users will be created through the authorized HR/Admin
+# employee-management workflow.
+
 class RegisterForm(UserCreationForm):
-    password1 = forms.CharField(
-        label="Password",
-        widget=forms.PasswordInput(
+
+    first_name = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Create password",
-                "autocomplete": "new-password",
+                "placeholder": "First Name",
             }
         ),
     )
 
-    password2 = forms.CharField(
-        label="Confirm Password",
-        widget=forms.PasswordInput(
+    last_name = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Confirm password",
-                "autocomplete": "new-password",
+                "placeholder": "Last Name",
+            }
+        ),
+    )
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Email",
+            }
+        ),
+    )
+
+    phone = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Phone",
             }
         ),
     )
 
     class Meta:
         model = User
-
-        fields = [
+        fields = (
             "username",
             "first_name",
             "last_name",
@@ -59,47 +95,37 @@ class RegisterForm(UserCreationForm):
             "phone",
             "password1",
             "password2",
-        ]
+        )
 
-        widgets = {
-            "username": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Username",
-                }
-            ),
-            "first_name": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "First name",
-                }
-            ),
-            "last_name": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Last name",
-                }
-            ),
-            "email": forms.EmailInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Email address",
-                }
-            ),
-            "phone": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Phone number",
-                }
-            ),
-        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["username"].widget.attrs.update(
+            {
+                "class": "form-control",
+                "placeholder": "Username",
+            }
+        )
+
+        self.fields["password1"].widget.attrs.update(
+            {
+                "class": "form-control",
+                "placeholder": "Password",
+            }
+        )
+
+        self.fields["password2"].widget.attrs.update(
+            {
+                "class": "form-control",
+                "placeholder": "Confirm Password",
+            }
+        )
 
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        # Normal registration should always create
-        # an Employee account.
         user.role = User.Role.EMPLOYEE
+        user.must_change_password = False
 
         if commit:
             user.save()
@@ -107,7 +133,9 @@ class RegisterForm(UserCreationForm):
         return user
 
 
+# ============================================================
 # FORGOT PASSWORD
+# ============================================================
 
 class ForgotPasswordForm(forms.Form):
 
@@ -121,6 +149,11 @@ class ForgotPasswordForm(forms.Form):
         )
     )
 
+
+# ============================================================
+# OTP VERIFICATION
+# ============================================================
+
 class OTPVerificationForm(forms.Form):
 
     otp = forms.CharField(
@@ -128,64 +161,79 @@ class OTPVerificationForm(forms.Form):
         min_length=6,
         widget=forms.TextInput(
             attrs={
-                "class": "form-control text-center",
+                "class": "form-control",
                 "placeholder": "Enter 6-digit OTP",
+                "maxlength": "6",
                 "autocomplete": "one-time-code",
-                "inputmode": "numeric",
             }
-        )
+        ),
     )
+
+
+# ============================================================
+# RESET PASSWORD
+# ============================================================
 
 class ResetPasswordForm(SetPasswordForm):
 
     new_password1 = forms.CharField(
+        label="New Password",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter new password",
+                "placeholder": "New Password",
                 "autocomplete": "new-password",
             }
-        )
+        ),
     )
 
     new_password2 = forms.CharField(
+        label="Confirm New Password",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Confirm new password",
+                "placeholder": "Confirm New Password",
                 "autocomplete": "new-password",
             }
-        )
+        ),
     )
+
+
+# ============================================================
+# CHANGE PASSWORD
+# ============================================================
 
 class ChangePasswordForm(PasswordChangeForm):
 
     old_password = forms.CharField(
+        label="Current Password",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter current password",
+                "placeholder": "Current Password",
                 "autocomplete": "current-password",
             }
-        )
+        ),
     )
 
     new_password1 = forms.CharField(
+        label="New Password",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Enter new password",
+                "placeholder": "New Password",
                 "autocomplete": "new-password",
             }
-        )
+        ),
     )
 
     new_password2 = forms.CharField(
+        label="Confirm New Password",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Confirm new password",
+                "placeholder": "Confirm New Password",
                 "autocomplete": "new-password",
             }
-        )
+        ),
     )

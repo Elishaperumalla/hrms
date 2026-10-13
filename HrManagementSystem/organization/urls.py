@@ -30,147 +30,147 @@ from .views import (
 
 urlpatterns = [
 
-    # =========================
+    # =====================================================
     # COMPANY
-    # =========================
+    # =====================================================
 
     path(
         "companies/",
         CompanyListView.as_view(),
-        name="company_list"
+        name="company_list",
     ),
 
     path(
         "companies/add/",
         CompanyCreateView.as_view(),
-        name="company_create"
+        name="company_create",
     ),
 
     path(
         "companies/<int:pk>/edit/",
         CompanyUpdateView.as_view(),
-        name="company_update"
+        name="company_update",
     ),
 
     path(
         "companies/<int:pk>/delete/",
         CompanyDeleteView.as_view(),
-        name="company_delete"
+        name="company_delete",
     ),
 
 
-    # =========================
+    # =====================================================
     # DEPARTMENT
-    # =========================
+    # =====================================================
 
     path(
         "departments/",
         DepartmentListView.as_view(),
-        name="department_list"
+        name="department_list",
     ),
 
     path(
         "departments/add/",
         DepartmentCreateView.as_view(),
-        name="department_create"
+        name="department_create",
     ),
 
     path(
         "departments/<int:pk>/edit/",
         DepartmentUpdateView.as_view(),
-        name="department_update"
+        name="department_update",
     ),
 
     path(
         "departments/<int:pk>/delete/",
         DepartmentDeleteView.as_view(),
-        name="department_delete"
+        name="department_delete",
     ),
 
 
-    # =========================
+    # =====================================================
     # DESIGNATION
-    # =========================
+    # =====================================================
 
     path(
         "designations/",
         DesignationListView.as_view(),
-        name="designation_list"
+        name="designation_list",
     ),
 
     path(
         "designations/add/",
         DesignationCreateView.as_view(),
-        name="designation_create"
+        name="designation_create",
     ),
 
     path(
         "designations/<int:pk>/edit/",
         DesignationUpdateView.as_view(),
-        name="designation_update"
+        name="designation_update",
     ),
 
     path(
         "designations/<int:pk>/delete/",
         DesignationDeleteView.as_view(),
-        name="designation_delete"
+        name="designation_delete",
     ),
 
 
-    # =========================
+    # =====================================================
     # BRANCH
-    # =========================
+    # =====================================================
 
     path(
         "branches/",
         BranchListView.as_view(),
-        name="branch_list"
+        name="branch_list",
     ),
 
     path(
         "branches/add/",
         BranchCreateView.as_view(),
-        name="branch_create"
+        name="branch_create",
     ),
 
     path(
         "branches/<int:pk>/edit/",
         BranchUpdateView.as_view(),
-        name="branch_update"
+        name="branch_update",
     ),
 
     path(
         "branches/<int:pk>/delete/",
         BranchDeleteView.as_view(),
-        name="branch_delete"
+        name="branch_delete",
     ),
 
 
-    # =========================
+    # =====================================================
     # WORK LOCATION
-    # =========================
+    # =====================================================
 
     path(
         "work-locations/",
         WorkLocationListView.as_view(),
-        name="work_location_list"
+        name="work_location_list",
     ),
 
     path(
         "work-locations/add/",
         WorkLocationCreateView.as_view(),
-        name="work_location_create"
+        name="work_location_create",
     ),
 
     path(
         "work-locations/<int:pk>/edit/",
         WorkLocationUpdateView.as_view(),
-        name="work_location_update"
+        name="work_location_update",
     ),
 
     path(
         "work-locations/<int:pk>/delete/",
         WorkLocationDeleteView.as_view(),
-        name="work_location_delete"
+        name="work_location_delete",
     ),
 ]

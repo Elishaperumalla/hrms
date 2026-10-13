@@ -1,6 +1,10 @@
 from django.db import models
 
 
+# =========================================================
+# COMPANY
+# =========================================================
+
 class Company(models.Model):
 
     name = models.CharField(
@@ -79,6 +83,10 @@ class Company(models.Model):
         return self.name
 
 
+# =========================================================
+# DEPARTMENT
+# =========================================================
+
 class Department(models.Model):
 
     company = models.ForeignKey(
@@ -97,6 +105,25 @@ class Department(models.Model):
 
     description = models.TextField(
         blank=True
+    )
+
+    # -----------------------------------------------------
+    # DEPARTMENT HEAD
+    # -----------------------------------------------------
+    #
+    # Employee model already points to Department.
+    # Using a string reference avoids circular import issues.
+    #
+    # This field can be assigned to a Manager / HR Admin
+    # through the form/view.
+    #
+
+    head = models.ForeignKey(
+        "employees.Employee",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="headed_departments"
     )
 
     is_active = models.BooleanField(
@@ -119,6 +146,7 @@ class Department(models.Model):
                 fields=["company", "name"],
                 name="unique_department_per_company"
             ),
+
             models.UniqueConstraint(
                 fields=["company", "code"],
                 name="unique_department_code_per_company"
@@ -128,6 +156,10 @@ class Department(models.Model):
     def __str__(self):
         return f"{self.name} ({self.code})"
 
+
+# =========================================================
+# DESIGNATION
+# =========================================================
 
 class Designation(models.Model):
 
@@ -173,6 +205,7 @@ class Designation(models.Model):
                 fields=["company", "name"],
                 name="unique_designation_per_company"
             ),
+
             models.UniqueConstraint(
                 fields=["company", "code"],
                 name="unique_designation_code_per_company"
@@ -182,6 +215,10 @@ class Designation(models.Model):
     def __str__(self):
         return f"{self.name} ({self.code})"
 
+
+# =========================================================
+# BRANCH
+# =========================================================
 
 class Branch(models.Model):
 
@@ -256,6 +293,7 @@ class Branch(models.Model):
                 fields=["company", "name"],
                 name="unique_branch_per_company"
             ),
+
             models.UniqueConstraint(
                 fields=["company", "code"],
                 name="unique_branch_code_per_company"
@@ -266,7 +304,21 @@ class Branch(models.Model):
         return f"{self.name} ({self.code})"
 
 
+# =========================================================
+# WORK LOCATION
+# =========================================================
+
 class WorkLocation(models.Model):
+
+    class LocationType(models.TextChoices):
+
+        OFFICE = "OFFICE", "Office"
+
+        REMOTE = "REMOTE", "Remote"
+
+        HYBRID = "HYBRID", "Hybrid"
+
+        CLIENT = "CLIENT", "Client Site"
 
     company = models.ForeignKey(
         Company,
@@ -304,13 +356,8 @@ class WorkLocation(models.Model):
 
     location_type = models.CharField(
         max_length=20,
-        choices=[
-            ("OFFICE", "Office"),
-            ("REMOTE", "Remote"),
-            ("HYBRID", "Hybrid"),
-            ("CLIENT", "Client Site"),
-        ],
-        default="OFFICE"
+        choices=LocationType.choices,
+        default=LocationType.OFFICE
     )
 
     is_active = models.BooleanField(

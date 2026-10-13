@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block title %}
-Employee Dashboard - HRMS
+    Employee Dashboard | HRMS
 {% endblock %}
 
 
 {% block page_title %}
-Employee Dashboard
+    Employee Dashboard
 {% endblock %}
 
 
@@ -15,186 +15,137 @@ Employee Dashboard
 <div class="mb-4">
 
     <h3 class="fw-bold">
-        Welcome, {{ request.user.first_name|default:request.user.username }} 👋
+        Welcome,
+        {{ request.user.first_name|default:request.user.username }}
+        👋
     </h3>
 
-    <p class="text-muted">
-        Here's what's happening with your work today.
+    <p class="text-muted mb-0">
+        Here's your HRMS self-service dashboard.
     </p>
 
 </div>
 
 
-<div class="row g-4">
+<!-- PROFILE SUMMARY -->
+
+<div class="card dashboard-card mb-4">
+
+    <div class="card-body">
+
+        <div class="d-flex align-items-center">
+
+            <div
+                class="rounded-circle
+                       bg-primary
+                       bg-opacity-10
+                       text-primary
+                       d-flex
+                       align-items-center
+                       justify-content-center
+                       me-3"
+                style="width:64px;height:64px;"
+            >
+                <i class="bi bi-person-fill fs-3"></i>
+            </div>
 
 
-    <!-- Attendance -->
+            <div>
 
-    <div class="col-md-6 col-xl-3">
+                <h5 class="fw-bold mb-1">
 
-        <div class="card dashboard-card p-3">
+                    {% if current_employee %}
 
-            <div class="d-flex justify-content-between">
+                        {{ current_employee.get_full_name }}
 
-                <div>
+                    {% else %}
 
-                    <p class="text-muted mb-1">
-                        Attendance
+                        {{ request.user.get_full_name|default:request.user.username }}
+
+                    {% endif %}
+
+                </h5>
+
+
+                {% if current_employee %}
+
+                    <p class="text-muted mb-0">
+
+                        {% if current_employee.designation %}
+                            {{ current_employee.designation }}
+                        {% endif %}
+
+                        {% if current_employee.department %}
+
+                            {% if current_employee.designation %}
+                                ·
+                            {% endif %}
+
+                            {{ current_employee.department.name }}
+
+                        {% endif %}
+
                     </p>
 
-                    <h3 class="fw-bold mb-0">
-                        Present
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-clock"></i>
-
-                </div>
+                {% endif %}
 
             </div>
 
         </div>
 
     </div>
-
-
-    <!-- Leave -->
-
-    <div class="col-md-6 col-xl-3">
-
-        <div class="card dashboard-card p-3">
-
-            <div class="d-flex justify-content-between">
-
-                <div>
-
-                    <p class="text-muted mb-1">
-                        Leave Balance
-                    </p>
-
-                    <h3 class="fw-bold mb-0">
-                        12
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-calendar-check"></i>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- Payroll -->
-
-    <div class="col-md-6 col-xl-3">
-
-        <div class="card dashboard-card p-3">
-
-            <div class="d-flex justify-content-between">
-
-                <div>
-
-                    <p class="text-muted mb-1">
-                        Last Salary
-                    </p>
-
-                    <h3 class="fw-bold mb-0">
-                        ₹0
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-cash-stack"></i>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- Performance -->
-
-    <div class="col-md-6 col-xl-3">
-
-        <div class="card dashboard-card p-3">
-
-            <div class="d-flex justify-content-between">
-
-                <div>
-
-                    <p class="text-muted mb-1">
-                        Performance
-                    </p>
-
-                    <h3 class="fw-bold mb-0">
-                        N/A
-                    </h3>
-
-                </div>
-
-                <div class="stat-icon">
-
-                    <i class="bi bi-graph-up"></i>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
 
 </div>
 
 
-<div class="row g-4 mt-1">
+<!-- ===================================================== -->
+<!-- SELF SERVICE -->
+<!-- ===================================================== -->
+
+<div class="row g-4 mb-4">
 
 
-    <!-- Quick Actions -->
+    <!-- ATTENDANCE -->
 
-    <div class="col-lg-8">
+    <div class="col-md-6 col-xl-4">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
-                <h5 class="fw-bold mb-3">
-                    Quick Actions
-                </h5>
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Attendance
+                        </p>
+
+                        <h5 class="fw-bold mb-2">
+                            My Attendance
+                        </h5>
+
+                        <small class="text-muted">
+                            View your attendance records.
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+                        <i class="bi bi-clock"></i>
+                    </div>
+
+                </div>
 
 
-                <div class="d-flex flex-wrap gap-2">
+                <div class="mt-3">
 
-                    <button class="btn btn-primary">
-                        <i class="bi bi-calendar-check me-1"></i>
-                        Apply Leave
-                    </button>
-
-                    <button class="btn btn-outline-primary">
-                        <i class="bi bi-clock me-1"></i>
+                    <a
+                        href="{% url 'attendance_list' %}"
+                        class="btn btn-outline-primary btn-sm"
+                    >
                         View Attendance
-                    </button>
-
-                    <button class="btn btn-outline-primary">
-                        <i class="bi bi-file-earmark-text me-1"></i>
-                        View Payslip
-                    </button>
+                    </a>
 
                 </div>
 
@@ -205,41 +156,107 @@ Employee Dashboard
     </div>
 
 
-    <!-- Profile -->
+    <!-- LEAVE -->
 
-    <div class="col-lg-4">
+    <div class="col-md-6 col-xl-4">
 
-        <div class="card dashboard-card">
+        <div class="card dashboard-card h-100">
 
             <div class="card-body">
 
-                <h5 class="fw-bold mb-3">
-                    My Profile
-                </h5>
+                <div class="d-flex justify-content-between">
 
-                <p class="mb-1">
+                    <div>
 
-                    <strong>Name:</strong>
+                        <p class="text-muted mb-1">
+                            Leave
+                        </p>
 
-                    {{ request.user.get_full_name }}
+                        <h5 class="fw-bold mb-2">
+                            Leave Management
+                        </h5>
 
-                </p>
+                        <small class="text-muted">
+                            Apply for leave and view your requests.
+                        </small>
 
-                <p class="mb-1">
+                    </div>
 
-                    <strong>Email:</strong>
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
 
-                    {{ request.user.email }}
+                </div>
 
-                </p>
 
-                <p class="mb-0">
+                <div class="mt-3">
 
-                    <strong>Role:</strong>
+                    <a
+                        href="{% url 'leave_create' %}"
+                        class="btn btn-primary btn-sm"
+                    >
+                        Apply Leave
+                    </a>
 
-                    {{ request.user.role }}
+                    <a
+                        href="{% url 'leave_list' %}"
+                        class="btn btn-outline-primary btn-sm"
+                    >
+                        My Leaves
+                    </a>
 
-                </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PROFILE -->
+
+    <div class="col-md-6 col-xl-4">
+
+        <div class="card dashboard-card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <p class="text-muted mb-1">
+                            Profile
+                        </p>
+
+                        <h5 class="fw-bold mb-2">
+                            My Profile
+                        </h5>
+
+                        <small class="text-muted">
+                            View your account and employee information.
+                        </small>
+
+                    </div>
+
+                    <div class="stat-icon">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="mt-3">
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="btn btn-outline-primary btn-sm"
+                    >
+                        View Profile
+                    </a>
+
+                </div>
 
             </div>
 
@@ -248,5 +265,134 @@ Employee Dashboard
     </div>
 
 </div>
+
+
+<!-- ===================================================== -->
+<!-- EMPLOYMENT INFORMATION -->
+<!-- ===================================================== -->
+
+{% if current_employee %}
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <h5 class="fw-bold mb-3">
+            Employment Information
+        </h5>
+
+
+        <div class="row g-3">
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Employee ID
+                </small>
+
+                <span class="fw-semibold">
+                    {{ current_employee.employee_id|default:"Not assigned" }}
+                </span>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Department
+                </small>
+
+                <span class="fw-semibold">
+
+                    {% if current_employee.department %}
+                        {{ current_employee.department.name }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Employment Status
+                </small>
+
+                <span class="fw-semibold">
+                    {{ current_employee.get_employment_status_display }}
+                </span>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Employment Type
+                </small>
+
+                <span class="fw-semibold">
+
+                    {% if current_employee.employment_type %}
+                        {{ current_employee.get_employment_type_display }}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Designation
+                </small>
+
+                <span class="fw-semibold">
+
+                    {% if current_employee.designation %}
+                        {{ current_employee.designation }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <small class="text-muted d-block">
+                    Reporting Manager
+                </small>
+
+                <span class="fw-semibold">
+
+                    {% if current_employee.reporting_manager %}
+                        {{ current_employee.reporting_manager }}
+                    {% else %}
+                        Not assigned
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
 
 {% endblock %}

@@ -1,0 +1,54 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div><h2 class="fw-bold mb-1">Performance Reviews</h2>
+      <p class="text-secondary mb-0">Manage employee reviews and ratings.</p></div>
+    <a href="{% url 'performance:review_create' %}" class="btn btn-primary">+ New Review</a>
+  </div>
+
+  <form method="get" class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body row g-2">
+      <div class="col-md-6">
+        <input name="q" value="{{ search_query }}" class="form-control"
+               placeholder="Search review title or goals">
+      </div>
+      <div class="col-md-4">
+        <select name="status" class="form-select">
+          <option value="">All statuses</option>
+          {% for value,label in status_choices %}
+          <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-grid"><button class="btn btn-dark">Filter</button></div>
+    </div>
+  </form>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light"><tr><th>Review</th><th>Employee</th><th>Period</th><th>Rating</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for review in reviews %}
+          <tr>
+            <td class="fw-semibold">{{ review.review_title }}</td>
+            <td>{{ review.employee }}</td>
+            <td>{{ review.review_period_start|date:"d M Y" }} – {{ review.review_period_end|date:"d M Y" }}</td>
+            <td>{% if review.rating %}⭐ {{ review.rating }}/5{% else %}—{% endif %}</td>
+            <td>{{ review.get_status_display }}</td>
+            <td class="text-end text-nowrap">
+              <a href="{% url 'performance:review_detail' review.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+              <a href="{% url 'performance:review_update' review.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-secondary py-4">No performance reviews found.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

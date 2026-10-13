@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        Payslip - {{ payslip.payslip_number }}
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 40px;
+            color: #222;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #222;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .company {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .section {
+            margin-top: 25px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 9px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f5f5;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .net-salary {
+            margin-top: 25px;
+            padding: 15px;
+            border: 2px solid #222;
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+        }
+
+        @media print {
+
+            body {
+                margin: 15px;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="no-print" style="margin-bottom:20px;">
+
+        <button onclick="window.print()">
+            Print Payslip
+        </button>
+
+    </div>
+
+    <div class="header">
+
+        <div>
+
+            <div class="company">
+                {{ payslip.payroll_record.employee.company }}
+            </div>
+
+            <div>
+                Salary Payslip
+            </div>
+
+        </div>
+
+        <div style="text-align:right;">
+
+            <div>
+                <strong>Payslip:</strong>
+                {{ payslip.payslip_number }}
+            </div>
+
+            <div>
+                <strong>Period:</strong>
+                {{ payslip.payroll_record.period.display_name }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            Employee Information
+        </div>
+
+        <table>
+
+            <tr>
+                <th>Employee Name</th>
+                <td>
+                    {{ payslip.payroll_record.employee.get_full_name }}
+                </td>
+
+                <th>Employee ID</th>
+                <td>
+                    {{ payslip.payroll_record.employee.employee_id }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Department</th>
+                <td>
+                    {{ payslip.payroll_record.employee.department|default:"-" }}
+                </td>
+
+                <th>Payable Days</th>
+                <td>
+                    {{ payslip.payroll_record.payable_days }}
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            Earnings
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for component in payslip.payroll_record.components.all %}
+
+                {% if component.component.component_type == "EARNING" %}
+
+                <tr>
+                    <td>
+                        {{ component.component.name }}
+                    </td>
+
+                    <td class="text-right">
+                        ₹{{ component.amount|floatformat:2 }}
+                    </td>
+                </tr>
+
+                {% endif %}
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            Deductions
+        </div>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for component in payslip.payroll_record.components.all %}
+
+                {% if component.component.component_type == "DEDUCTION" %}
+
+                <tr>
+
+                    <td>
+                        {{ component.component.name }}
+                    </td>
+
+                    <td class="text-right">
+                        ₹{{ component.amount|floatformat:2 }}
+                    </td>
+
+                </tr>
+
+                {% endif %}
+
+            {% endfor %}
+
+            {% if payslip.payroll_record.lop_amount %}
+
+            <tr>
+
+                <td>
+                    Loss of Pay
+                </td>
+
+                <td class="text-right">
+                    ₹{{ payslip.payroll_record.lop_amount|floatformat:2 }}
+                </td>
+
+            </tr>
+
+            {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="net-salary">
+
+        <span>
+            Net Salary
+        </span>
+
+        <span>
+            ₹{{ payslip.payroll_record.net_salary|floatformat:2 }}
+        </span>
+
+    </div>
+
+
+    <div class="footer">
+
+        <p>
+            This is a system-generated payslip.
+        </p>
+
+        <p>
+            Generated on
+            {{ payslip.generated_at|date:"d M Y H:i" }}
+        </p>
+
+    </div>
+
+</body>
+
+</html>

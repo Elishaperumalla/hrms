@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Employee Assets - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <a
+                href="{% url 'employee_detail' employee.pk %}"
+                class="text-decoration-none"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Employee Profile
+            </a>
+
+            <h3 class="fw-bold mt-3 mb-1">
+                Employee Assets
+            </h3>
+
+            <p class="text-muted mb-0">
+                Assets assigned to {{ employee.get_full_name }}.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ASSET SUMMARY -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card dashboard-card">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="stat-icon me-3">
+                            <i class="bi bi-laptop"></i>
+                        </div>
+
+                        <div>
+
+                            <small class="text-muted">
+                                Assigned Assets
+                            </small>
+
+                            <h4 class="fw-bold mb-0">
+                                {{ assets|length }}
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ASSET LIST -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-0">
+
+            {% if assets %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="ps-4">
+                                    Asset
+                                </th>
+
+                                <th>
+                                    Asset ID
+                                </th>
+
+                                <th>
+                                    Category
+                                </th>
+
+                                <th>
+                                    Assigned Date
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for asset in assets %}
+
+                                <tr>
+
+                                    <td class="ps-4">
+
+                                        <div class="d-flex align-items-center">
+
+                                            <div class="stat-icon me-3">
+
+                                                <i class="bi bi-pc-display"></i>
+
+                                            </div>
+
+                                            <div>
+
+                                                <div class="fw-semibold">
+                                                    {{ asset.name }}
+                                                </div>
+
+                                                {% if asset.serial_number %}
+
+                                                    <small class="text-muted">
+
+                                                        Serial:
+                                                        {{ asset.serial_number }}
+
+                                                    </small>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ asset.asset_id|default:"—" }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ asset.category|default:"—" }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ asset.assigned_date|date:"d M Y"|default:"—" }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if asset.status == "ASSIGNED" %}
+
+                                            <span class="badge bg-success-subtle text-success">
+                                                Assigned
+                                            </span>
+
+                                        {% elif asset.status == "RETURNED" %}
+
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                Returned
+                                            </span>
+
+                                        {% elif asset.status == "DAMAGED" %}
+
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                Damaged
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                {{ asset.get_status_display|default:asset.status }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <div
+                        class="stat-icon mx-auto mb-3"
+                        style="width:70px;height:70px;"
+                    >
+                        <i class="bi bi-laptop fs-3"></i>
+                    </div>
+
+
+                    <h5 class="fw-bold">
+                        No assets assigned
+                    </h5>
+
+
+                    <p class="text-muted mb-0">
+                        This employee currently has no assigned assets.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,860 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    System Settings | HRMS
+{% endblock %}
+
+{% block content %}
+{% if user.role == "SUPER_ADMIN" %}
+<div class="container-fluid py-2">
+
+
+    <!-- HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <a
+                    href="{% url 'settings' %}"
+                    class="text-decoration-none text-muted"
+                >
+                    <i class="bi bi-gear"></i>
+                    Settings
+                </a>
+
+                <i class="bi bi-chevron-right text-muted small"></i>
+
+                <span class="text-muted">
+                    System Settings
+                </span>
+
+            </div>
+
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-sliders me-2 text-primary"></i>
+                System Settings
+            </h3>
+
+            <p class="text-muted mb-0">
+                Configure HRMS application behavior and system preferences.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'settings' %}"
+            class="btn btn-light border mt-3 mt-md-0"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Settings
+        </a>
+
+    </div>
+
+
+
+    <!-- GENERAL SETTINGS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-primary bg-opacity-10 text-primary me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-sliders fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        General Settings
+                    </h5>
+
+                    <small class="text-muted">
+                        Basic application preferences
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-4">
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Application Name
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        value="HRMS"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Default Language
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            English
+                        </option>
+
+                        <option>Telugu</option>
+                        <option>Hindi</option>
+
+                    </select>
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Date Format
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            DD/MM/YYYY
+                        </option>
+
+                        <option>MM/DD/YYYY</option>
+                        <option>YYYY-MM-DD</option>
+
+                    </select>
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Time Format
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            12 Hour
+                        </option>
+
+                        <option>24 Hour</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SECURITY SETTINGS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-danger bg-opacity-10 text-danger me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-shield-check fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Security
+                    </h5>
+
+                    <small class="text-muted">
+                        Configure application security preferences
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+
+            <!-- PASSWORD EXPIRY -->
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Password Expiry
+                    </div>
+
+                    <small class="text-muted">
+                        Require users to change passwords periodically.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <!-- LOGIN ALERTS -->
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Login Security Alerts
+                    </div>
+
+                    <small class="text-muted">
+                        Notify administrators about suspicious login activity.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <!-- SESSION SECURITY -->
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Automatic Session Timeout
+                    </div>
+
+                    <small class="text-muted">
+                        Automatically log out inactive users.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- NOTIFICATION SETTINGS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-info bg-opacity-10 text-info me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-bell fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Notifications
+                    </h5>
+
+                    <small class="text-muted">
+                        Manage HRMS notification preferences
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Email Notifications
+                    </div>
+
+                    <small class="text-muted">
+                        Send important HRMS notifications through email.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Leave Notifications
+                    </div>
+
+                    <small class="text-muted">
+                        Notify managers and HR about leave requests and approvals.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        Attendance Notifications
+                    </div>
+
+                    <small class="text-muted">
+                        Notify employees about attendance-related events.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <div class="settings-option">
+
+                <div>
+
+                    <div class="fw-semibold">
+                        System Announcements
+                    </div>
+
+                    <small class="text-muted">
+                        Show important system announcements to users.
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ATTENDANCE & WORK SETTINGS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-10 text-success me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Attendance & Work Settings
+                    </h5>
+
+                    <small class="text-muted">
+                        Default working-day configuration
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-4">
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Work Start Time
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        value="09:00"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Work End Time
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        value="18:00"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Standard Working Hours
+                    </label>
+
+                    <input
+                        type="number"
+                        class="form-control"
+                        value="8"
+                        min="1"
+                        max="24"
+                    >
+
+                </div>
+
+
+
+                <div class="col-12">
+
+                    <label class="form-label fw-semibold d-block">
+                        Working Days
+                    </label>
+
+
+                    <div class="d-flex flex-wrap gap-2">
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="monday"
+                            checked
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="monday"
+                        >
+                            Monday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="tuesday"
+                            checked
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="tuesday"
+                        >
+                            Tuesday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="wednesday"
+                            checked
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="wednesday"
+                        >
+                            Wednesday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="thursday"
+                            checked
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="thursday"
+                        >
+                            Thursday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="friday"
+                            checked
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="friday"
+                        >
+                            Friday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="saturday"
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="saturday"
+                        >
+                            Saturday
+                        </label>
+
+
+
+                        <input
+                            type="checkbox"
+                            class="btn-check"
+                            id="sunday"
+                        >
+
+                        <label
+                            class="btn btn-outline-primary"
+                            for="sunday"
+                        >
+                            Sunday
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SYSTEM STATUS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-secondary bg-opacity-10 text-secondary me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-cpu fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        System Status
+                    </h5>
+
+                    <small class="text-muted">
+                        Current application status
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-3">
+
+
+                <div class="col-md-4">
+
+                    <div class="system-status-item">
+
+                        <span class="status-dot bg-success"></span>
+
+                        <div>
+
+                            <div class="fw-semibold">
+                                Application
+                            </div>
+
+                            <small class="text-success">
+                                Operational
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <div class="system-status-item">
+
+                        <span class="status-dot bg-success"></span>
+
+                        <div>
+
+                            <div class="fw-semibold">
+                                Database
+                            </div>
+
+                            <small class="text-success">
+                                Connected
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <div class="system-status-item">
+
+                        <span class="status-dot bg-success"></span>
+
+                        <div>
+
+                            <div class="fw-semibold">
+                                Notifications
+                            </div>
+
+                            <small class="text-success">
+                                Available
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ACTIONS -->
+    <div class="d-flex justify-content-end gap-2 mb-4">
+
+        <a
+            href="{% url 'settings' %}"
+            class="btn btn-light border"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-check-lg me-1"></i>
+            Save System Settings
+        </button>
+
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<style>
+
+    .settings-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 6px 0;
+    }
+
+    .settings-option .form-check-input {
+        width: 2.5em;
+        height: 1.25em;
+        cursor: pointer;
+    }
+
+    .system-status-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        min-width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+</style>
+
+
+{% endblock %}

@@ -1,0 +1,82 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Reports & Analytics</h2>
+      <p class="text-secondary mb-0">Explore HR data and export reports as CSV.</p>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    {% for key,item in report_data.items %}
+    <div class="col-sm-6 col-xl-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="text-secondary">{{ key|title }}</div>
+              {% if item.available %}
+                <h2 class="fw-bold mt-2 mb-1">{{ item.count }}</h2>
+                <span class="small text-success">Records available</span>
+              {% else %}
+                <h4 class="fw-semibold mt-2 mb-1">Not connected</h4>
+                <span class="small text-secondary">Model name needs configuration</span>
+              {% endif %}
+            </div>
+            <div class="rounded-3 bg-primary-subtle text-primary p-3">
+              {% if key == "employees" %}<i class="bi bi-people fs-4"></i>
+              {% elif key == "attendance" %}<i class="bi bi-calendar-check fs-4"></i>
+              {% elif key == "leaves" %}<i class="bi bi-calendar2-minus fs-4"></i>
+              {% elif key == "payroll" %}<i class="bi bi-cash-stack fs-4"></i>
+              {% else %}<i class="bi bi-person-lines-fill fs-4"></i>{% endif %}
+            </div>
+          </div>
+          {% if item.available %}
+          <a href="{% url 'reports:export_csv' key %}" class="btn btn-outline-primary btn-sm mt-3">
+            <i class="bi bi-download me-1"></i> Export CSV
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+      <h5 class="fw-bold mb-3">HR Data Overview</h5>
+      <p class="text-secondary small">Record counts from available HR modules.</p>
+      <canvas id="hrOverviewChart" height="110"></canvas>
+    </div>
+  </div>
+</div>
+
+{{ chart_labels|json_script:"hr-chart-labels" }}
+{{ chart_values|json_script:"hr-chart-values" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labels = JSON.parse(document.getElementById("hr-chart-labels").textContent);
+const values = JSON.parse(document.getElementById("hr-chart-values").textContent);
+
+new Chart(document.getElementById("hrOverviewChart"), {
+  type: "bar",
+  data: {
+    labels: labels,
+    datasets: [{
+      label: "Number of records",
+      data: values,
+      backgroundColor: "#2563eb",
+      borderRadius: 7,
+      maxBarThickness: 48
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+  }
+});
+</script>
+{% endblock %}

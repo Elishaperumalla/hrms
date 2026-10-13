@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Period{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-calendar-check me-2"></i>
+                {{ period.display_name }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                Payroll processing details.
+            </p>
+        </div>
+
+        <div>
+
+            {% if period.status == "DRAFT" and can_manage %}
+
+            <form method="post"
+                  action="{% url 'payroll:process_payroll' period.pk %}"
+                  class="d-inline">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="btn btn-primary"
+                        onclick="return confirm('Process payroll for this period?');">
+
+                    <i class="bi bi-play-circle me-1"></i>
+                    Process Payroll
+
+                </button>
+
+            </form>
+
+            {% elif period.status == "PROCESSED" and can_manage %}
+
+            <form method="post"
+                  action="{% url 'payroll:mark_payroll_paid' period.pk %}"
+                  class="d-inline">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="btn btn-success"
+                        onclick="return confirm('Mark this payroll as paid?');">
+
+                    <i class="bi bi-check-circle me-1"></i>
+                    Mark Paid
+
+                </button>
+
+            </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <!-- Period Information -->
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Period</small>
+                    <h5 class="fw-bold mt-1">
+                        {{ period.display_name }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">Start Date</small>
+                    <h5 class="fw-bold mt-1">
+                        {{ period.start_date|date:"d M Y" }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">End Date</small>
+                    <h5 class="fw-bold mt-1">
+                        {{ period.end_date|date:"d M Y" }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Status
+                    </small>
+
+                    <div class="mt-2">
+
+                        {% if period.status == "DRAFT" %}
+                            <span class="badge bg-secondary">
+                                Draft
+                            </span>
+                        {% elif period.status == "PROCESSING" %}
+                            <span class="badge bg-warning text-dark">
+                                Processing
+                            </span>
+                        {% elif period.status == "PROCESSED" %}
+                            <span class="badge bg-success">
+                                Processed
+                            </span>
+                        {% elif period.status == "PAID" %}
+                            <span class="badge bg-primary">
+                                Paid
+                            </span>
+                        {% elif period.status == "CANCELLED" %}
+                            <span class="badge bg-danger">
+                                Cancelled
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Payroll Records -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white border-0 py-3">
+
+            <h5 class="mb-0 fw-semibold">
+                Payroll Records
+            </h5>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            {% if records %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Employee</th>
+                            <th>Employee ID</th>
+                            <th>Gross</th>
+                            <th>Deductions</th>
+                            <th>LOP</th>
+                            <th>Net Salary</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for record in records %}
+
+                        <tr>
+
+                            <td class="fw-semibold">
+                                {{ record.employee.get_full_name }}
+                            </td>
+
+                            <td>
+                                {{ record.employee.employee_id }}
+                            </td>
+
+                            <td>
+                                ₹{{ record.gross_salary|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                ₹{{ record.total_deductions|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                ₹{{ record.lop_amount|floatformat:2 }}
+                            </td>
+
+                            <td class="fw-bold text-success">
+                                ₹{{ record.net_salary|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if record.status == "PROCESSED" %}
+                                    <span class="badge bg-success">
+                                        Processed
+                                    </span>
+                                {% elif record.status == "PAID" %}
+                                    <span class="badge bg-primary">
+                                        Paid
+                                    </span>
+                                {% elif record.status == "HOLD" %}
+                                    <span class="badge bg-warning text-dark">
+                                        Hold
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        Draft
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if record.payslip %}
+                                <a href="{% url 'payroll:payslip_detail' record.payslip.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Payslip
+                                </a>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="text-center py-5">
+
+                <i class="bi bi-receipt fs-1 text-muted"></i>
+
+                <p class="text-muted mt-3 mb-0">
+                    Payroll has not been processed for this period.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+
+        <a href="{% url 'payroll:period_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

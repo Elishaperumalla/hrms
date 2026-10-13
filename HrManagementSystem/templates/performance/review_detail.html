@@ -1,0 +1,35 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div><a href="{% url 'performance:review_list' %}" class="text-decoration-none">← All reviews</a>
+      <h2 class="fw-bold mt-2">{{ review.review_title }}</h2></div>
+    <a href="{% url 'performance:review_update' review.pk %}" class="btn btn-primary">Edit Review</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body p-4">
+        <h5 class="fw-bold mb-3">Review Information</h5>
+        <p><strong>Employee:</strong> {{ review.employee }}</p>
+        <p><strong>Period:</strong> {{ review.review_period_start|date:"d M Y" }} – {{ review.review_period_end|date:"d M Y" }}</p>
+        <p><strong>Status:</strong> {{ review.get_status_display }}</p>
+        <p class="mb-0"><strong>Reviewer:</strong> {{ review.reviewer|default:"Not assigned" }}</p>
+      </div></div>
+      <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4">
+        <h5 class="fw-bold">Goals & Targets</h5><p>{{ review.goals|default:"No goals added."|linebreaksbr }}</p>
+        <hr><h5 class="fw-bold">Achievements</h5><p>{{ review.achievements|default:"No achievements added."|linebreaksbr }}</p>
+        <hr><h5 class="fw-bold">Manager Feedback</h5><p class="mb-0">{{ review.feedback|default:"No feedback added."|linebreaksbr }}</p>
+      </div></div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4 text-center">
+        <div class="text-secondary">Performance Rating</div>
+        <div class="display-3 fw-bold text-primary my-2">{% if review.rating %}{{ review.rating }}<span class="fs-5 text-secondary">/5</span>{% else %}—{% endif %}</div>
+        <div class="text-warning fs-4">{% if review.rating %}{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}{% endif %}</div>
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

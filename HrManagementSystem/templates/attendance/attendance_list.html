@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}
+Attendance - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                Attendance
+            </h3>
+
+            <p class="text-muted mb-0">
+                View and manage attendance records.
+            </p>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{% url 'attendance_dashboard' %}"
+                class="btn btn-light border"
+            >
+                <i class="bi bi-speedometer2 me-1"></i>
+                Dashboard
+            </a>
+
+            {% if can_manage_attendance %}
+
+                <a
+                    href="{% url 'attendance_create' %}"
+                    class="btn btn-primary"
+                >
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Mark Attendance
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- FILTER -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body">
+
+            <form
+                method="GET"
+                class="row g-3 align-items-end"
+            >
+
+                <div class="col-lg-4 col-md-6">
+
+                    <label class="form-label">
+                        Search Employee
+                    </label>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search|default:'' }}"
+                        class="form-control"
+                        placeholder="Name or Employee ID"
+                    >
+
+                </div>
+
+
+                <div class="col-lg-3 col-md-6">
+
+                    <label class="form-label">
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date"
+                        value="{{ selected_date|default:'' }}"
+                        class="form-control"
+                    >
+
+                </div>
+
+
+                <div class="col-lg-3 col-md-6">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        {% for value, label in status_choices %}
+
+                            <option
+                                value="{{ value }}"
+                                {% if selected_status == value %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-lg-2 col-md-6 d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary flex-grow-1"
+                    >
+                        <i class="bi bi-search me-1"></i>
+                        Filter
+                    </button>
+
+                    <a
+                        href="{% url 'attendance_list' %}"
+                        class="btn btn-light border"
+                    >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TABLE -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Work Hours</th>
+                            <th>Late</th>
+                            <th class="text-end">Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for record in records %}
+
+                            <tr>
+
+                                <!-- EMPLOYEE -->
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ record.employee.get_full_name }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ record.employee.employee_id }}
+                                    </small>
+
+                                </td>
+
+
+                                <!-- DATE -->
+
+                                <td>
+                                    {{ record.date|date:"d M Y" }}
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    {% if record.status == "PRESENT" %}
+
+                                        {% if record.check_in and not record.check_out %}
+
+                                            <span class="badge bg-success-subtle text-success">
+                                                Working
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-success">
+                                                Present
+                                            </span>
+
+                                        {% endif %}
+
+                                    {% elif record.status == "ABSENT" %}
+
+                                        <span class="badge bg-danger">
+                                            Absent
+                                        </span>
+
+                                    {% elif record.status == "HALF_DAY" %}
+
+                                        <span class="badge bg-warning text-dark">
+                                            Half Day
+                                        </span>
+
+                                    {% elif record.status == "ON_LEAVE" %}
+
+                                        <span class="badge bg-info">
+                                            On Leave
+                                        </span>
+
+                                    {% elif record.status == "HOLIDAY" %}
+
+                                        <span class="badge bg-primary">
+                                            Holiday
+                                        </span>
+
+                                    {% elif record.status == "WEEK_OFF" %}
+
+                                        <span class="badge bg-secondary">
+                                            Week Off
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- CHECK IN -->
+
+                                <td>
+
+                                    {% if record.check_in %}
+                                        {{ record.check_in|time:"h:i A" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- CHECK OUT -->
+
+                                <td>
+
+                                    {% if record.check_out %}
+                                        {{ record.check_out|time:"h:i A" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- WORK HOURS -->
+
+                                <td>
+
+                                    {% if record.work_hours %}
+                                        {{ record.work_hours }} hrs
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- LATE -->
+
+                                <td>
+
+                                    {% if record.late_minutes %}
+
+                                        <span class="text-warning fw-semibold">
+                                            {{ record.late_minutes }} min
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td class="text-end">
+
+                                    <div class="dropdown">
+
+                                        <button
+                                            class="btn btn-sm btn-light border"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                        >
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+
+                                            <!-- VIEW -->
+
+                                            <li>
+
+                                                <a
+                                                    class="dropdown-item"
+                                                    href="{% url 'attendance_detail' record.pk %}"
+                                                >
+                                                    <i class="bi bi-eye me-2"></i>
+                                                    View
+                                                </a>
+
+                                            </li>
+
+
+                                            {% if can_manage_attendance %}
+
+                                                <!-- EDIT -->
+
+                                                <li>
+
+                                                    <a
+                                                        class="dropdown-item"
+                                                        href="{% url 'attendance_update' record.pk %}"
+                                                    >
+                                                        <i class="bi bi-pencil me-2"></i>
+                                                        Edit
+                                                    </a>
+
+                                                </li>
+
+                                            {% endif %}
+
+
+                                            {% if can_delete_attendance %}
+
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+
+                                                <!-- DELETE -->
+
+                                                <li>
+
+                                                    <form
+                                                        method="POST"
+                                                        action="{% url 'attendance_delete' record.pk %}"
+                                                    >
+
+                                                        {% csrf_token %}
+
+                                                        <button
+                                                            type="submit"
+                                                            class="dropdown-item text-danger"
+                                                            onclick="return confirm('Delete this attendance record?');"
+                                                        >
+                                                            <i class="bi bi-trash me-2"></i>
+                                                            Delete
+                                                        </button>
+
+                                                    </form>
+
+                                                </li>
+
+                                            {% endif %}
+
+                                        </ul>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="8"
+                                    class="text-center py-5"
+                                >
+
+                                    <i class="bi bi-calendar-x fs-1 text-muted"></i>
+
+                                    <p class="text-muted mt-2 mb-0">
+                                        No attendance records found.
+                                    </p>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

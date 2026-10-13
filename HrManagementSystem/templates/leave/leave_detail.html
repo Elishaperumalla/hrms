@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Details{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold mb-1">
+            Leave Details
+        </h2>
+
+        <p class="text-muted mb-0">
+            Leave request information
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        {% if current_employee.role == "MANAGER" %}
+
+            {% if leave_request.employee.role == "EMPLOYEE" %}
+
+                {% if leave_request.employee.reporting_manager_id == current_employee.pk %}
+
+                    {% if leave_request.approval_stage == "MANAGER" %}
+
+                        {% if leave_request.status == "PENDING" %}
+
+                            {% if leave_request.employee.company_id == current_employee.company_id %}
+
+                                {% if leave_request.employee.department_id == current_employee.department_id %}
+
+                                    <a
+                                        href="{% url 'leave_approval' leave_request.pk %}"
+                                        class="btn btn-primary"
+                                    >
+                                        <i class="bi bi-check2-circle me-1"></i>
+                                        Review
+                                    </a>
+
+                                {% endif %}
+
+                            {% endif %}
+
+                        {% endif %}
+
+                    {% endif %}
+
+                {% endif %}
+
+            {% endif %}
+
+
+        {% elif current_employee.role == "HR_ADMIN" %}
+
+            {% if leave_request.employee.role == "MANAGER" %}
+
+                {% if leave_request.approval_stage == "HR_ADMIN" %}
+
+                    {% if leave_request.status == "PENDING" %}
+
+                        {% if leave_request.employee.company_id == current_employee.company_id %}
+
+                            <a
+                                href="{% url 'leave_approval' leave_request.pk %}"
+                                class="btn btn-primary"
+                            >
+                                <i class="bi bi-check2-circle me-1"></i>
+                                Review
+                            </a>
+
+                        {% endif %}
+
+                    {% endif %}
+
+                {% endif %}
+
+            {% endif %}
+
+        {% endif %}
+
+
+        <a
+            href="{% url 'leave_list' %}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-4">
+
+
+    <!-- =========================================================
+         REQUEST INFORMATION
+         ========================================================= -->
+
+    <div class="col-lg-8">
+
+        <div class="card dashboard-card h-100">
+
+            <div class="card-body p-4">
+
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Request Information
+                </h5>
+
+                <div class="row g-4">
+
+
+                    <!-- Employee -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Employee
+                        </small>
+
+                        <div class="fw-semibold">
+                            {{ leave_request.employee.get_full_name }}
+                            <span class="badge bg-warning text-dark">
+                                {{ leave_request.employee.role }}
+                            </span>
+                            
+                        </div>
+
+                    </div>
+
+
+                    <!-- Employee ID -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Employee ID
+                        </small>
+
+                        <div class="fw-semibold">
+                            {{ leave_request.employee.employee_id }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Leave Type -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Leave Type
+                        </small>
+
+                        <div class="fw-semibold">
+                            {{ leave_request.leave_type.name }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Duration Type -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Duration Type
+                        </small>
+
+                        <div>
+                            {{ leave_request.get_duration_type_display }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Start Date -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Start Date
+                        </small>
+
+                        <div>
+                            {{ leave_request.start_date|date:"d M Y" }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- End Date -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            End Date
+                        </small>
+
+                        <div>
+                            {{ leave_request.end_date|date:"d M Y" }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Duration -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Duration
+                        </small>
+
+                        <div class="fw-semibold">
+                            {{ leave_request.total_days }} day(s)
+                        </div>
+
+                    </div>
+
+
+                    <!-- Applied On -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Applied On
+                        </small>
+
+                        <div>
+                            {{ leave_request.applied_at|date:"d M Y, h:i A" }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Department -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Department
+                        </small>
+
+                        <div>
+                            {% if leave_request.employee.department %}
+                                {{ leave_request.employee.department.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Reporting Manager -->
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted d-block mb-1">
+                            Reporting Manager
+                        </small>
+
+                        <div>
+                            {% if leave_request.employee.reporting_manager %}
+                                {{ leave_request.employee.reporting_manager.get_full_name|title }}
+                                <span class="badge bg-primary">
+                                {{leave_request.employee.reporting_manager.role}}
+                                </span>
+            
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Reason -->
+
+                    <div class="col-12">
+
+                        <small class="text-muted d-block mb-1">
+                            Reason
+                        </small>
+
+                        <div class="p-3 bg-light rounded">
+                            {{ leave_request.reason|default:"No reason provided." }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- Attachment -->
+
+                    {% if leave_request.attachment %}
+
+                        <div class="col-12">
+
+                            <a
+                                href="{{ leave_request.attachment.url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-outline-primary"
+                            >
+                                <i class="bi bi-paperclip me-1"></i>
+                                View Attachment
+                            </a>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+         <!-- CURRENT STATUS -->
+
+    <div class="col-lg-4">
+
+        <div class="card dashboard-card h-100">
+
+            <div class="card-body text-center p-4">
+
+                <h6 class="text-muted mb-3">
+                    Current Status
+                </h6>
+
+
+                {% if leave_request.status == "APPROVED" %}
+
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Approved
+                    </span>
+
+
+                {% elif leave_request.status == "REJECTED" %}
+
+                    <span class="badge bg-danger fs-6 px-3 py-2">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Rejected
+                    </span>
+
+
+                {% elif leave_request.status == "CANCELLED" %}
+
+                    <span class="badge bg-secondary fs-6 px-3 py-2">
+                        <i class="bi bi-slash-circle me-1"></i>
+                        Cancelled
+                    </span>
+
+
+                {% else %}
+
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                        <i class="bi bi-clock me-1"></i>
+                        Pending
+                    </span>
+
+                {% endif %}
+
+
+                {% if leave_request.approval_stage %}
+
+                    <hr class="my-4">
+
+                    <small class="text-muted d-block mb-1">
+                        Current Approval Stage
+                    </small>
+
+                    <div class="fw-semibold">
+                        {{ leave_request.get_approval_stage_display }}
+                    </div>
+
+                {% endif %}
+
+
+                {% if leave_request.approved_by %}
+
+                    <hr class="my-4">
+
+                    <small class="text-muted d-block mb-1">
+                        Approved By
+                    </small>
+
+                    <div class="fw-semibold">
+                        {{ leave_request.approved_by.get_full_name }}
+                    </div>
+
+                    {% if leave_request.approved_at %}
+
+                        <div class="small text-muted mt-1">
+                            {{ leave_request.approved_at|date:"d M Y, h:i A" }}
+                        </div>
+
+                    {% endif %}
+
+                {% endif %}
+
+
+                {% if leave_request.rejection_reason %}
+
+                    <hr class="my-4">
+
+                    <small class="text-muted d-block mb-1">
+                        Rejection Reason
+                    </small>
+
+                    <div class="text-danger mt-2">
+                        {{ leave_request.rejection_reason }}
+                    </div>
+
+                {% endif %}
+
+
+                {% if leave_request.balance_deducted %}
+
+                    <hr class="my-4">
+
+                    <div class="text-success small">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Leave balance deducted
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+     <!-- APPROVAL HISTORY -->
+
+<div class="card dashboard-card mt-4">
+
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-clock-history me-2"></i>
+                Approval History
+            </h5>
+
+        </div>
+
+
+        {% for approval in approval_history %}
+
+            <div class="border-start border-3 ps-3 mb-4">
+
+                <div class="d-flex justify-content-between align-items-start gap-3">
+
+                    <div>
+
+                        <strong>
+                            {{ approval.get_stage_display }}
+                        </strong>
+
+
+                        <div class="small text-muted mt-1">
+
+                            {% if approval.acted_by %}
+
+                                {{ approval.acted_by.get_full_name }}
+
+                                {% if approval.acted_by.employee_id %}
+                                    ({{ approval.acted_by.employee_id }})
+                                {% endif %}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- LeaveApproval model has created_at,
+                             NOT acted_at -->
+
+                        {% if approval.created_at %}
+
+                            <div class="small text-muted mt-1">
+                                {{ approval.created_at|date:"d M Y, h:i A" }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div>
+
+                        {% if approval.action == "APPROVED" %}
+
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Approved
+                            </span>
+
+
+                        {% elif approval.action == "REJECTED" %}
+
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Rejected
+                            </span>
+
+
+                        {% elif approval.action == "CANCELLED" %}
+
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-slash-circle me-1"></i>
+                                Cancelled
+                            </span>
+
+
+                        {% else %}
+
+                            <span class="badge bg-warning text-dark">
+                                {{ approval.get_action_display }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                {% if approval.reason %}
+
+                    <div class="bg-light rounded p-3 mt-3">
+
+                        <small class="text-muted d-block mb-1">
+                            Remarks
+                        </small>
+
+                        <p class="text-muted small mb-0">
+                            {{ approval.reason }}
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        {% empty %}
+
+            <div class="text-center py-4">
+
+                <i class="bi bi-clock-history fs-2 text-muted"></i>
+
+                <p class="text-muted mb-0 mt-2">
+                    No approval history available.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Components{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-list-check me-2"></i>
+                Salary Components
+            </h2>
+            <p class="text-muted mb-0">
+                Manage earnings, deductions and employer contributions.
+            </p>
+        </div>
+
+        <a href="{% url 'payroll:component_create' %}"
+           class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add Component
+        </a>
+
+    </div>
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-0">
+
+            {% if components %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Calculation</th>
+                            <th>Default Amount</th>
+                            <th>Statutory</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for component in components %}
+
+                        <tr>
+
+                            <td class="fw-semibold">
+                                {{ component.name }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ component.code }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ component.get_component_type_display }}
+                            </td>
+
+                            <td>
+                                {{ component.get_calculation_type_display }}
+                            </td>
+
+                            <td>
+                                ₹{{ component.default_amount|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if component.is_statutory %}
+                                    <span class="badge bg-info">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if component.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+
+                                <a href="{% url 'payroll:component_update' component.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <a href="{% url 'payroll:component_delete' component.pk %}"
+                                   class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="text-center py-5">
+                <i class="bi bi-list-check fs-1 text-muted"></i>
+                <h5 class="mt-3">No Salary Components</h5>
+                <p class="text-muted">
+                    Create your first salary component.
+                </p>
+
+                <a href="{% url 'payroll:component_create' %}"
+                   class="btn btn-primary">
+                    Add Component
+                </a>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

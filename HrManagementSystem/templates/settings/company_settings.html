@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    Company Settings | HRMS
+{% endblock %}
+
+{% block content %}
+
+
+{% if user.role == "SUPER_ADMIN" %}
+<div class="container-fluid py-2">
+
+
+    <!-- HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <a
+                    href="{% url 'settings' %}"
+                    class="text-decoration-none text-muted"
+                >
+                    <i class="bi bi-gear"></i>
+                    Settings
+                </a>
+
+                <i class="bi bi-chevron-right text-muted small"></i>
+
+                <span class="text-muted">
+                    Company Settings
+                </span>
+
+            </div>
+
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-building me-2 text-primary"></i>
+                Company Settings
+            </h3>
+
+            <p class="text-muted mb-0">
+                Configure your organization's company information and preferences.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'settings' %}"
+            class="btn btn-light border mt-3 mt-md-0"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Settings
+        </a>
+
+    </div>
+
+
+
+    <!-- COMPANY PROFILE -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-primary bg-opacity-10 text-primary me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-building fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Company Information
+                    </h5>
+
+                    <small class="text-muted">
+                        Basic information about your organization
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-4">
+
+
+                <!-- COMPANY NAME -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Company Name
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter company name"
+                    >
+
+                </div>
+
+
+
+                <!-- LEGAL NAME -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Legal / Registered Name
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter registered company name"
+                    >
+
+                </div>
+
+
+
+                <!-- COMPANY CODE -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Company Code
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="e.g. HRMS01"
+                    >
+
+                </div>
+
+
+
+                <!-- INDUSTRY -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Industry
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            Select industry
+                        </option>
+
+                        <option>Information Technology</option>
+                        <option>Software Development</option>
+                        <option>Finance</option>
+                        <option>Healthcare</option>
+                        <option>Education</option>
+                        <option>Manufacturing</option>
+                        <option>Retail</option>
+                        <option>Consulting</option>
+                        <option>Other</option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- COMPANY SIZE -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Company Size
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            Select company size
+                        </option>
+
+                        <option>1 - 10 Employees</option>
+                        <option>11 - 50 Employees</option>
+                        <option>51 - 200 Employees</option>
+                        <option>201 - 500 Employees</option>
+                        <option>501 - 1000 Employees</option>
+                        <option>1000+ Employees</option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- EMAIL -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Official Email
+                    </label>
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        placeholder="company@example.com"
+                    >
+
+                </div>
+
+
+
+                <!-- PHONE -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Official Phone
+                    </label>
+
+                    <input
+                        type="tel"
+                        class="form-control"
+                        placeholder="+91 XXXXX XXXXX"
+                    >
+
+                </div>
+
+
+
+                <!-- WEBSITE -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Website
+                    </label>
+
+                    <input
+                        type="url"
+                        class="form-control"
+                        placeholder="https://example.com"
+                    >
+
+                </div>
+
+
+
+                <!-- TAX ID -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Tax / Registration Number
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter registration number"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ADDRESS -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-10 text-success me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-geo-alt fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Company Address
+                    </h5>
+
+                    <small class="text-muted">
+                        Registered office and contact address
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-4">
+
+
+                <div class="col-12">
+
+                    <label class="form-label fw-semibold">
+                        Address
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        rows="3"
+                        placeholder="Enter company address"
+                    ></textarea>
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        City
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="City"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        State
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="State"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        Postal Code
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Postal code"
+                    >
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Country
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            India
+                        </option>
+
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                        <option>Other</option>
+
+                    </select>
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Time Zone
+                    </label>
+
+                    <select class="form-select">
+
+                        <option selected>
+                            Asia/Kolkata (IST)
+                        </option>
+
+                        <option>UTC</option>
+                        <option>America/New_York</option>
+                        <option>Europe/London</option>
+                        <option>Asia/Singapore</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- BRANDING -->
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 p-4">
+
+            <div class="d-flex align-items-center">
+
+                <div
+                    class="d-flex align-items-center justify-content-center rounded-3 bg-warning bg-opacity-10 text-warning me-3"
+                    style="width: 48px; height: 48px;"
+                >
+                    <i class="bi bi-palette fs-5"></i>
+                </div>
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Branding
+                    </h5>
+
+                    <small class="text-muted">
+                        Customize your company branding
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-4">
+
+            <div class="row g-4">
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Company Logo
+                    </label>
+
+                    <input
+                        type="file"
+                        class="form-control"
+                        accept="image/*"
+                    >
+
+                    <small class="text-muted">
+                        Recommended format: PNG or JPG.
+                    </small>
+
+                </div>
+
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label fw-semibold">
+                        Primary Brand Color
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="color"
+                            class="form-control form-control-color"
+                            value="#2563eb"
+                        >
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="#2563EB"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ACTIONS -->
+    <div class="d-flex justify-content-end gap-2 mb-4">
+
+        <a
+            href="{% url 'settings' %}"
+            class="btn btn-light border"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="button"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-check-lg me-1"></i>
+            Save Company Settings
+        </button>
+
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Requests{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold">
+            Leave Requests
+        </h2>
+
+        <p class="text-muted">
+            View and manage employee leave requests
+        </p>
+    </div>
+
+    <a
+        href="{% url 'leave_create' %}"
+        class="btn btn-primary"
+    >
+        <i class="bi bi-plus-circle me-1"></i>
+        Apply Leave
+    </a>
+
+</div>
+
+
+<div class="card dashboard-card mb-4">
+
+    <div class="card-body">
+
+        <form method="GET">
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Employee
+                    </label>
+
+                    <select
+                        name="employee"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Employees
+                        </option>
+
+                        {% for employee in employees %}
+
+                            <option
+                                value="{{ employee.id }}"
+                                {% if selected_employee|stringformat:"s" == employee.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ employee.get_full_name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Leave Type
+                    </label>
+
+                    <select
+                        name="leave_type"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Types
+                        </option>
+
+                        {% for type in leave_types %}
+
+                            <option
+                                value="{{ type.id }}"
+                                {% if selected_leave_type|stringformat:"s" == type.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ type.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                        <option
+                            value="PENDING"
+                            {% if selected_status == "PENDING" %}selected{% endif %}
+                        >
+                            Pending
+                        </option>
+
+                        <option
+                            value="APPROVED"
+                            {% if selected_status == "APPROVED" %}selected{% endif %}
+                        >
+                            Approved
+                        </option>
+
+                        <option
+                            value="REJECTED"
+                            {% if selected_status == "REJECTED" %}selected{% endif %}
+                        >
+                            Rejected
+                        </option>
+
+                        <option
+                            value="CANCELLED"
+                            {% if selected_status == "CANCELLED" %}selected{% endif %}
+                        >
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-2 d-flex align-items-end">
+
+                    <button
+                        class="btn btn-primary w-100"
+                        type="submit"
+                    >
+                        <i class="bi bi-search me-1"></i>
+                        Filter
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Approval Stage</th>
+                        <th></th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for item in leave_requests %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.employee.get_full_name }}
+
+                            {% if item.employee_id == current_employee.pk %}
+
+                                <span class="badge bg-info ms-1">
+                                    You
+                                </span>
+
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+                            {{ item.leave_type.name }}
+                        </td>
+
+
+                        <td>
+                            {{ item.start_date }}
+                        </td>
+
+
+                        <td>
+                            {{ item.end_date }}
+                        </td>
+
+
+                        <td>
+                            {{ item.total_days }}
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if item.status == "APPROVED" %}
+
+                                <span class="badge bg-success">
+                                    Approved
+                                </span>
+
+                            {% elif item.status == "REJECTED" %}
+
+                                <span class="badge bg-danger">
+                                    Rejected
+                                </span>
+
+                            {% elif item.status == "CANCELLED" %}
+
+                                <span class="badge bg-secondary">
+                                    Cancelled
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Pending
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- APPROVAL STAGE -->
+
+                        <td>
+
+                            {% if item.status == "APPROVED" %}
+
+                                <span class="badge bg-success">
+                                    Final
+                                </span>
+
+                            {% elif item.status == "REJECTED" %}
+
+                                <span class="badge bg-danger">
+                                    Final
+                                </span>
+
+                            {% elif item.status == "CANCELLED" %}
+
+                                <span class="badge bg-secondary">
+                                    Final
+                                </span>
+
+                            {% elif item.approval_stage == "MANAGER" %}
+
+                                <span class="badge bg-primary">
+                                    Manager
+                                </span>
+
+                            {% elif item.approval_stage == "HR_ADMIN" %}
+
+                                <span class="badge bg-info text-dark">
+                                    HR Admin
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- VIEW -->
+
+                        <td>
+
+                            <a
+                                href="{% url 'leave_detail' item.pk %}"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center text-muted py-5"
+                        >
+                            No leave requests found.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

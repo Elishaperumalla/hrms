@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold mb-1">
+            Leave Management
+        </h2>
+
+        <p class="text-muted mb-0">
+            Manage employee leave and approvals
+        </p>
+    </div>
+
+    <a
+        href="{% url 'leave_create' %}"
+        class="btn btn-primary"
+    >
+        <i class="bi bi-plus-circle me-1"></i>
+        Apply Leave
+    </a>
+
+</div>
+
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+
+                <div class="stat-icon mb-3">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+
+                <h6 class="text-muted">
+                    Pending
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ pending_count }}
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+
+                <div class="stat-icon mb-3">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+
+                <h6 class="text-muted">
+                    Approved
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ approved_count }}
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+
+                <div class="stat-icon mb-3">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+
+                <h6 class="text-muted">
+                    Rejected
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ rejected_count }}
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card dashboard-card h-100">
+            <div class="card-body">
+
+                <div class="stat-icon mb-3">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+
+                <h6 class="text-muted">
+                    Leave Types
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ active_types }}
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between mb-3">
+
+            <h5 class="fw-bold mb-0">
+                Recent Leave Requests
+            </h5>
+
+            <a
+                href="{% url 'leave_list' %}"
+                class="btn btn-sm btn-outline-primary"
+            >
+                View All
+            </a>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Dates</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in recent_requests %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.employee.get_full_name }}
+                        </td>
+
+                        <td>
+                            {{ item.leave_type.name }}
+                        </td>
+
+                        <td>
+                            {{ item.start_date }}
+                            -
+                            {{ item.end_date }}
+                        </td>
+
+                        <td>
+
+                            {% if item.status == "APPROVED" %}
+                                <span class="badge bg-success">
+                                    Approved
+                                </span>
+                            {% elif item.status == "REJECTED" %}
+                                <span class="badge bg-danger">
+                                    Rejected
+                                </span>
+                            {% elif item.status == "CANCELLED" %}
+                                <span class="badge bg-secondary">
+                                    Cancelled
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    Pending
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            No leave requests found.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

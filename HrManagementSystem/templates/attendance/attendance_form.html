@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ title }} - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                {{ title }}
+            </h3>
+
+            <p class="text-muted mb-0">
+                {% if is_edit %}
+                    Update the attendance record.
+                {% else %}
+                    Create a manual attendance record.
+                {% endif %}
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'attendance_list' %}"
+            class="btn btn-light border"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- FORM -->
+    <!-- ================================================= -->
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <!-- ========================================= -->
+            <!-- MAIN FORM -->
+            <!-- ========================================= -->
+
+            <div class="col-lg-8">
+
+                <div class="card dashboard-card">
+
+                    <div class="card-body">
+
+                        {% if form.non_field_errors %}
+
+                            <div class="alert alert-danger">
+
+                                {% for error in form.non_field_errors %}
+
+                                    <div>
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- EMPLOYEE / DATE / STATUS -->
+
+                        <h6 class="fw-bold mb-3">
+                            Attendance Information
+                        </h6>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="{{ form.employee.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Employee
+                                </label>
+
+                                {{ form.employee }}
+
+                                {% for error in form.employee.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label
+                                    for="{{ form.date.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Date
+                                </label>
+
+                                {{ form.date }}
+
+                                {% for error in form.date.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label
+                                    for="{{ form.status.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Status
+                                </label>
+
+                                {{ form.status }}
+
+                                {% for error in form.status.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+
+                        <hr class="my-4">
+
+
+                        <!-- TIME -->
+
+                        <h6 class="fw-bold mb-3">
+                            Working Time
+                        </h6>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="{{ form.check_in.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Check In
+                                </label>
+
+                                {{ form.check_in }}
+
+                                {% for error in form.check_in.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="{{ form.check_out.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Check Out
+                                </label>
+
+                                {{ form.check_out }}
+
+                                {% for error in form.check_out.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="{{ form.break_duration.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Break Duration
+                                </label>
+
+                                {{ form.break_duration }}
+
+                                <small class="text-muted">
+                                    Minutes
+                                </small>
+
+                                {% for error in form.break_duration.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+
+                        <hr class="my-4">
+
+
+                        <!-- OVERTIME -->
+
+                        <h6 class="fw-bold mb-3">
+                            Additional Information
+                        </h6>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="{{ form.overtime_hours.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Overtime Hours
+                                </label>
+
+                                {{ form.overtime_hours }}
+
+                                {% for error in form.overtime_hours.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="col-md-8">
+
+                                <label
+                                    for="{{ form.remarks.id_for_label }}"
+                                    class="form-label"
+                                >
+                                    Remarks
+                                </label>
+
+                                {{ form.remarks }}
+
+                                {% for error in form.remarks.errors %}
+
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ACTIONS -->
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+
+                            <a
+                                href="{% url 'attendance_list' %}"
+                                class="btn btn-light border"
+                            >
+                                Cancel
+                            </a>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                <i class="bi bi-check-lg me-1"></i>
+                                {{ button_text }}
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- INFORMATION -->
+            <!-- ========================================= -->
+
+            <div class="col-lg-4">
+
+                <div class="card dashboard-card">
+
+                    <div class="card-body">
+
+                        <h6 class="fw-bold mb-3">
+                            Attendance Rules
+                        </h6>
+
+                        <div class="d-flex gap-3 mb-3">
+
+                            <i class="bi bi-calculator text-primary fs-5"></i>
+
+                            <div>
+
+                                <div class="fw-semibold">
+                                    Work Hours
+                                </div>
+
+                                <small class="text-muted">
+                                    Automatically calculated from check-in,
+                                    check-out and break duration.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex gap-3 mb-3">
+
+                            <i class="bi bi-clock text-warning fs-5"></i>
+
+                            <div>
+
+                                <div class="fw-semibold">
+                                    Late Arrival
+                                </div>
+
+                                <small class="text-muted">
+                                    Calculated automatically using the
+                                    configured shift start and grace period.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex gap-3 mb-3">
+
+                            <i class="bi bi-box-arrow-right text-danger fs-5"></i>
+
+                            <div>
+
+                                <div class="fw-semibold">
+                                    Early Departure
+                                </div>
+
+                                <small class="text-muted">
+                                    Calculated automatically from the
+                                    scheduled shift end time.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="d-flex gap-3">
+
+                            <i class="bi bi-info-circle text-info fs-5"></i>
+
+                            <div>
+
+                                <div class="fw-semibold">
+                                    Self Attendance
+                                </div>
+
+                                <small class="text-muted">
+                                    Employees should normally use
+                                    Clock In and Clock Out from the
+                                    Attendance Dashboard.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert alert-info mt-3">
+
+                    <i class="bi bi-lightbulb me-2"></i>
+
+                    <strong>Tip:</strong>
+
+                    Late minutes and early-leave minutes are
+                    calculated automatically. They do not need
+                    to be entered manually.
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

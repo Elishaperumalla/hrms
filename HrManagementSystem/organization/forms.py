@@ -9,9 +9,14 @@ from .models import (
 )
 
 
+# =========================================================
+# COMPANY FORM
+# =========================================================
+
 class CompanyForm(forms.ModelForm):
 
     class Meta:
+
         model = Company
 
         fields = [
@@ -124,9 +129,14 @@ class CompanyForm(forms.ModelForm):
         }
 
 
+# =========================================================
+# DEPARTMENT FORM
+# =========================================================
+
 class DepartmentForm(forms.ModelForm):
 
     class Meta:
+
         model = Department
 
         fields = [
@@ -175,9 +185,14 @@ class DepartmentForm(forms.ModelForm):
         }
 
 
+# =========================================================
+# DESIGNATION FORM
+# =========================================================
+
 class DesignationForm(forms.ModelForm):
 
     class Meta:
+
         model = Designation
 
         fields = [
@@ -235,9 +250,14 @@ class DesignationForm(forms.ModelForm):
         }
 
 
+# =========================================================
+# BRANCH FORM
+# =========================================================
+
 class BranchForm(forms.ModelForm):
 
     class Meta:
+
         model = Branch
 
         fields = [
@@ -341,9 +361,14 @@ class BranchForm(forms.ModelForm):
         }
 
 
+# =========================================================
+# WORK LOCATION FORM
+# =========================================================
+
 class WorkLocationForm(forms.ModelForm):
 
     class Meta:
+
         model = WorkLocation
 
         fields = [

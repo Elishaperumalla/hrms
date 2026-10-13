@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Balance{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold">
+            Leave Balance
+        </h2>
+
+        <p class="text-muted">
+            Employee leave balances for {{ year }}
+        </p>
+    </div>
+
+    <a
+        href="{% url 'leave_balance_create' %}"
+        class="btn btn-primary"
+    >
+        <i class="bi bi-plus-circle me-1"></i>
+        Add Balance
+    </a>
+
+</div>
+
+
+<div class="card dashboard-card">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Allocated</th>
+                        <th>Carried Forward</th>
+                        <th>Used</th>
+                        <th>Available</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for balance in balances %}
+
+                    <tr>
+
+                        <td>
+                            {{ balance.employee.get_full_name }}
+                        </td>
+
+                        <td>
+                            {{ balance.leave_type.name }}
+                        </td>
+
+                        <td>
+                            {{ balance.allocated_days }}
+                        </td>
+
+                        <td>
+                            {{ balance.carried_forward_days }}
+                        </td>
+
+                        <td>
+                            {{ balance.used_days }}
+                        </td>
+
+                        <td>
+
+                            <span class="badge bg-success">
+                                {{ balance.available_days }}
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="text-center text-muted py-5"
+                        >
+                            No leave balances found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <a href="{% url 'recruitment:dashboard' %}"
+       class="text-decoration-none">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <div class="mt-3 mb-4">
+        <h2 class="fw-bold">{{ application.candidate_name }}</h2>
+        <p class="text-muted mb-0">
+            {{ application.job.title|default:"Job not specified" }}
+        </p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Candidate Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ application.candidate_name }}</p>
+                    <p><strong>Email:</strong> {{ application.email }}</p>
+                    <p><strong>Phone:</strong> {{ application.phone|default:"Not provided" }}</p>
+                    <p><strong>Job:</strong> {{ application.job.title|default:"Not specified" }}</p>
+                    <p><strong>Source:</strong> {{ application.get_source_display }}</p>
+                    <p><strong>Skills:</strong> {{ application.skills|default:"Not provided" }}</p>
+                    <p><strong>Applied Date:</strong> {{ application.applied_at|date:"d M Y, h:i A" }}</p>
+                    <p><strong>Current Status:</strong> {{ application.get_status_display }}</p>
+
+                    <hr>
+                    <h6>HR Notes</h6>
+                    <p>{{ application.notes|default:"No notes available."|linebreaksbr }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Candidate Resume</h5>
+                </div>
+                <div class="card-body">
+                    {% if application.resume %}
+                        <p>{{ application.resume_filename }}</p>
+                        <a href="{{ application.resume.url }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> Open Resume
+                        </a>
+                        <a href="{{ application.resume.url }}" download
+                           class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                    {% else %}
+                        <p class="text-muted">No resume uploaded.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Update Hiring Status</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post"
+                          action="{% url 'recruitment:application_update_status' application.pk %}">
+                        {% csrf_token %}
+
+                        <label class="form-label">Application Status</label>
+                        <select name="status" class="form-select mb-3" required>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}"
+                                    {% if application.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

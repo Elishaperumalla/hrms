@@ -1,113 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Leave Balance{% endblock %}
+{% block title %}Leave Bank{% endblock %}
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
-        <h2 class="fw-bold">
-            Leave Balance
+        <h2 class="fw-bold mb-1">
+            <i class="bi bi-wallet2 me-2"></i>Leave Bank
         </h2>
-
-        <p class="text-muted">
-            Employee leave balances for {{ year }}
+        <p class="text-muted mb-0">
+            Track allocated, used and available leave balances for {{ year }}.
         </p>
     </div>
 
-    <a
-        href="{% url 'leave_balance_create' %}"
-        class="btn btn-primary"
-    >
-        <i class="bi bi-plus-circle me-1"></i>
-        Add Balance
+    {% if current_employee.role == "HR_ADMIN" or current_employee.role == "SUPER_ADMIN" %}
+    <a href="{% url 'leave_balance_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Allocate Leave
     </a>
-
+    {% endif %}
 </div>
 
+<div class="card dashboard-card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-sm-6 col-md-3">
+                <label for="year" class="form-label fw-semibold">Leave Year</label>
+                <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    class="form-control"
+                    min="2000"
+                    max="2100"
+                    value="{{ year }}"
+                    required
+                >
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <div class="card dashboard-card">
+    <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0">Leave Balances</h5>
+    </div>
 
     <div class="card-body">
-
         <div class="table-responsive">
-
             <table class="table table-hover align-middle">
-
-                <thead>
-
+                <thead class="table-light">
                     <tr>
+                        {% if current_employee.role != "EMPLOYEE" %}
                         <th>Employee</th>
+                        {% endif %}
                         <th>Leave Type</th>
                         <th>Allocated</th>
                         <th>Carried Forward</th>
                         <th>Used</th>
                         <th>Available</th>
                     </tr>
-
                 </thead>
 
                 <tbody>
-
-                {% for balance in balances %}
-
+                    {% for balance in balances %}
                     <tr>
-
+                        {% if current_employee.role != "EMPLOYEE" %}
                         <td>
-                            {{ balance.employee.get_full_name }}
+                            <div class="fw-semibold">
+                                {{ balance.employee.get_full_name }}
+                            </div>
+                            <small class="text-muted">
+                                {{ balance.employee.employee_id|default:"" }}
+                            </small>
                         </td>
+                        {% endif %}
 
                         <td>
-                            {{ balance.leave_type.name }}
-                        </td>
-
-                        <td>
-                            {{ balance.allocated_days }}
-                        </td>
-
-                        <td>
-                            {{ balance.carried_forward_days }}
-                        </td>
-
-                        <td>
-                            {{ balance.used_days }}
-                        </td>
-
-                        <td>
-
-                            <span class="badge bg-success">
-                                {{ balance.available_days }}
+                            <span class="fw-semibold">
+                                {{ balance.leave_type.name }}
                             </span>
-
+                            <small class="d-block text-muted">
+                                {{ balance.leave_type.code }}
+                            </small>
                         </td>
 
+                        <td>{{ balance.allocated_days|floatformat:1 }}</td>
+                        <td>{{ balance.carried_forward_days|floatformat:1 }}</td>
+                        <td>{{ balance.used_days|floatformat:1 }}</td>
+
+                        <td>
+                            {% if balance.available_days > 0 %}
+                            <span class="badge bg-success">
+                                {{ balance.available_days|floatformat:1 }} days
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                {{ balance.available_days|floatformat:1 }} days
+                            </span>
+                            {% endif %}
+                        </td>
                     </tr>
-
-                {% empty %}
-
+                    {% empty %}
                     <tr>
-
-                        <td
-                            colspan="6"
-                            class="text-center text-muted py-5"
-                        >
-                            No leave balances found.
-
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-wallet fs-1 d-block mb-2"></i>
+                            <strong>No leave balances found.</strong>
+                            <p class="mb-0 mt-1">
+                                Balances will appear here once leave is allocated.
+                            </p>
                         </td>
-
                     </tr>
-
-                {% endfor %}
-
+                    {% endfor %}
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
-
 </div>
 
 {% endblock %}

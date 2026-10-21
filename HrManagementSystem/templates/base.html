@@ -7,10 +7,7 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
         {% block title %}HRMS{% endblock %}
@@ -19,18 +16,12 @@
 
     <!-- Bootstrap 5.3.3 -->
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
     <!-- Bootstrap Icons -->
 
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
     <!--THEME INITIALIZATION    -->
@@ -93,10 +84,7 @@
 
     <!-- Custom CSS -->
 
-    <link
-        rel="stylesheet"
-        href="{% static 'css/style.css' %}"
-    >
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
 </head>
 
@@ -104,97 +92,72 @@
 <body>
 
 
-<div class="d-flex min-vh-100">
+    <div class="d-flex min-vh-100">
 
 
-    <!--          SIDEBAR           -->
+        <!--          SIDEBAR           -->
 
-    <aside
-        class="sidebar"
-        id="sidebar"
-    >
+        <aside class="sidebar" id="sidebar">
 
 
-        <button
-            type="button"
-            class="sidebar-close"
-            id="sidebarClose"
-            aria-label="Close sidebar"
-        >
+            <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
 
-            <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x-lg"></i>
 
-        </button>
+            </button>
+            <!-- BRAND -->
 
+            <div class="sidebar-brand">
 
-        <div
-            class="sidebar-overlay"
-            id="sidebarOverlay"
-        ></div>
+                <div class="brand-icon">
+
+                    <i class="bi bi-people-fill"></i>
+
+                </div>
 
 
-        <!-- BRAND -->
+                <div>
 
-        <div class="sidebar-brand">
+                    <h5 class="mb-0">
+                        HRMS
+                    </h5>
 
-            <div class="brand-icon">
+                    <small>
+                        Human Resources
+                    </small>
 
-                <i class="bi bi-people-fill"></i>
-
-            </div>
-
-
-            <div>
-
-                <h5 class="mb-0">
-                    HRMS
-                </h5>
-
-                <small>
-                    Human Resources
-                </small>
+                </div>
 
             </div>
 
-        </div>
+
+            <hr>
 
 
-        <hr>
+            <!-- MENU -->
+
+            <nav class="sidebar-menu">
 
 
-        <!-- MENU -->
+                <!-- DASHBOARD -->
 
-        <nav class="sidebar-menu">
+                <a href="{% url 'dashboard' %}" class="sidebar-link">
 
+                    <i class="bi bi-grid-1x2-fill"></i>
 
-            <!-- DASHBOARD -->
+                    <span>
+                        Dashboard
+                    </span>
 
-            <a
-                href="{% url 'dashboard' %}"
-                class="sidebar-link"
-            >
-
-                <i class="bi bi-grid-1x2-fill"></i>
-
-                <span>
-                    Dashboard
-                </span>
-
-            </a>
+                </a>
 
 
-            <!-- ORGANIZATION -->
+                <!-- ORGANIZATION -->
 
-            {% if user.role == "SUPER_ADMIN" %}
+                {% if user.role == "SUPER_ADMIN" %}
 
-                <a
-                    class="sidebar-link"
-                    data-bs-toggle="collapse"
-                    href="#organizationMenu"
-                    role="button"
-                    aria-expanded="false"
-                    aria-controls="organizationMenu"
-                >
+                <a class="sidebar-link" data-bs-toggle="collapse" href="#organizationMenu" role="button"
+                    aria-expanded="false" aria-controls="organizationMenu">
 
                     <i class="bi bi-building"></i>
 
@@ -207,15 +170,9 @@
                 </a>
 
 
-                <div
-                    class="collapse sidebar-submenu"
-                    id="organizationMenu"
-                >
+                <div class="collapse sidebar-submenu" id="organizationMenu">
 
-                    <a
-                        href="{% url 'company_list' %}"
-                        class="sidebar-link sidebar-sublink"
-                    >
+                    <a href="{% url 'company_list' %}" class="sidebar-link sidebar-sublink">
 
                         <i class="bi bi-buildings"></i>
 
@@ -226,10 +183,7 @@
                     </a>
 
 
-                    <a
-                        href="{% url 'department_list' %}"
-                        class="sidebar-link sidebar-sublink"
-                    >
+                    <a href="{% url 'department_list' %}" class="sidebar-link sidebar-sublink">
 
                         <i class="bi bi-diagram-3"></i>
 
@@ -240,10 +194,7 @@
                     </a>
 
 
-                    <a
-                        href="{% url 'designation_list' %}"
-                        class="sidebar-link sidebar-sublink"
-                    >
+                    <a href="{% url 'designation_list' %}" class="sidebar-link sidebar-sublink">
 
                         <i class="bi bi-person-badge"></i>
 
@@ -254,10 +205,7 @@
                     </a>
 
 
-                    <a
-                        href="{% url 'branch_list' %}"
-                        class="sidebar-link sidebar-sublink"
-                    >
+                    <a href="{% url 'branch_list' %}" class="sidebar-link sidebar-sublink">
 
                         <i class="bi bi-building"></i>
 
@@ -268,10 +216,7 @@
                     </a>
 
 
-                    <a
-                        href="{% url 'work_location_list' %}"
-                        class="sidebar-link sidebar-sublink"
-                    >
+                    <a href="{% url 'work_location_list' %}" class="sidebar-link sidebar-sublink">
 
                         <i class="bi bi-geo-alt"></i>
 
@@ -283,388 +228,336 @@
 
                 </div>
 
-            {% endif %}
+                {% endif %}
 
 
-            <!-- EMPLOYEES -->
+                <!-- EMPLOYEES -->
 
-            <a
-                href="{% url 'employee_list' %}"
-                class="sidebar-link"
-            >
+                <a href="{% url 'employee_list' %}" class="sidebar-link">
 
-                <i class="bi bi-people"></i>
+                    <i class="bi bi-people"></i>
 
-                <span>
-                    Employees
-                </span>
+                    <span>
+                        Employees
+                    </span>
 
-            </a>
+                </a>
 
 
-            <!-- ATTENDANCE -->
+                <!-- ATTENDANCE -->
 
-            <a
-                href="{% url 'attendance_dashboard' %}"
-                class="sidebar-link"
-            >
+                <a href="{% url 'attendance_dashboard' %}" class="sidebar-link">
 
-                <i class="bi bi-clock"></i>
+                    <i class="bi bi-clock"></i>
 
-                <span>
-                    Attendance
-                </span>
+                    <span>
+                        Attendance
+                    </span>
 
-            </a>
+                </a>
 
 
-            <!-- LEAVES -->
+                <!-- LEAVES -->
 
-            <a
-                href="{% url 'leave_dashboard' %}"
-                class="sidebar-link"
-            >
+                <a href="{% url 'leave_dashboard' %}" class="sidebar-link">
 
-                <i class="bi bi-calendar-check"></i>
+                    <i class="bi bi-calendar-check"></i>
 
-                <span>
-                    Leaves
-                </span>
+                    <span>
+                        Leaves
+                    </span>
 
-            </a>
+                </a>
 
 
-            <!-- PAYROLL -->
+                <!-- PAYROLL -->
 
-            <a
-                href="{% url 'payroll:payroll_dashboard' %}"
-                class="sidebar-link"
-            >
+                <a href="{% url 'payroll:payroll_dashboard' %}" class="sidebar-link">
 
-                <i class="bi bi-cash-stack"></i>
+                    <i class="bi bi-cash-stack"></i>
 
-                <span>
-                    Payroll
-                </span>
+                    <span>
+                        Payroll
+                    </span>
 
-            </a>
+                </a>
 
 
-            <!-- RECRUITMENT -->
+                <!-- RECRUITMENT -->
+                {% if user.role == "HR_ADMIN" %}
+                <a href="{% url 'recruitment:dashboard' %}" class="sidebar-link">
 
-            <a
-                href="{% url 'recruitment:dashboard' %}"
-                class="sidebar-link"
-            >
+                    <i class="bi bi-person-plus"></i>
 
-                <i class="bi bi-person-plus"></i>
+                    <span>
+                        Recruitment
+                    </span>
 
-                <span>
-                    Recruitment
-                </span>
-
-            </a>
+                </a>
+                {% endif %}
 
 
-            <!-- PERFORMANCE -->
+                <!-- PERFORMANCE -->
 
-            <a
-                href="{% url 'performance:dashboard' %}"
-                class="sidebar-link"
-            >
+                <a href="{% url 'performance:dashboard' %}" class="sidebar-link">
 
-                <i class="bi bi-graph-up-arrow"></i>
+                    <i class="bi bi-graph-up-arrow"></i>
 
-                <span>
-                    Performance
-                </span>
+                    <span>
+                        Performance
+                    </span>
 
-            </a>
+                </a>
 
 
-            <!-- REPORTS -->
-
-            <a
-                href="{% url 'reports:dashboard' %}"
-                class="sidebar-link"
-            >
-
-                <i class="bi bi-bar-chart"></i>
-
-                <span>
-                    Reports
-                </span>
-
-            </a>
+                <!-- REPORTS -->
+                {% if user.role == "HR_ADMIN" or user.role == "SUPER_ADMIN" %}
 
 
-        </nav>
+                <a href="{% url 'reports:dashboard' %}" class="sidebar-link">
 
+                    <i class="bi bi-bar-chart"></i>
 
-        <!-- SIDEBAR BOTTOM -->
+                    <span>
+                        Reports
+                    </span>
 
-        <div class="sidebar-bottom">
-
-            <a
-                href="{% url 'settings' %}"
-                class="sidebar-link"
-            >
-
-                <i class="bi bi-gear"></i>
-
-                <span>
-                    Settings
-                </span>
-
-            </a>
-
-        </div>
-
-    </aside>
+                </a>
+                {% endif %}
 
 
 
-    <!-- ======================================================
+                <a href="{% url 'chat:home' %}"
+                    class="sidebar-link {% if request.resolver_match.namespace == 'chat' %}active{% endif %}">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    <span>Chat</span>
+                </a>
+
+
+
+
+            </nav>
+
+
+            <!-- SIDEBAR BOTTOM -->
+
+            <div class="sidebar-bottom">
+
+                <a href="{% url 'settings' %}" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+         <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+
+        <!-- ======================================================
          MAIN WRAPPER
          ====================================================== -->
 
-    <div class="main-wrapper">
+        <div class="main-wrapper">
 
 
-        <!--              NAVBAR            -->
+            <!--              NAVBAR            -->
 
-        <nav class="top-navbar">
-
-
-            <!-- MOBILE MENU -->
-
-            <button
-                type="button"
-                class="btn btn-light d-lg-none"
-                id="sidebarToggle"
-            >
-
-                <i class="bi bi-list"></i>
-
-            </button>
+            <nav class="top-navbar">
 
 
-            <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- MOBILE MENU -->
 
+                <button type="button" class="btn btn-light d-lg-none" id="sidebarToggle">
 
-                <!-- THEME TOGGLE -->
-
-                <button
-                    type="button"
-                    class="btn theme-toggle"
-                    id="themeToggle"
-                    aria-label="Switch to dark mode"
-                    title="Switch to dark mode"
-                >
-
-                    <i
-                        class="bi bi-moon-fill"
-                        id="themeToggleIcon"
-                    ></i>
+                    <i class="bi bi-list"></i>
 
                 </button>
 
 
-                <!-- NOTIFICATION -->
-
-                <button
-                    type="button"
-                    class="btn btn-light position-relative"
-                >
-
-                    <i class="bi bi-bell"></i>
-
-                    <span
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                    >
-                        3
-                    </span>
-
-                </button>
+                <div class="ms-auto d-flex align-items-center gap-3">
 
 
-                <!-- USER -->
+                    <!-- THEME TOGGLE -->
 
-                <div class="dropdown">
+                    <button type="button" class="btn theme-toggle" id="themeToggle" aria-label="Switch to dark mode"
+                        title="Switch to dark mode">
 
-
-                    <button
-                        type="button"
-                        class="btn user-menu dropdown-toggle"
-                        data-bs-toggle="dropdown"
-                    >
-
-                        <div class="user-avatar">
-
-                            {{ user.first_name|first|default:user.username|first|upper }}
-
-                        </div>
-
-
-                        <div class="d-none d-md-block text-start">
-
-                            <div class="fw-semibold">
-
-                                {{ user.get_full_name|default:user.username }}
-
-                            </div>
-
-
-                            <small class="text-muted">
-
-                                {{ user.get_role_display }}
-
-                            </small>
-
-                        </div>
+                        <i class="bi bi-moon-fill" id="themeToggleIcon"></i>
 
                     </button>
 
 
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <!-- NOTIFICATION -->
+
+                    <button type="button" class="btn btn-light position-relative">
+
+                        <i class="bi bi-bell"></i>
+
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            3
+                        </span>
+
+                    </button>
 
 
-                        <li>
+                    <!-- USER -->
 
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'profile' %}"
-                            >
-
-                                <i class="bi bi-person me-2"></i>
-
-                                Profile
-
-                            </a>
-
-                        </li>
+                    <div class="dropdown">
 
 
-                        <li>
+                        <button type="button" class="btn user-menu dropdown-toggle" data-bs-toggle="dropdown">
 
-                            <a
-                                class="dropdown-item"
-                                href="{% url 'change_password' %}"
-                            >
+                            <div class="user-avatar">
 
-                                <i class="bi bi-shield-lock me-2"></i>
+                                {{ user.first_name|first|default:user.username|first|upper }}
 
-                                Change Password
-
-                            </a>
-
-                        </li>
+                            </div>
 
 
-                        <li>
+                            <div class="d-none d-md-block text-start">
 
-                            <hr class="dropdown-divider">
+                                <div class="fw-semibold">
 
-                        </li>
+                                    {{ user.get_full_name|default:user.username }}
 
-
-                        <li>
-
-                            <form
-                                method="POST"
-                                action="{% url 'logout' %}"
-                            >
-
-                                {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="dropdown-item text-danger"
-                                >
-
-                                    <i class="bi bi-box-arrow-right me-2"></i>
-
-                                    Logout
-
-                                </button>
-
-                            </form>
-
-                        </li>
+                                </div>
 
 
-                    </ul>
+                                <small class="text-muted">
 
-                </div>
+                                    {{ user.get_role_display }}
 
+                                </small>
 
-            </div>
+                            </div>
 
-        </nav>
-
-
-
-        <!-- ==================================================
-             CONTENT
-             ================================================== -->
-
-        <main class="content-area">
+                        </button>
 
 
-            {% if messages %}
-
-                {% for message in messages %}
-
-                    <div
-                        class="alert alert-{{ message.tags }} alert-dismissible fade show"
-                        role="alert"
-                    >
-
-                        {{ message }}
+                        <ul class="dropdown-menu dropdown-menu-end">
 
 
-                        <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert"
-                        ></button>
+                            <li>
+
+                                <a class="dropdown-item" href="{% url 'profile' %}">
+
+                                    <i class="bi bi-person me-2"></i>
+
+                                    Profile
+
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <a class="dropdown-item" href="{% url 'change_password' %}">
+
+                                    <i class="bi bi-shield-lock me-2"></i>
+
+                                    Change Password
+
+                                </a>
+
+                            </li>
+
+
+                            <li>
+
+                                <hr class="dropdown-divider">
+
+                            </li>
+
+
+                            <li>
+
+                                <form method="POST" action="{% url 'logout' %}">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit" class="dropdown-item text-danger">
+
+                                        <i class="bi bi-box-arrow-right me-2"></i>
+
+                                        Logout
+
+                                    </button>
+
+                                </form>
+
+                            </li>
+
+
+                        </ul>
 
                     </div>
 
+
+                </div>
+
+            </nav>
+
+
+
+            <!-- ==================================================
+             CONTENT
+             ================================================== -->
+
+            <main class="content-area">
+
+
+                {% if messages %}
+
+                {% for message in messages %}
+
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+
+                    {{ message }}
+
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+                </div>
+
                 {% endfor %}
 
-            {% endif %}
+                {% endif %}
 
 
-            {% block content %}
-            {% endblock %}
+                {% block content %}
+                {% endblock %}
 
 
-        </main>
+            </main>
 
+
+        </div>
 
     </div>
 
-</div>
 
 
+    <!-- Bootstrap JS -->
 
-<!-- Bootstrap JS -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
-<!-- Custom JS -->
+    <!-- Custom JS -->
 
-<script
-    src="{% static 'js/app.js' %}"
-></script>
+    <script src="{% static 'js/app.js' %}"></script>
 
 
-{% block scripts %}
-{% endblock %}
+    {% block scripts %}
+    {% endblock %}
 
 
 </body>

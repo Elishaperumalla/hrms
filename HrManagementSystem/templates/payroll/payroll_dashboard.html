@@ -6,104 +6,349 @@
 
 <div class="container-fluid py-4">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Dashboard Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1">
                 <i class="bi bi-wallet2 me-2"></i>Payroll Dashboard
             </h2>
+
             <p class="text-muted mb-0">
-                Manage salaries, payroll periods and employee payslips.
+                Manage employee salaries, monthly payroll and payslips.
             </p>
+
+            {% if current_employee %}
+            <span class="badge bg-light text-dark border mt-2">
+                {{ current_employee.get_role_display }}
+            </span>
+            {% endif %}
         </div>
 
-        {% if can_manage %}
-        <a href="{% url 'payroll:period_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i>
-            Create Payroll Period
-        </a>
-        {% endif %}
+        <div class="d-flex flex-wrap gap-2">
+
+            {% if current_employee.role == "HR_ADMIN" or current_employee.role == "SUPER_ADMIN" %}
+            <a href="{% url 'payroll:period_create' %}" class="btn btn-primary">
+                <i class="bi bi-calendar-plus me-1"></i>
+                Create Payroll Period
+            </a>
+            {% endif %}
+
+            {% if current_employee.role == "SUPER_ADMIN" or current_employee.role == "HR_ADMIN" %}
+            <a href="{% url 'payroll:salary_create' %}" class="btn btn-success">
+                <i class="bi bi-person-plus me-1"></i>
+                Create Salary
+            </a>
+            {% endif %}
+
+        </div>
     </div>
+
+    <!-- Role Information -->
+    {% if current_employee.role == "SUPER_ADMIN" %}
+    <div class="alert alert-info border-0 shadow-sm">
+        <i class="bi bi-shield-check me-2"></i>
+        <strong>Super Admin:</strong>
+        You can manage HR salary records and the payroll applicable to HR.
+    </div>
+
+    {% elif current_employee.role == "HR_ADMIN" %}
+    <div class="alert alert-primary border-0 shadow-sm">
+        <i class="bi bi-people me-2"></i>
+        <strong>HR Admin:</strong>
+        You can manage permitted employee salaries, payroll periods,
+        salary components and payroll processing.
+    </div>
+
+    {% else %}
+    <div class="alert alert-secondary border-0 shadow-sm">
+        <i class="bi bi-person-check me-2"></i>
+        View your own salary details and payslips here.
+    </div>
+    {% endif %}
 
     <!-- Statistics -->
-    <div class="row g-4 mb-4">
+  
+<!-- Modern Payroll KPI Cards -->
+<style>
+    .payroll-kpi {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #edf0f5;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, .045);
+        transition: transform .2s ease, box-shadow .2s ease;
+        height: 100%;
+    }
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1">Employees</p>
-                            <h3 class="fw-bold mb-0">
-                                {{ employee_count|default:0 }}
-                            </h3>
-                        </div>
-                        <div class="fs-2 text-primary">
-                            <i class="bi bi-people"></i>
-                        </div>
+    .payroll-kpi:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
+    }
+
+    .payroll-kpi .card-body {
+        padding: 24px;
+    }
+
+    .payroll-kpi-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        font-size: 25px;
+        flex-shrink: 0;
+    }
+
+    .kpi-blue { background: #eaf2ff; color: #2563eb; }
+    .kpi-green { background: #e7f8ef; color: #159957; }
+    .kpi-orange { background: #fff2df; color: #d97706; }
+    .kpi-purple { background: #f1eaff; color: #7c3aed; }
+
+    .payroll-kpi-label {
+        color: #64748b;
+        font-size: .88rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .payroll-kpi-value {
+        color: #172033;
+        font-size: clamp(1.8rem, 3vw, 2.25rem);
+        line-height: 1.15;
+        font-weight: 750;
+        letter-spacing: -.8px;
+        margin-bottom: 10px;
+    }
+
+    .payroll-kpi-footer {
+        color: #94a3b8;
+        font-size: .78rem;
+        margin: 0;
+    }
+
+    .payroll-kpi-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .payroll-kpi-accent {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        right: -48px;
+        bottom: -55px;
+        border-radius: 50%;
+        opacity: .45;
+        pointer-events: none;
+    }
+
+    @media (max-width: 575.98px) {
+        .payroll-kpi .card-body {
+            padding: 18px;
+        }
+
+        .payroll-kpi-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 21px;
+            border-radius: 12px;
+        }
+    }
+</style>
+
+<div class="row g-3 g-xl-4 mb-4">
+
+    <!-- Accessible Employees -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="payroll-kpi">
+            <div class="card-body">
+                <div class="payroll-kpi-top">
+                    <div>
+                        <p class="payroll-kpi-label">
+                            {% if current_employee.role == "HR_ADMIN" or current_employee.role == "SUPER_ADMIN" %}
+                                Accessible Employees
+                            {% else %}
+                                My Profile
+                            {% endif %}
+                        </p>
+
+                        <h3 class="payroll-kpi-value">
+                            {{ employee_count|default:0 }}
+                        </h3>
+                    </div>
+
+                    <div class="payroll-kpi-icon kpi-blue">
+                        <i class="bi bi-people-fill"></i>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1">Active Salaries</p>
-                            <h3 class="fw-bold mb-0">
-                                {{ salary_count|default:0 }}
-                            </h3>
-                        </div>
-                        <div class="fs-2 text-success">
-                            <i class="bi bi-cash-stack"></i>
-                        </div>
-                    </div>
-                </div>
+                <p class="payroll-kpi-footer">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Based on your access
+                </p>
             </div>
+            <div class="payroll-kpi-accent kpi-blue"></div>
         </div>
-
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1">Payroll Periods</p>
-                            <h3 class="fw-bold mb-0">
-                                {{ period_count|default:0 }}
-                            </h3>
-                        </div>
-                        <div class="fs-2 text-warning">
-                            <i class="bi bi-calendar3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-xl-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="text-muted mb-1">Payslips</p>
-                            <h3 class="fw-bold mb-0">
-                                {{ payslip_count|default:0 }}
-                            </h3>
-                        </div>
-                        <div class="fs-2 text-info">
-                            <i class="bi bi-receipt"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
+    <!-- Active Salary Records -->
+    <div class="col-12 col-sm-6 col-xl-3">
+    <a href="{% url 'payroll:salary_list' %}" class="text-decoration-none">
+        <div class="payroll-kpi">
+            <div class="card-body">
+                <div class="payroll-kpi-top">
+                    <div>
+                        <p class="payroll-kpi-label">Active Salary Records</p>
+
+                        <h3 class="payroll-kpi-value">
+                            {{ salary_count|default:0 }}
+                        </h3>
+                    </div>
+
+                    <div class="payroll-kpi-icon kpi-green">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+
+                <p class="payroll-kpi-footer">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Currently active salary assignments
+                </p>
+            </div>
+            <div class="payroll-kpi-accent kpi-green"></div>
+        </div>
+    </a>
+    </div>
+
+    <!-- Payroll Periods -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a href="{% url 'payroll:period_list' %}" class="text-decoration-none">
+        <div class="payroll-kpi">
+            <div class="card-body">
+                <div class="payroll-kpi-top">
+                    <div>
+                        <p class="payroll-kpi-label">Payroll Periods</p>
+
+                        <h3 class="payroll-kpi-value">
+                            {{ period_count|default:0 }}
+                        </h3>
+                    </div>
+
+                    <div class="payroll-kpi-icon kpi-orange">
+                        <i class="bi bi-calendar2-week-fill"></i>
+                    </div>
+                </div>
+
+                <p class="payroll-kpi-footer">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Total configured payroll periods
+                </p>
+            </div>
+            <div class="payroll-kpi-accent kpi-orange"></div>
+        </div>
+        </a>
+    </div>
+
+
+    <!-- Available Payslips -->
+    <div class="col-12 col-sm-6 col-xl-3">
+            <a href="{% url 'payroll:payslip_list' %}" class=" text-decoration-none ">
+
+        <div class="payroll-kpi">
+            <div class="card-body">
+                <div class="payroll-kpi-top">
+
+                    <div>
+                        <p class="payroll-kpi-label">Available Payslips</p>
+
+                        <h3 class="payroll-kpi-value">
+                            {{ payslip_count|default:0 }}
+                        </h3>
+                    </div>
+
+                    <div class="payroll-kpi-icon kpi-purple">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
+                </div>
+
+                <p class="payroll-kpi-footer">
+                    <i class="bi bi-file-earmark-check me-1"></i>
+                    Payslips in your accessible scope
+                </p>
+            </div>
+            <div class="payroll-kpi-accent kpi-purple"></div>
+        </div>
+    </div>
+    </a>
+
+</div>
+
+<!-- Current Payroll Overview -->
+<div class="card border-0 shadow-sm mb-4"
+     style="border-radius: 18px;">
+
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between
+                    align-items-center gap-3">
+
+            <div>
+                <p class="text-muted small fw-semibold text-uppercase mb-2">
+                    <i class="bi bi-graph-up-arrow me-1"></i>
+                    Current Payroll Overview
+                </p>
+
+                {% if current_period %}
+                    <h5 class="fw-bold mb-1">
+                        {{ current_period.display_name }}
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        {{ current_period.start_date|date:"d M Y" }}
+                        – {{ current_period.end_date|date:"d M Y" }}
+                    </p>
+                {% else %}
+                    <h5 class="fw-bold mb-1">No current period</h5>
+                    <p class="text-muted small mb-0">
+                        A payroll period has not been created for this month.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-wrap gap-4">
+                <div>
+                    <p class="text-muted small mb-1">Payroll Records</p>
+                    <h4 class="fw-bold mb-0">
+                        {{ current_payroll_count|default:0 }}
+                    </h4>
+                </div>
+
+                <div>
+                    <p class="text-muted small mb-1">Net Payroll Total</p>
+                    <h4 class="fw-bold text-success mb-0">
+                        ₹{{ current_payroll_total|floatformat:2 }}
+                    </h4>
+                </div>
+            </div>
+
+            {% if current_period %}
+                <a href="{% url 'payroll:period_detail' current_period.pk %}"
+                   class="btn btn-outline-primary">
+                    View Payroll <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+
     <!-- Quick Actions -->
+ {% if current_employee.role == "SUPER_ADMIN" or current_employee.role == "HR_ADMIN" %}
     <div class="card border-0 shadow-sm mb-4">
+
         <div class="card-header bg-white border-0 py-3">
             <h5 class="mb-0 fw-semibold">
                 <i class="bi bi-lightning-charge me-2"></i>
@@ -114,57 +359,104 @@
         <div class="card-body">
             <div class="row g-3">
 
+                <!-- Salary List -->
                 <div class="col-md-6 col-lg-3">
-                    <a href="{% url 'payroll:salary_list' %}"
-                       class="btn btn-outline-primary w-100 py-3">
+                    <a href="{% url 'payroll:salary_list' %}" class="btn btn-outline-primary w-100 py-3 h-100">
                         <i class="bi bi-cash-stack d-block fs-3 mb-2"></i>
-                        Employee Salaries
+                        <strong>Salary Records</strong>
+                        <small class="d-block mt-1">
+                            View accessible salaries
+                        </small>
                     </a>
                 </div>
 
+                <!-- Create Salary -->
                 <div class="col-md-6 col-lg-3">
-                    <a href="{% url 'payroll:period_list' %}"
-                       class="btn btn-outline-success w-100 py-3">
+                    <a href="{% url 'payroll:salary_create' %}" class="btn btn-outline-success w-100 py-3 h-100">
+                        <i class="bi bi-person-plus d-block fs-3 mb-2"></i>
+                        <strong>Create Salary</strong>
+                        <small class="d-block mt-1">
+                            Assign an employee salary
+                        </small>
+                    </a>
+                </div>
+                
+
+                <!-- Payroll Periods -->
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'payroll:period_list' %}" class="btn btn-outline-warning w-100 py-3 h-100">
                         <i class="bi bi-calendar-check d-block fs-3 mb-2"></i>
-                        Payroll Periods
+                        <strong>Payroll Periods</strong>
+                        <small class="d-block mt-1">
+                            View monthly payroll
+                        </small>
                     </a>
                 </div>
 
+                <!-- Payslips -->
                 <div class="col-md-6 col-lg-3">
-                    <a href="{% url 'payroll:payslip_list' %}"
-                       class="btn btn-outline-info w-100 py-3">
+                    <a href="{% url 'payroll:payslip_list' %}" class="btn btn-outline-info w-100 py-3 h-100">
                         <i class="bi bi-receipt d-block fs-3 mb-2"></i>
-                        Payslips
+                        <strong>My / Available Payslips</strong>
+                        <small class="d-block mt-1">
+                            View and print payslips
+                        </small>
                     </a>
                 </div>
 
-                {% if can_manage %}
+                <!-- Salary Components: HR Admin only -->
+               
                 <div class="col-md-6 col-lg-3">
-                    <a href="{% url 'payroll:component_list' %}"
-                       class="btn btn-outline-warning w-100 py-3">
+                    <a href="{% url 'payroll:component_list' %}" class="btn btn-outline-dark w-100 py-3 h-100">
                         <i class="bi bi-list-check d-block fs-3 mb-2"></i>
-                        Salary Components
+                        <strong>Salary Components</strong>
+                        <small class="d-block mt-1">
+                            Manage earnings and deductions
+                        </small>
                     </a>
                 </div>
-                {% endif %}
+               
+                <!-- Salary Structure  -->
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'payroll:structure_list' %}" class="btn btn-outline-dark w-100 py-3 h-100">
+                        <i class="bi bi-diagram-3 d-block fs-3 mb-2"></i>
+                        <strong>Salary Structures</strong>
+                        <small class="d-block mt-1">
+                            Create structures and configure components
+                        </small>
+                    </a>
+                </div>
+               
+
+                <!-- Create Payroll Period: HR Admin only -->
+                <div class="col-md-6 col-lg-3">
+                    <a href="{% url 'payroll:period_create' %}" class="btn btn-outline-secondary w-100 py-3 h-100">
+                        <i class="bi bi-calendar-plus d-block fs-3 mb-2"></i>
+                        <strong>Create Payroll Period</strong>
+                        <small class="d-block mt-1">
+                            Set up monthly payroll
+                        </small>
+                    </a>
+                </div>
 
             </div>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Recent Periods -->
-    <div class="card border-0 shadow-sm">
+    <!-- Recent Payroll Periods -->
+    <div class="card border-0 shadow-sm mb-4">
 
         <div class="card-header bg-white border-0 py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-clock-history me-2"></i>
                     Recent Payroll Periods
                 </h5>
 
-                <a href="{% url 'payroll:period_list' %}"
-                   class="btn btn-sm btn-outline-primary">
+                <!-- <a href="{% url 'payroll:period_list' %}" class="btn btn-sm btn-outline-primary">
                     View All
-                </a>
+                </a> -->
             </div>
         </div>
 
@@ -173,7 +465,6 @@
             {% if recent_periods %}
 
             <div class="table-responsive">
-
                 <table class="table table-hover align-middle mb-0">
 
                     <thead class="table-light">
@@ -187,9 +478,7 @@
                     </thead>
 
                     <tbody>
-
-                    {% for period in recent_periods %}
-
+                        {% for period in recent_periods %}
                         <tr>
                             <td class="fw-semibold">
                                 {{ period.display_name }}
@@ -205,40 +494,138 @@
 
                             <td>
                                 {% if period.status == "DRAFT" %}
-                                    <span class="badge bg-secondary">Draft</span>
+                                <span class="badge bg-secondary">Draft</span>
                                 {% elif period.status == "PROCESSING" %}
-                                    <span class="badge bg-warning text-dark">Processing</span>
+                                <span class="badge bg-warning text-dark">Processing</span>
                                 {% elif period.status == "PROCESSED" %}
-                                    <span class="badge bg-success">Processed</span>
+                                <span class="badge bg-success">Processed</span>
                                 {% elif period.status == "PAID" %}
-                                    <span class="badge bg-primary">Paid</span>
+                                <span class="badge bg-primary">Paid</span>
                                 {% elif period.status == "CANCELLED" %}
-                                    <span class="badge bg-danger">Cancelled</span>
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    {{ period.status }}
+                                </span>
                                 {% endif %}
                             </td>
 
                             <td class="text-end">
                                 <a href="{% url 'payroll:period_detail' period.pk %}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    View
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>
+                                    View / Process
                                 </a>
                             </td>
                         </tr>
-
-                    {% endfor %}
-
+                        {% endfor %}
                     </tbody>
 
                 </table>
-
             </div>
 
             {% else %}
 
             <div class="text-center py-5">
                 <i class="bi bi-calendar-x fs-1 text-muted"></i>
-                <p class="text-muted mt-3 mb-0">
-                    No payroll periods found.
+                <h6 class="mt-3">No payroll periods found</h6>
+                <p class="text-muted mb-3">
+                    Payroll periods will appear here once created.
+                </p>
+
+                {% if current_employee.role == "HR_ADMIN" or current_employee.role == "SUPER_ADMIN" %}
+                <a href="{% url 'payroll:period_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Create First Period
+                </a>
+                {% endif %}
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Recent Payslips -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-receipt me-2"></i>
+                    Recent Payslips
+                </h5>
+
+                <!-- <a href="{% url 'payroll:payslip_list' %}" class="btn btn-sm btn-outline-info">
+                    View All
+                </a> -->
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+
+            {% if recent_payslips %}
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Payroll Period</th>
+                            <th>Net Salary</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for payroll_record in recent_payslips %}
+                        <tr>
+                            <td>
+                                {{ payroll_record.employee }}
+                            </td>
+
+                            <td>
+                                {{ payroll_record.period.display_name }}
+                            </td>
+
+                            <td class="fw-semibold text-success">
+                                ₹{{ payroll_record.net_salary|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if payroll_record.status == "PAID" %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif payroll_record.status == "HOLD" %}
+                                <span class="badge bg-danger">On Hold</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    {{ payroll_record.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'payroll:payslip_detail' payroll_record.payslip.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>
+                                    View Payslip
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="text-center py-4">
+                <i class="bi bi-receipt fs-1 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">
+                    No payslips are available yet.
                 </p>
             </div>
 

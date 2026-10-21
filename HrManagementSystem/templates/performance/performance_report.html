@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Performance Reports</h2>
+        <p class="text-secondary mb-0">Summary of reviews, goals and appraisals available to your account.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="text-secondary">Total Reviews</div>
+                    <h2 class="fw-bold mt-2">{{ total_reviews }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="text-secondary">Completed Reviews</div>
+                    <h2 class="fw-bold mt-2">{{ completed_reviews }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="text-secondary">Total Goals</div>
+                    <h2 class="fw-bold mt-2">{{ total_goals }}</h2>
+                    <span class="text-secondary small">{{ completed_goals }} completed</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <div class="text-secondary">Average Review Rating</div>
+                    <h2 class="fw-bold mt-2">
+                        {% if average_rating %}{{ average_rating|floatformat:1 }} / 5{% else %}—{% endif %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Rating Distribution</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rating</th>
+                                    <th>Reviews</th>
+                                    <th>Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rating_breakdown %}
+                                <tr>
+                                    <td>{{ row.rating }} / 5</td>
+                                    <td>{{ row.count }}</td>
+                                    <td>
+                                        <div class="progress" style="min-width:100px">
+                                            {% if total_reviews %}
+                                            <div class="progress" role="progressbar"
+                                                aria-valuenow="{{ row.percentage }}" aria-valuemin="0"
+                                                aria-valuemax="100">
+                                                <div class="progress-bar"
+                                                    style="width: {{ row.percentage|default:0 }}%;">
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Appraisal Summary</h5>
+                    <div class="text-secondary">Average appraisal rating</div>
+                    <div class="display-5 fw-bold text-primary my-2">
+                        {% if average_appraisal_rating %}{{ average_appraisal_rating|floatformat:1 }} / 5{% else %}—{%
+                        endif %}
+                    </div>
+                    <p class="text-secondary small">Calculated from appraisals visible to your account.</p>
+                    <hr>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'performance:review_list' %}" class="btn btn-outline-primary">View Reviews</a>
+                        <a href="{% url 'performance:goal_list' %}" class="btn btn-outline-primary">View Goals</a>
+                        <a href="{% url 'performance:appraisal_list' %}" class="btn btn-outline-primary">View
+                            Appraisals</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

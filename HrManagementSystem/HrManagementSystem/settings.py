@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-d)a+%j+v!hhe*2f-9qm7cp(##_y%qc5)(97e6z!4c!s-0#2-z-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1","localhost"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,8 +50,7 @@ INSTALLED_APPS = [
     'performance',
     'recruitment',
     'reports',
-    
-
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -152,3 +153,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DEFAULT_FROM_EMAIL = "HRMS <noreply@hrms.local>"
+
+
+
+ASGI_APPLICATION = "HrManagementSystem.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}

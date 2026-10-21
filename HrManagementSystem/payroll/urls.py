@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 app_name = "payroll"
@@ -25,4 +26,9 @@ urlpatterns = [
     path("payslips/", views.payslip_list, name="payslip_list"),
     path("payslips/<int:pk>/", views.payslip_detail, name="payslip_detail"),
     path("payslips/<int:pk>/print/", views.payslip_print, name="payslip_print"),
+    
+    path("structures/",views.structure_list,name="structure_list",),
+    path("structures/add/",views.structure_create,name="structure_create",),
+    path("structures/<int:pk>/",views.structure_detail,name="structure_detail",), 
+    path("structures/<int:pk>/components/add/",views.structure_component_add,name="structure_component_add",),
 ]

@@ -92,6 +92,184 @@ body {
 }
 
 
+/* ==========================================
+   RESPONSIVE SIDEBAR FIX
+========================================== */
+
+.sidebar-overlay {
+    display: none;
+}
+
+.sidebar-close {
+    display: none;
+}
+
+.sidebar-open {
+    overflow: hidden;
+}
+
+@media (max-width: 991px) {
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+
+        width: 260px;
+        height: 100vh;
+        min-height: 100vh;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+
+        z-index: 1050;
+        pointer-events: none;
+
+        background: #111827;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    /* Overlay stays outside the sidebar */
+    .sidebar-overlay {
+        display: block;
+
+        position: fixed;
+        inset: 0;
+
+        background: rgba(0, 0, 0, 0.45);
+
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+
+        transition:
+            opacity 0.3s ease,
+            visibility 0.3s ease;
+
+        z-index: 1040;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    /* Keep sidebar contents above its own background */
+    .sidebar-brand,
+    .sidebar-menu,
+    .sidebar-bottom {
+        position: relative;
+        z-index: 1;
+    }
+
+    .sidebar-link {
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+        cursor: pointer;
+    }
+
+    /* Close button */
+    .sidebar-close {
+        display: flex;
+
+        position: absolute;
+        top: 18px;
+        right: 15px;
+
+        width: 38px;
+        height: 38px;
+
+        align-items: center;
+        justify-content: center;
+
+        border: none;
+        border-radius: 8px;
+
+        background: #1f2937;
+        color: #d1d5db;
+
+        cursor: pointer;
+        z-index: 5;
+    }
+
+    .sidebar-close:hover {
+        background: #374151;
+        color: #ffffff;
+    }
+
+    .sidebar-close i {
+        font-size: 18px;
+    }
+
+    /* Main content */
+    .main-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .top-navbar {
+        position: relative;
+        z-index: 10;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    #sidebarToggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 45px;
+        height: 45px;
+
+        border: none;
+        border-radius: 10px;
+
+        cursor: pointer;
+    }
+
+    .content-area {
+        width: 100%;
+        min-width: 0;
+        padding: 20px;
+    }
+}
+
+@media (min-width: 992px) {
+
+    .sidebar {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+
+    .sidebar-overlay {
+        display: none !important;
+    }
+
+    .sidebar-open {
+        overflow: auto;
+    }
+
+    .main-wrapper {
+        margin-left: 260px;
+        width: calc(100% - 260px);
+    }
+}
+
+
 /* MAIN */
 
 .main-wrapper {

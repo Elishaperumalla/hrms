@@ -13,6 +13,13 @@ from employees.models import Employee
 from .forms import AttendanceForm
 from .models import Attendance
 
+import calendar
+
+from datetime import date
+from attendance.holidays import (
+    get_public_holidays,
+    is_weekend,
+)
 
 # =========================================================
 # ROLE HELPERS
@@ -653,166 +660,82 @@ def attendance_calendar(request):
 
     today = timezone.localdate()
 
-    # -----------------------------------------------------
-    # YEAR / MONTH
-    # -----------------------------------------------------
-
     try:
-
-        year = int(
-            request.GET.get(
-                "year",
-                today.year,
-            )
-        )
-
-        month = int(
-            request.GET.get(
-                "month",
-                today.month,
-            )
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
+        year = int(request.GET.get("year", today.year))
+        month = int(request.GET.get("month", today.month))
+    except (TypeError, ValueError):
         year = today.year
         month = today.month
 
-    # -----------------------------------------------------
-    # NORMALIZE MONTH
-    # -----------------------------------------------------
+    if month < 1 or month > 12:
+        month = today.month
+        year = today.year
 
-    while month < 1:
-
-        month += 12
-        year -= 1
-
-    while month > 12:
-
-        month -= 12
-        year += 1
-
-    first_day = date(
-        year,
-        month,
-        1,
-    )
-
-    days_in_month = monthrange(
-        year,
-        month,
-    )[1]
-
-    # -----------------------------------------------------
-    # EMPLOYEES
-    # -----------------------------------------------------
+    first_day = date(year, month, 1)
+    days_in_month = monthrange(year, month)[1]
 
     employees = (
-        get_attendance_employee_scope(
-            request.user
-        )
+        get_attendance_employee_scope(request.user)
         .filter(
             employment_status=Employee.EmploymentStatus.ACTIVE
         )
-        .select_related(
-            "department",
-            "designation",
-        )
-        .order_by(
-            "first_name",
-            "last_name",
-        )
+        .select_related("department", "designation")
+        .order_by("first_name", "last_name")
     )
 
-    # -----------------------------------------------------
-    # RECORDS
-    # -----------------------------------------------------
-
     records = (
-        Attendance.objects
-        .filter(
+        Attendance.objects.filter(
             employee__in=employees,
             date__year=year,
             date__month=month,
         )
-        .select_related(
-            "employee"
-        )
+        .select_related("employee")
     )
 
     attendance_map = {
-        (
-            record.employee_id,
-            record.date.day,
-        ): record
+        (record.employee_id, record.date.day): record
         for record in records
     }
 
-    # -----------------------------------------------------
-    # DAYS
-    # -----------------------------------------------------
-
+    public_holidays = get_public_holidays(year)
     calendar_days = []
 
-    for day_number in range(
-        1,
-        days_in_month + 1,
-    ):
+    for day_number in range(1, days_in_month + 1):
+        current_date = date(year, month, day_number)
 
-        current_date = date(
-            year,
-            month,
-            day_number,
-        )
+        holiday_name = public_holidays.get(current_date, "")
+        weekend = is_weekend(current_date)
 
-        calendar_days.append(
-            {
-                "number": day_number,
-                "date": current_date,
-                "weekday": current_date.strftime(
-                    "%a"
-                ),
-                "is_today": (
-                    current_date == today
-                ),
-            }
-        )
-
-    # -----------------------------------------------------
-    # EMPLOYEE ROWS
-    # -----------------------------------------------------
+        calendar_days.append({
+            "number": day_number,
+            "date": current_date,
+            "weekday": current_date.strftime("%a"),
+            "is_today": current_date == today,
+            "is_weekend": weekend,
+            "is_holiday": bool(holiday_name),
+            "holiday_name": holiday_name,
+            "is_non_working_day": weekend or bool(holiday_name),
+        })
 
     employee_rows = []
 
     for employee in employees:
-
         row = []
 
         for day in calendar_days:
-
             record = attendance_map.get(
-                (
-                    employee.pk,
-                    day["number"],
-                )
+                (employee.pk, day["number"])
             )
 
-            row.append(
-                {
-                    "day": day,
-                    "record": record,
-                }
-            )
+            row.append({
+                "day": day,
+                "record": record,
+            })
 
-        employee_rows.append(
-            {
-                "employee": employee,
-                "days": row,
-            }
-        )
+        employee_rows.append({
+            "employee": employee,
+            "days": row,
+        })
 
     return render(
         request,
@@ -820,9 +743,7 @@ def attendance_calendar(request):
         {
             "year": year,
             "month": month,
-            "month_name": first_day.strftime(
-                "%B"
-            ),
+            "month_name": first_day.strftime("%B"),
             "calendar_days": calendar_days,
             "employee_rows": employee_rows,
             "can_manage_attendance": can_manage_attendance(
@@ -830,7 +751,6 @@ def attendance_calendar(request):
             ),
         },
     )
-
 
 # =========================================================
 # REPORT

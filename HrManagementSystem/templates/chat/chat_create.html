@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ chat_title }} | HRMS Chat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --purple: #6264a7;
+            --purple-light: #eeeeff;
+            --border: #e5e5e5;
+            --text: #242424;
+            --muted: #666;
+            --incoming: #f3f3f3;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background: #fff;
+        }
+
+        .chat-app {
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            min-height: 72px;
+            padding: 12px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .chat-heading {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-width: 0;
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--purple-light);
+            color: var(--purple);
+            font-size: 21px;
+        }
+
+        .chat-heading h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 650;
+            overflow-wrap: anywhere;
+        }
+
+        .chat-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .connection-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 5px;
+            border-radius: 50%;
+            background: #999;
+        }
+
+        .connection-dot.connected {
+            background: #24a148;
+        }
+
+        .connection-dot.disconnected {
+            background: #d83b01;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .icon-button {
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #555;
+        }
+
+        .icon-button:hover {
+            background: #f2f2f2;
+        }
+
+        .message-area {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 24px clamp(14px, 4vw, 48px);
+            scroll-behavior: smooth;
+        }
+
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 0 0 25px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .date-divider::before,
+        .date-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ededed;
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 9px;
+            margin-bottom: 20px;
+        }
+
+        .message-row.mine {
+            justify-content: flex-end;
+        }
+
+        .sender-avatar {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8e8f5;
+            color: var(--purple);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .message-content {
+            max-width: min(76%, 650px);
+            min-width: 0;
+        }
+
+        .message-meta {
+            margin: 0 0 5px 2px;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .mine .message-meta {
+            text-align: right;
+        }
+
+        .bubble {
+            padding: 10px 13px;
+            border-radius: 4px 12px 12px 12px;
+            background: var(--incoming);
+            font-size: 14px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .mine .bubble {
+            background: var(--purple);
+            color: white;
+            border-radius: 12px 4px 12px 12px;
+        }
+
+        .message-status {
+            min-height: 15px;
+            padding-top: 4px;
+            text-align: right;
+            font-size: 11px;
+            color: #777;
+        }
+
+        .message-status .ticks {
+            letter-spacing: -2px;
+        }
+
+        .message-status .read {
+            color: #4779e5;
+        }
+
+        .composer-wrap {
+            padding: 12px 20px 17px;
+            border-top: 1px solid var(--border);
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 9px;
+            padding: 7px 10px;
+            border: 1px solid #d5d5d5;
+            border-radius: 9px;
+            background: white;
+        }
+
+        .composer:focus-within {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 2px #6264a71a;
+        }
+
+        #messageInput {
+            flex: 1;
+            min-width: 0;
+            max-height: 120px;
+            resize: none;
+            border: 0;
+            outline: none;
+            padding: 8px 2px;
+            font: inherit;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        #sendButton {
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--purple);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        #sendButton:hover {
+            background: #50528d;
+        }
+
+        #sendButton:disabled {
+            opacity: .45;
+        }
+
+        .composer-hint {
+            padding: 6px 3px 0;
+            font-size: 11px;
+            color: #777;
+        }
+
+        .empty-chat {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #777;
+        }
+
+        .empty-chat i {
+            color: var(--purple);
+            font-size: 38px;
+            margin-bottom: 12px;
+        }
+
+        #chatError {
+            display: none;
+            margin: 8px 20px 0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .chat-header {
+                padding: 10px 12px;
+            }
+
+            .message-area {
+                padding: 18px 12px;
+            }
+
+            .composer-wrap {
+                padding: 10px;
+            }
+
+            .message-content {
+                max-width: 86%;
+            }
+
+            .header-actions {
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-app">
+
+        <header class="chat-header">
+            <div class="chat-heading">
+                <div class="chat-avatar">
+                    {% if conversation.chat_type == "INDIVIDUAL" %}
+                        <i class="bi bi-person-fill"></i>
+                    {% elif conversation.chat_type == "TEAM" %}
+                        <i class="bi bi-people-fill"></i>
+                    {% elif conversation.chat_type == "DEPARTMENT" %}
+                        <i class="bi bi-diagram-3-fill"></i>
+                    {% elif conversation.chat_type == "BRANCH" %}
+                        <i class="bi bi-geo-alt-fill"></i>
+                    {% else %}
+                        <i class="bi bi-building-fill"></i>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h1>{{ chat_title }}</h1>
+
+                    <div class="chat-subtitle">
+                        <span id="connectionDot" class="connection-dot"></span>
+                        <span id="connectionStatus">Connecting...</span>
+
+                        {% if conversation.chat_type != "INDIVIDUAL" %}
+                            · {{ conversation.get_chat_type_display }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button
+                    class="icon-button"
+                    type="button"
+                    id="soundToggle"
+                    title="Toggle notification sounds"
+                    aria-label="Toggle notification sounds">
+                    <i class="bi bi-volume-up"></i>
+                </button>
+            </div>
+        </header>
+
+        <div id="chatError" class="alert alert-warning py-2"></div>
+
+        <main class="message-area" id="messageArea">
+
+            <div class="date-divider">
+                <span>Conversation</span>
+            </div>
+
+            <div id="messageList">
+                {% for message in chat_messages %}
+                    <div
+                        class="message-row {% if message.sender_id == request.user.id %}mine{% endif %}"
+                        data-message-id="{{ message.id }}"
+                        data-sender-id="{{ message.sender_id }}">
+
+                        {% if message.sender_id != request.user.id %}
+                            <div class="sender-avatar">
+                                {{ message.sender.get_full_name|default:message.sender.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+
+                        <div class="message-content">
+                            <div class="message-meta">
+                                {% if message.sender_id != request.user.id %}
+                                    {{ message.sender.get_full_name|default:message.sender.username }} ·
+                                {% else %}
+                                    You ·
+                                {% endif %}
+
+                                {{ message.created_at|date:"h:i A" }}
+                            </div>
+
+                            <div class="bubble">{{ message.content }}</div>
+
+                            {% if message.sender_id == request.user.id %}
+                                <div class="message-status" data-status>
+                                    {% if message.receipt_status == "read" %}
+                                        <span class="ticks read" title="Read">✓✓</span>
+                                    {% elif message.receipt_status == "delivered" %}
+                                        <span class="ticks" title="Delivered">✓✓</span>
+                                    {% else %}
+                                        <span class="ticks" title="Sent">✓</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% empty %}
+                    <div class="empty-chat" id="emptyChat">
+                        <i class="bi bi-chat-square-dots"></i>
+                        <h5 class="text-dark">Start the conversation</h5>
+                        <p class="small">Send a message to get things started.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </main>
+
+        <footer class="composer-wrap">
+            <form id="messageForm">
+                <div class="composer">
+                    <textarea
+                        id="messageInput"
+                        rows="1"
+                        maxlength="5000"
+                        placeholder="Type a message..."
+                        aria-label="Message"
+                        required></textarea>
+
+                    <button
+                        id="sendButton"
+                        type="submit"
+                        title="Send message"
+                        aria-label="Send message">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+
+                <div class="composer-hint">
+                    Press Enter to send · Shift + Enter for a new line
+                </div>
+            </form>
+        </footer>
+
+    </div>
+
+    <script>
+        "use strict";
+
+        const conversationId = Number("{{ conversation.id|default:0 }}");
+        const currentUserId = Number("{{ request.user.id|default:0 }}");
+
+        const messageArea = document.getElementById("messageArea");
+        const messageList = document.getElementById("messageList");
+        const messageForm = document.getElementById("messageForm");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const connectionDot = document.getElementById("connectionDot");
+        const connectionStatus = document.getElementById("connectionStatus");
+        const chatError = document.getElementById("chatError");
+        const soundToggle = document.getElementById("soundToggle");
+
+        const chatTitle = "{{ chat_title|escapejs }}";
+        const chatType = "{{ conversation.chat_type|escapejs }}";
+
+        /*
+         * Notify chat_home.html when this room opens or receives a message.
+         * This works when chat_room.html is loaded inside the chatFrame iframe.
+         */
+        function notifyParent(type, extra = {}) {
+            if (window.parent === window) {
+                return;
+            }
+
+            const payload = Object.assign({
+                type: type,
+                conversationId: conversationId,
+                href: window.location.pathname + window.location.search,
+                chatTitle: chatTitle,
+                chatType: chatType
+            }, extra);
+
+            window.parent.postMessage(payload, window.location.origin);
+        }
+
+        let socket = null;
+        let soundEnabled = true;
+        let audioContext = null;
+        let reconnectTimer = null;
+
+        function scrollToBottom() {
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        function showError(text) {
+            chatError.textContent = text;
+            chatError.style.display = "block";
+        }
+
+        function hideError() {
+            chatError.textContent = "";
+            chatError.style.display = "none";
+        }
+
+        function setConnection(connected) {
+            connectionDot.classList.toggle("connected", connected);
+            connectionDot.classList.toggle("disconnected", !connected);
+
+            connectionStatus.textContent = connected
+                ? "Connected"
+                : "Reconnecting...";
+
+            sendButton.disabled = !connected;
+        }
+
+        function playNotificationSound() {
+            if (!soundEnabled) {
+                return;
+            }
+
+            try {
+                const AudioContextClass =
+                    window.AudioContext || window.webkitAudioContext;
+
+                if (!AudioContextClass) {
+                    return;
+                }
+
+                audioContext = audioContext || new AudioContextClass();
+
+                if (audioContext.state === "suspended") {
+                    audioContext.resume();
+                }
+
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                oscillator.type = "sine";
+                oscillator.frequency.value = 780;
+
+                gain.gain.setValueAtTime(
+                    0.0001,
+                    audioContext.currentTime
+                );
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.12,
+                    audioContext.currentTime + 0.02
+                );
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.0001,
+                    audioContext.currentTime + 0.16
+                );
+
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.17);
+
+            } catch (error) {
+                // Browser audio may be blocked until the user interacts.
+            }
+        }
+
+        soundToggle.addEventListener("click", function () {
+            soundEnabled = !soundEnabled;
+
+            soundToggle.innerHTML = soundEnabled
+                ? '<i class="bi bi-volume-up"></i>'
+                : '<i class="bi bi-volume-mute"></i>';
+
+            if (soundEnabled) {
+                playNotificationSound();
+            }
+        });
+
+        function sendSocketData(data) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(data));
+                return true;
+            }
+
+            return false;
+        }
+
+        function formatTime(dateString) {
+            return dateString || new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function removeEmptyMessage() {
+            const empty = document.getElementById("emptyChat");
+
+            if (empty) {
+                empty.remove();
+            }
+        }
+
+        function addMessage(data) {
+            if (data.id == null) {
+                return null;
+            }
+
+            const existingMessage = document.querySelector(
+                '[data-message-id="' + String(data.id) + '"]'
+            );
+
+            if (existingMessage) {
+                return existingMessage;
+            }
+
+            removeEmptyMessage();
+
+            const mine =
+                Number(data.sender_id) === Number(currentUserId);
+
+            const row = document.createElement("div");
+
+            row.className = "message-row" + (mine ? " mine" : "");
+            row.dataset.messageId = data.id;
+            row.dataset.senderId = data.sender_id;
+
+            if (!mine) {
+                const avatar = document.createElement("div");
+
+                avatar.className = "sender-avatar";
+                avatar.textContent = (
+                    data.sender_name || "?"
+                ).trim().slice(0, 1).toUpperCase();
+
+                row.appendChild(avatar);
+            }
+
+            const content = document.createElement("div");
+            content.className = "message-content";
+
+            const meta = document.createElement("div");
+            meta.className = "message-meta";
+
+            meta.textContent =
+                (mine ? "You" : (data.sender_name || "Colleague")) +
+                " · " +
+                formatTime(data.created_at);
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.textContent = data.message || "";
+
+            content.appendChild(meta);
+            content.appendChild(bubble);
+
+            if (mine) {
+                const status = document.createElement("div");
+
+                status.className = "message-status";
+                status.dataset.status = "";
+
+                status.innerHTML =
+                    '<span class="ticks" title="Sent">✓</span>';
+
+                content.appendChild(status);
+            }
+
+            row.appendChild(content);
+            messageList.appendChild(row);
+
+            scrollToBottom();
+
+            return row;
+        }
+
+        function updateReceipt(action, messageIds) {
+            if (!Array.isArray(messageIds)) {
+                return;
+            }
+
+            messageIds.forEach(function (id) {
+                const row = document.querySelector(
+                    '[data-message-id="' + String(id) + '"]'
+                );
+
+                if (
+                    !row ||
+                    Number(row.dataset.senderId) !== Number(currentUserId)
+                ) {
+                    return;
+                }
+
+                const status = row.querySelector("[data-status]");
+
+                if (!status) {
+                    return;
+                }
+
+                if (action === "read") {
+                    status.innerHTML =
+                        '<span class="ticks read" title="Read">✓✓</span>';
+
+                } else if (action === "delivered") {
+                    status.innerHTML =
+                        '<span class="ticks" title="Delivered">✓✓</span>';
+                }
+            });
+        }
+
+        function markVisibleMessagesRead() {
+            if (document.visibilityState !== "visible") {
+                return;
+            }
+
+            const ids = [];
+
+            document.querySelectorAll(".message-row").forEach(function (row) {
+                if (
+                    Number(row.dataset.senderId) !== Number(currentUserId)
+                ) {
+                    const id = Number(row.dataset.messageId);
+
+                    if (id) {
+                        ids.push(id);
+                    }
+                }
+            });
+
+            if (ids.length) {
+                sendSocketData({
+                    action: "read",
+                    message_ids: ids
+                });
+            }
+        }
+
+        function notifyExistingMessagesDelivered() {
+            document.querySelectorAll(".message-row").forEach(function (row) {
+                const senderId = Number(row.dataset.senderId);
+                const messageId = Number(row.dataset.messageId);
+
+                if (
+                    senderId !== Number(currentUserId) &&
+                    messageId
+                ) {
+                    sendSocketData({
+                        action: "delivered",
+                        message_id: messageId
+                    });
+                }
+            });
+        }
+
+        function connectWebSocket() {
+            if (!conversationId) {
+                showError("Invalid conversation. Please return to Chat.");
+                setConnection(false);
+                return;
+            }
+
+            const protocol =
+                window.location.protocol === "https:" ? "wss:" : "ws:";
+
+            const url = protocol +
+                "//" +
+                window.location.host +
+                "/ws/chat/" +
+                conversationId +
+                "/";
+
+            socket = new WebSocket(url);
+
+            socket.onopen = function () {
+                setConnection(true);
+                hideError();
+
+                notifyExistingMessagesDelivered();
+                markVisibleMessagesRead();
+            };
+
+            socket.onmessage = function (event) {
+                let data;
+
+                try {
+                    data = JSON.parse(event.data);
+                } catch (error) {
+                    return;
+                }
+
+                if (data.type === "message") {
+                    const mine =
+                        Number(data.sender_id) === Number(currentUserId);
+
+                    addMessage(data);
+
+                    /*
+                     * Keep the parent chat sidebar preview updated.
+                     * chat_home.html must handle this event name.
+                     */
+                    notifyParent("chat_message_update", {
+                        senderName:
+                            data.sender_name || (mine ? "You" : "Colleague"),
+                        message: data.message || "",
+                        createdAt: data.created_at || ""
+                    });
+
+                    if (!mine) {
+                        sendSocketData({
+                            action: "delivered",
+                            message_id: data.id
+                        });
+
+                        if (document.visibilityState === "visible") {
+                            sendSocketData({
+                                action: "read",
+                                message_ids: [data.id]
+                            });
+                        }
+
+                        playNotificationSound();
+                    }
+                }
+
+                if (data.type === "receipt") {
+                    updateReceipt(
+                        data.action,
+                        data.message_ids || []
+                    );
+                }
+            };
+
+            socket.onclose = function (event) {
+                setConnection(false);
+
+                if (event.code === 4401 || event.code === 4403) {
+                    showError(
+                        "You are not authorized to access this chat. " +
+                        "Refresh or contact your administrator."
+                    );
+                    return;
+                }
+
+                if (event.code === 4400) {
+                    showError(
+                        "Invalid conversation. Please return to Chat."
+                    );
+                    return;
+                }
+
+                if (reconnectTimer !== null) {
+                    window.clearTimeout(reconnectTimer);
+                }
+
+                reconnectTimer = window.setTimeout(function () {
+                    reconnectTimer = null;
+                    connectWebSocket();
+                }, 2000);
+            };
+
+            socket.onerror = function () {
+                setConnection(false);
+            };
+        }
+
+        messageForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const text = messageInput.value.trim();
+
+            if (!text || text.length > 5000) {
+                return;
+            }
+
+            if (!sendSocketData({
+                action: "message",
+                message: text
+            })) {
+                showError(
+                    "Chat is reconnecting. Please try again."
+                );
+                return;
+            }
+
+            hideError();
+
+            messageInput.value = "";
+            messageInput.style.height = "auto";
+            messageInput.focus();
+        });
+
+        messageInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                messageForm.requestSubmit();
+            }
+        });
+
+        messageInput.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height =
+                Math.min(this.scrollHeight, 120) + "px";
+        });
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                markVisibleMessagesRead();
+            }
+        });
+
+        /*
+         * Inform chat_home that the conversation room has opened.
+         * This allows its sidebar to select/update the active conversation.
+         */
+        setConnection(false);
+        scrollToBottom();
+
+        notifyParent("chat_room_opened");
+
+        connectWebSocket();
+    </script>
+</body>
+
+</html>

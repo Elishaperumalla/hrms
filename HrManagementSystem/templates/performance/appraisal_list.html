@@ -1,0 +1,43 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Performance Appraisals</h2>
+      <p class="text-secondary mb-0">Review employee performance and development.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{% url 'performance:appraisal_create' %}" class="btn btn-primary">+ New Appraisal</a>
+    {% endif %}
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Appraisal</th><th>Employee</th><th>Period</th>
+            <th>Rating</th><th>Status</th><th>Reviewer</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for appraisal in appraisals %}
+          <tr>
+            <td class="fw-semibold">{{ appraisal.title }}</td>
+            <td>{{ appraisal.employee }}</td>
+            <td>{{ appraisal.appraisal_period_start|date:"d M Y" }} – {{ appraisal.appraisal_period_end|date:"d M Y" }}</td>
+            <td>{% if appraisal.overall_rating %}{{ appraisal.overall_rating }}/5{% else %}—{% endif %}</td>
+            <td>{{ appraisal.get_status_display }}</td>
+            <td>{{ appraisal.reviewer|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-secondary py-4">No appraisals found.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

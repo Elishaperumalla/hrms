@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        body {
+            background: #f4f7fb;
+            font-family: Arial, sans-serif;
+            color: #1f2937;
+        }
+
+        .page-container {
+            padding: 10px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 27px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .summary-card,
+        .table-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .summary-card {
+            padding: 22px;
+            margin-bottom: 22px;
+        }
+
+        .summary-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            background: #e8efff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .summary-label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 14px;
+        }
+
+        .summary-number {
+            font-size: 27px;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        .table-card {
+            overflow: hidden;
+        }
+
+        .table-heading {
+            padding: 20px 22px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-heading h5 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .search-box {
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .table-responsive {
+            min-height: 150px;
+        }
+
+        .table {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            padding: 15px 18px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 16px 18px;
+            font-size: 14px;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .employee-id {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .payslip-number {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .view-btn {
+            border: 1px solid #2563eb;
+            color: #2563eb;
+            background: white;
+            border-radius: 7px;
+            padding: 7px 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .view-btn:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        .empty-state {
+            padding: 55px 20px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 45px;
+            color: #94a3b8;
+        }
+
+        .empty-state h5 {
+            margin-top: 15px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+        }
+
+        .pagination-info {
+            padding: 16px 22px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 16px;
+            }
+
+            .page-title {
+                font-size: 23px;
+            }
+
+            .table-heading {
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-container">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <i class="bi bi-receipt-cutoff text-primary me-2"></i>
+                    Payslips
+                </h1>
+                <p class="page-subtitle">View and manage employee payslips.</p>
+            </div>
+
+            <a href="{% url 'payroll:payroll_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="summary-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="summary-icon">
+                    <i class="bi bi-file-earmark-ruled"></i>
+                </div>
+                <div>
+                    <div class="summary-label mt-0">Available Payslips</div>
+                    <div class="summary-number" id="totalPayslips">
+                        {{ payslips|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-heading">
+                <div>
+                    <h5>All Payslips</h5>
+                    <small class="text-secondary">Employee salary statements</small>
+                </div>
+
+                <form method="get" class="search-box">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="search" id="searchInput" class="form-control"
+                            placeholder="Search employee or payslip..." value="{{ search|default:'' }}">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        {% if search %}
+                        <a href="{% url 'payroll:payslip_list' %}" class="btn btn-outline-secondary"
+                            title="Clear search">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                {% if payslips %}
+                <table class="table table-hover" id="payslipTable">
+                    <thead>
+                        <tr>
+                            <th>Payslip Number</th>
+                            <th>Employee</th>
+                            <th>Pay Period</th>
+                            <th>Net Salary</th>
+                            <th>Generated Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for payslip in payslips %}
+                        <tr>
+                            <td>
+                                <span class="payslip-number">
+                                    {{ payslip.payslip_number|default:"-" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="employee-name">
+                                    {{ payslip.payroll_record.employee.get_full_name|default:"-" }}
+                                </div>
+                                <div class="employee-id">
+                                    {{ payslip.payroll_record.employee.employee_id|default:"-" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {{ payslip.payroll_record.period.display_name|default:"-" }}
+                            </td>
+
+                            <td class="fw-semibold">
+                                ₹{{ payslip.payroll_record.net_salary|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if payslip.generated_at %}
+                                {{ payslip.generated_at|date:"d M Y" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% with status=payslip.payroll_record.period.status %}
+                                {% if status == "PAID" %}
+                                <span class="status-badge status-published">
+                                    <i class="bi bi-check-circle me-1"></i> Paid
+                                </span>
+                                {% elif status == "PROCESSED" %}
+                                <span class="status-badge status-published">
+                                    <i class="bi bi-check-circle me-1"></i> Processed
+                                </span>
+                                {% elif status == "PROCESSING" %}
+                                <span class="status-badge status-draft">
+                                    <i class="bi bi-clock me-1"></i> Processing
+                                </span>
+                                {% elif status == "CANCELLED" %}
+                                <span class="status-badge status-draft">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelled
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-draft">
+                                    <i class="bi bi-clock me-1"></i> Draft
+                                </span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'payroll:payslip_detail' payslip.payroll_record.pk %}" class="view-btn">
+                                    <i class="bi bi-eye me-1"></i> View Payslip
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <h5>No Payslips Available</h5>
+
+                    {% if search %}
+                    <p>No payslips match your search for "{{ search }}".</p>
+                    <a href="{% url 'payroll:payslip_list' %}" class="btn btn-outline-primary">
+                        Clear Search
+                    </a>
+                    {% else %}
+                    <p>No payslips are available for your account.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="pagination-info">
+                Showing <strong>{{ payslips|length }}</strong>
+                payslip(s)
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Client-side filtering of the payslips already rendered on this page.
+        const searchInput = document.getElementById("searchInput");
+        const payslipTable = document.getElementById("payslipTable");
+
+        if (searchInput && payslipTable) {
+            searchInput.addEventListener("input", function () {
+                const searchTerm = this.value.toLowerCase().trim();
+                const rows = payslipTable.querySelectorAll("tbody tr");
+                let visibleCount = 0;
+
+                rows.forEach(function (row) {
+                    const matches = row.textContent.toLowerCase().includes(searchTerm);
+                    row.style.display = matches ? "" : "none";
+
+                    if (matches) {
+                        visibleCount++;
+                    }
+                });
+
+                const countElement = document.getElementById("totalPayslips");
+                if (countElement) {
+                    countElement.textContent = visibleCount;
+                }
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

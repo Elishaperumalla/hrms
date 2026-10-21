@@ -1,3 +1,7 @@
+import calendar
+from datetime import date
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -7,9 +11,8 @@ from django.shortcuts import (
     redirect,
     render,
 )
-from django.views.decorators.http import require_POST
 from django.utils import timezone
-
+from django.views.decorators.http import require_POST
 from employees.models import Employee
 from employees.views import get_current_employee
 
@@ -19,7 +22,6 @@ from .forms import (
     LeaveRequestForm,
     LeaveTypeForm,
 )
-
 from .models import (
     LeaveApproval,
     LeaveBalance,
@@ -101,6 +103,7 @@ def leave_dashboard(request):
 
     context = {
         "employee": employee,
+        "current_employee": employee,
         "today": today,
     }
 
@@ -121,6 +124,10 @@ def leave_dashboard(request):
                 status=LeaveRequest.Status.PENDING
             ).count(),
 
+            "active_types": LeaveType.objects.filter(
+                is_active=True
+            ).count(),
+
             "approved_count": my_requests.filter(
                 status=LeaveRequest.Status.APPROVED
             ).count(),
@@ -132,9 +139,7 @@ def leave_dashboard(request):
             "balances": LeaveBalance.objects.filter(
                 employee=employee,
                 year=today.year,
-            ).select_related(
-                "leave_type"
-            ),
+            ).select_related("leave_type"),
         })
 
     # ==========================================
@@ -147,51 +152,27 @@ def leave_dashboard(request):
             reporting_manager=employee
         )
 
-        # --------------------------------------
-        # TEAM REQUESTS
-        # --------------------------------------
-
         team_requests = LeaveRequest.objects.filter(
             employee__in=team
         )
 
-        # --------------------------------------
-        # OWN REQUESTS
-        # --------------------------------------
-
         my_requests = LeaveRequest.objects.filter(
             employee=employee
         )
-
-        # --------------------------------------
-        # TEAM REQUESTS WAITING FOR MANAGER
-        # --------------------------------------
 
         team_pending_count = team_requests.filter(
             approval_stage=LeaveRequest.ApprovalStage.MANAGER,
             status=LeaveRequest.Status.PENDING,
         ).count()
 
-        # --------------------------------------
-        # OWN REQUESTS WAITING FOR HR
-        # --------------------------------------
-
         own_pending_count = my_requests.filter(
             approval_stage=LeaveRequest.ApprovalStage.HR_ADMIN,
             status=LeaveRequest.Status.PENDING,
         ).count()
 
-        # --------------------------------------
-        # APPROVED TEAM LEAVES
-        # --------------------------------------
-
         team_approved_count = team_requests.filter(
             status=LeaveRequest.Status.APPROVED
         ).count()
-
-        # --------------------------------------
-        # TEAM MEMBERS CURRENTLY ON LEAVE
-        # --------------------------------------
 
         team_on_leave = team_requests.filter(
             status=LeaveRequest.Status.APPROVED,
@@ -201,26 +182,31 @@ def leave_dashboard(request):
 
         context.update({
             "team": team,
-
             "team_requests": team_requests,
-
             "my_requests": my_requests,
 
-            # Total pending items relevant to Manager.
-            # This includes:
-            # - Team leave waiting for Manager
-            # - Manager's own leave waiting for HR
             "pending_count": (
-                team_pending_count
-                + own_pending_count
+                team_pending_count + own_pending_count
             ),
 
             "team_pending_count": team_pending_count,
 
+            "rejected_count": (
+                team_requests.filter(
+                    status=LeaveRequest.Status.REJECTED
+                ).count()
+                +
+                my_requests.filter(
+                    status=LeaveRequest.Status.REJECTED
+                ).count()
+            ),
+
+            "active_types": LeaveType.objects.filter(
+                is_active=True
+            ).count(),
+
             "own_pending_count": own_pending_count,
-
             "approved_count": team_approved_count,
-
             "team_on_leave": team_on_leave,
         })
 
@@ -234,7 +220,6 @@ def leave_dashboard(request):
             employee
         )
 
-    
         hr_pending_requests = company_requests.filter(
             employee__role=Employee.Role.MANAGER,
             approval_stage=LeaveRequest.ApprovalStage.HR_ADMIN,
@@ -242,49 +227,42 @@ def leave_dashboard(request):
         )
 
         approved_requests = company_requests.filter(
-        status=LeaveRequest.Status.APPROVED   )
+            status=LeaveRequest.Status.APPROVED
+        )
 
         rejected_requests = company_requests.filter(
-        status=LeaveRequest.Status.REJECTED    )
+            status=LeaveRequest.Status.REJECTED
+        )
 
         active_leave_types = LeaveType.objects.filter(
-        is_active=True    )
+            is_active=True
+        )
 
         company_employees = Employee.objects.filter(
-                company_id=employee.company_id,
-                employment_status__in=[
-                    Employee.EmploymentStatus.ACTIVE,
-                    Employee.EmploymentStatus.ON_LEAVE,
-                    Employee.EmploymentStatus.BENCH,
-                ],
-            )
+            company_id=employee.company_id,
+            employment_status__in=[
+                Employee.EmploymentStatus.ACTIVE,
+                Employee.EmploymentStatus.ON_LEAVE,
+                Employee.EmploymentStatus.BENCH,
+            ],
+        )
 
         currently_on_leave = company_requests.filter(
-        status=LeaveRequest.Status.APPROVED,
-        start_date__lte=today,
-        end_date__gte=today,
-    )
+            status=LeaveRequest.Status.APPROVED,
+            start_date__lte=today,
+            end_date__gte=today,
+        )
 
-        
         context.update({
             "company_requests": company_requests,
-
             "pending_count": hr_pending_requests.count(),
-
             "approved_count": approved_requests.count(),
-
             "rejected_count": rejected_requests.count(),
-
             "active_types": active_leave_types.count(),
-
-        # Existing/extra values
             "employee_count": company_employees.count(),
-
             "leave_type_count": active_leave_types.count(),
-
             "currently_on_leave": currently_on_leave,
-
-      })
+        })
 
     # ==========================================
     # SUPER ADMIN
@@ -308,7 +286,6 @@ def leave_dashboard(request):
             ]
         ).count()
 
-
         currently_on_leave = all_requests.filter(
             status=LeaveRequest.Status.APPROVED,
             start_date__lte=today,
@@ -318,39 +295,301 @@ def leave_dashboard(request):
         context.update({
             "all_requests": all_requests,
 
-            # Pending
             "pending_count": all_requests.filter(
                 status=LeaveRequest.Status.PENDING
             ).count(),
 
-            # Approved
             "approved_count": all_requests.filter(
                 status=LeaveRequest.Status.APPROVED
             ).count(),
 
-            # Rejected
             "rejected_count": all_requests.filter(
                 status=LeaveRequest.Status.REJECTED
             ).count(),
 
-            # Active Leave Types
             "active_types": active_leave_types.count(),
-
-            # Existing employee count
             "employee_count": employee_count,
-
-            # Existing name, if used somewhere else
             "leave_type_count": active_leave_types.count(),
-
-            # Current employees on approved leave
             "currently_on_leave": currently_on_leave,
         })
+
+    # ==========================================
+    # MONTH-WISE LEAVE SUMMARY
+    # ==========================================
+
+    try:
+        selected_year = int(
+            request.GET.get("year", today.year)
+        )
+
+        selected_month = int(
+            request.GET.get("month", today.month)
+        )
+
+        if (
+            selected_year < 2000
+            or selected_year > 9999
+            or selected_month < 1
+            or selected_month > 12
+        ):
+            raise ValueError
+
+    except (TypeError, ValueError):
+        selected_year = today.year
+        selected_month = today.month
+
+    month_start = date(
+        selected_year,
+        selected_month,
+        1,
+    )
+
+    month_end = date(
+        selected_year,
+        selected_month,
+        calendar.monthrange(
+            selected_year,
+            selected_month,
+        )[1],
+    )
+
+    # Role-based visible requests for the selected month.
+    visible_requests = get_visible_leave_requests(
+        employee
+    )
+
+    monthly_requests = visible_requests.filter(
+        start_date__lte=month_end,
+        end_date__gte=month_start,
+    ).select_related(
+        "employee",
+        "leave_type",
+    )
+
+    monthly_pending = monthly_requests.filter(
+        status=LeaveRequest.Status.PENDING
+    )
+
+    monthly_approved = monthly_requests.filter(
+        status=LeaveRequest.Status.APPROVED
+    )
+
+    monthly_rejected = monthly_requests.filter(
+        status=LeaveRequest.Status.REJECTED
+    )
+
+    monthly_cancelled = monthly_requests.filter(
+        status=LeaveRequest.Status.CANCELLED
+    )
+
+    # ==========================================
+    # APPROVED LEAVE DAYS
+    # ==========================================
+
+    monthly_approved_days = Decimal("0.0")
+
+    for leave in monthly_approved:
+
+        overlap_start = max(
+            leave.start_date,
+            month_start,
+        )
+
+        overlap_end = min(
+            leave.end_date,
+            month_end,
+        )
+
+        if (
+            leave.duration_type
+            == LeaveRequest.DurationType.HALF_DAY
+        ):
+            days = Decimal("0.5")
+        else:
+            days = Decimal(
+                (overlap_end - overlap_start).days + 1
+            )
+
+        # Important: add days inside the loop.
+        monthly_approved_days += days
+
+    # ==========================================
+    # RECENT LEAVE REQUESTS
+    # Selected month first; otherwise previous month.
+    # ==========================================
+
+    recent_requests_month_name = month_start.strftime("%B")
+    recent_requests_year = selected_year
+
+    recent_requests = monthly_requests.order_by(
+        "-start_date",
+        "-pk",
+    )
+
+    if not recent_requests.exists():
+
+        # January -> previous year's December.
+        if selected_month == 1:
+            previous_month = 12
+            previous_year = selected_year - 1
+        else:
+            previous_month = selected_month - 1
+            previous_year = selected_year
+
+        previous_month_start = date(
+            previous_year,
+            previous_month,
+            1,
+        )
+
+        previous_month_end = date(
+            previous_year,
+            previous_month,
+            calendar.monthrange(
+                previous_year,
+                previous_month,
+            )[1],
+        )
+
+        recent_requests = visible_requests.filter(
+            start_date__lte=previous_month_end,
+            end_date__gte=previous_month_start,
+        ).select_related(
+            "employee",
+            "leave_type",
+        ).order_by(
+            "-start_date",
+            "-pk",
+        )
+
+        recent_requests_month_name = calendar.month_name[
+            previous_month
+        ]
+
+        recent_requests_year = previous_year
+
+    # Show maximum 5 requests.
+    recent_requests = recent_requests[:5]
+
+    # ==========================================
+    # FINAL CONTEXT
+    # ==========================================
+
+    context.update({
+        "selected_year": selected_year,
+        "selected_month": selected_month,
+        "selected_month_name": month_start.strftime("%B"),
+
+        "monthly_total_count": monthly_requests.count(),
+        "monthly_pending_count": monthly_pending.count(),
+        "monthly_approved_count": monthly_approved.count(),
+        "monthly_rejected_count": monthly_rejected.count(),
+        "monthly_cancelled_count": monthly_cancelled.count(),
+        "monthly_approved_days": monthly_approved_days,
+
+        "month_choices": [
+            (i, calendar.month_name[i])
+            for i in range(1, 13)
+        ],
+
+        # Recent requests and their displayed month.
+        "recent_requests": recent_requests,
+        "recent_requests_month_name": recent_requests_month_name,
+        "recent_requests_year": recent_requests_year,
+    })
 
     return render(
         request,
         "leave/leave_dashboard.html",
         context,
     )
+
+
+@login_required
+def leave_month_detail(request, year, month):
+    employee = get_object_or_404(
+        Employee,
+        user=request.user,
+    )
+
+    if year < 2000 or year > 9999 or month < 1 or month > 12:
+        from django.http import Http404
+        raise Http404("Invalid leave month.")
+
+    month_start = date(year, month, 1)
+    month_end = date(
+        year,
+        month,
+        calendar.monthrange(year, month)[1],
+    )
+
+    requests = get_visible_leave_requests(
+        employee
+    ).filter(
+        start_date__lte=month_end,
+        end_date__gte=month_start,
+    ).select_related(
+        "employee",
+        "leave_type",
+        "approved_by",
+    )
+
+    status = request.GET.get("status", "").upper()
+
+    valid_statuses = {
+        choice[0]
+        for choice in LeaveRequest.Status.choices
+    }
+
+    if status in valid_statuses:
+        requests = requests.filter(status=status)
+    else:
+        status = ""
+
+    requests = requests.order_by(
+        "-start_date",
+        "employee__first_name",
+    )
+
+    # Calculate the portion of each request overlapping this month.
+    monthly_records = []
+
+    for leave in requests:
+        overlap_start = max(
+            leave.start_date,
+            month_start,
+        )
+        overlap_end = min(
+            leave.end_date,
+            month_end,
+        )
+
+        if (
+            leave.duration_type
+            == LeaveRequest.DurationType.HALF_DAY
+        ):
+            days_in_month = Decimal("0.5")
+        else:
+            days_in_month = Decimal(
+                (overlap_end - overlap_start).days + 1
+            )
+
+        leave.days_in_month = days_in_month
+        monthly_records.append(leave)
+
+    return render(
+        request,
+        "leave/leave_month_detail.html",
+        {
+            "current_employee": employee,
+            "selected_year": year,
+            "selected_month": month,
+            "month_name": month_start.strftime("%B"),
+            "leave_requests": monthly_records,
+            "selected_status": status,
+        },
+    )
+
 
 
 @login_required
@@ -1490,32 +1729,86 @@ def leave_approval(request, pk):
     )
 
 
+# @login_required
+# def leave_balance(request):
+
+#     year = int(
+#         request.GET.get(
+#             "year",
+#             timezone.localdate().year,
+#         )
+#     )
+
+#     balances = LeaveBalance.objects.select_related(
+#         "employee",
+#         "leave_type",
+#     ).filter(
+#         year=year
+#     )
+
+#     return render(
+#         request,
+#         "leave/leave_balance.html",
+#         {
+#             "balances": balances,
+#             "year": year,
+#         },
+#     )
+
+
 @login_required
 def leave_balance(request):
-
-    year = int(
-        request.GET.get(
-            "year",
-            timezone.localdate().year,
-        )
+    employee = get_object_or_404(
+        Employee,
+        user=request.user,
     )
+
+    current_year = timezone.localdate().year
+
+    try:
+        year = int(request.GET.get("year", current_year))
+        if year < 2000 or year > 9999:
+            raise ValueError
+    except (TypeError, ValueError):
+        messages.error(request, "Invalid leave year.")
+        return redirect("leave_balance")
 
     balances = LeaveBalance.objects.select_related(
         "employee",
         "leave_type",
-    ).filter(
-        year=year
-    )
+    ).filter(year=year)
+
+    if employee.role == Employee.Role.SUPER_ADMIN:
+        pass
+
+    elif employee.role == Employee.Role.HR_ADMIN:
+        balances = balances.filter(
+            employee__company_id=employee.company_id,
+        )
+
+    elif employee.role == Employee.Role.MANAGER:
+        balances = balances.filter(
+            Q(employee_id=employee.pk)
+            | Q(employee__reporting_manager_id=employee.pk)
+        )
+
+    else:
+        balances = balances.filter(
+            employee_id=employee.pk,
+        )
 
     return render(
         request,
         "leave/leave_balance.html",
         {
-            "balances": balances,
+            "balances": balances.order_by(
+                "employee__first_name",
+                "leave_type__name",
+            ),
             "year": year,
+            "current_employee": employee,
         },
     )
-
 
 @login_required
 def leave_balance_create(request):
@@ -1830,13 +2123,7 @@ def leave_cancel(request, pk):
 
     if history_stage is None:
 
-        if employee.role == Employee.Role.MANAGER:
-
-            history_stage = (
-                LeaveRequest.ApprovalStage.HR_ADMIN
-            )
-
-        elif employee.role == Employee.Role.HR_ADMIN:
+        if employee.role == Employee.Role.MANAGER or employee.role == Employee.Role.HR_ADMIN:
 
             history_stage = (
                 LeaveRequest.ApprovalStage.HR_ADMIN

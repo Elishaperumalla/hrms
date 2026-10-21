@@ -16,6 +16,8 @@ from .forms import (
     EmployeeSalaryForm,
     PayrollPeriodForm,
     SalaryComponentForm,
+    SalaryStructureForm,
+    SalaryStructureComponentForm,
 )
 from .models import (
     EmployeeSalary,
@@ -24,8 +26,14 @@ from .models import (
     PayrollRecord,
     Payslip,
     SalaryComponent,
+    SalaryStructure,
+    SalaryStructureComponent,
+    
 )
-
+from attendance.holidays import (
+    get_working_days,
+    is_non_working_day,
+)
 
 # ============================================================
 # ROLE HELPERS
@@ -99,21 +107,7 @@ def is_employee(request):
 # ============================================================
 
 def get_accessible_employees(request):
-    """
-    Payroll employee visibility.
-
-    Super Admin:
-        All employees.
-
-    HR Admin:
-        Employees from same company + branch.
-
-    Manager:
-        Only own employee profile.
-
-    Employee:
-        Only own employee profile.
-    """
+    """Return employees allowed for the current payroll role."""
 
     current_employee = get_current_employee(request)
 
@@ -135,25 +129,80 @@ def get_accessible_employees(request):
     )
 
     if current_employee.role == Employee.Role.SUPER_ADMIN:
-        return base_queryset
+        # Super Admin can manage/view HR employees only.
+        return base_queryset.filter(
+            role=Employee.Role.HR_ADMIN
+        )
 
     if current_employee.role == Employee.Role.HR_ADMIN:
+        # HR manages other employees, not HR or Super Admin.
         return base_queryset.filter(
             company=current_employee.company,
             branch=current_employee.branch,
+        ).exclude(
+            role__in=[
+                Employee.Role.HR_ADMIN,
+                Employee.Role.SUPER_ADMIN,
+            ]
         )
 
+    # Manager and employee: own profile only.
     return base_queryset.filter(
         pk=current_employee.pk
     )
 
+def get_payroll_visible_employees(request):
+    """
+    Controls salary and payslip VIEW access only.
+
+    SUPER_ADMIN: HR Admin employees
+    HR_ADMIN: Own profile + permitted employees
+    MANAGER / EMPLOYEE: Own profile
+    """
+    current_employee = get_current_employee(request)
+
+    if not current_employee:
+        return Employee.objects.none()
+
+    accessible_employees = get_accessible_employees(request)
+
+    if current_employee.role == Employee.Role.HR_ADMIN:
+        return Employee.objects.filter(
+            Q(pk=current_employee.pk)
+            | Q(pk__in=accessible_employees.values("pk"))
+        )
+
+    return accessible_employees
+
+def require_salary_assignment(request):
+    """HR Admin manages other employees; Super Admin manages HR salary."""
+
+    employee = get_current_employee(request)
+
+    if employee and employee.role in [
+        Employee.Role.SUPER_ADMIN,
+        Employee.Role.HR_ADMIN,
+    ]:
+        return employee
+
+    return None
+
+
+def require_payroll_processing(request):
+    """Both roles can process payroll within their employee scope."""
+
+    employee = get_current_employee(request)
+
+    if employee and employee.role in [
+        Employee.Role.SUPER_ADMIN,
+        Employee.Role.HR_ADMIN,
+    ]:
+        return employee
+
+    return None
 
 def get_accessible_salary_queryset(request):
-    """
-    Return salary records visible to current user.
-    """
-
-    employees = get_accessible_employees(request)
+    employees = get_payroll_visible_employees(request)
 
     return EmployeeSalary.objects.filter(
         employee__in=employees
@@ -170,9 +219,9 @@ def get_accessible_salary_queryset(request):
 def get_accessible_payroll_queryset(request):
     """
     Return payroll records visible to current user.
+    HR Admin can view own payroll and permitted employees' payroll.
     """
-
-    employees = get_accessible_employees(request)
+    employees = get_payroll_visible_employees(request)
 
     return PayrollRecord.objects.filter(
         employee__in=employees
@@ -186,6 +235,7 @@ def get_accessible_payroll_queryset(request):
         "components__component",
         "payslip",
     )
+
 
 
 def require_payroll_access(request):
@@ -210,22 +260,12 @@ def require_payroll_access(request):
 
 
 def require_payroll_management(request):
-    """
-    Only HR Admin and Super Admin can manage payroll.
-    """
+    """Only HR Admin can manage shared payroll configuration and periods."""
 
     employee = get_current_employee(request)
-
-    if not employee:
-        return None
-
-    if employee.role not in [
-        Employee.Role.SUPER_ADMIN,
-        Employee.Role.HR_ADMIN,
-    ]:
-        return None
-
-    return employee
+    if employee and employee.role == Employee.Role.HR_ADMIN:
+        return employee
+    return None
 
 
 # ============================================================
@@ -260,22 +300,37 @@ def payroll_dashboard(request):
         period=current_period
     ) if current_period else PayrollRecord.objects.none()
 
+   
+    recent_payslips = payroll_queryset.filter(
+        payslip__isnull=False
+    ).order_by(
+        "-period__year",
+        "-period__month",
+    )
+
     context = {
         "current_employee": current_employee,
-        "total_employees": accessible_employees.count(),
-        "total_salary_records": salary_queryset.count(),
+
+        # KPI cards
+        "employee_count": accessible_employees.count(),
+        "salary_count": salary_queryset.filter(
+            is_active=True
+        ).count(),
+        "period_count": PayrollPeriod.objects.count(),
+        "payslip_count": recent_payslips.count(),
+
+        # Current payroll summary
         "current_period": current_period,
         "current_payroll_count": current_payroll.count(),
         "current_payroll_total": current_payroll.aggregate(
             total=Sum("net_salary")
         )["total"] or Decimal("0.00"),
-        "recent_periods": PayrollPeriod.objects.all()[:6],
-        "recent_payslips": payroll_queryset.filter(
-            payslip__isnull=False
-        ).order_by(
-            "-period__year",
-            "-period__month",
-        )[:5],
+
+        # Recent activity
+        "recent_periods": PayrollPeriod.objects.order_by(
+            "-year", "-month"
+        )[:6],
+        "recent_payslips": recent_payslips[:5],
     }
 
     return render(
@@ -294,7 +349,7 @@ def component_list(request):
 
     if not require_payroll_management(request):
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can manage salary components."
+            "Only HR Admin can manage salary components."
         )
 
     components = SalaryComponent.objects.all()
@@ -333,7 +388,7 @@ def component_create(request):
 
     if not require_payroll_management(request):
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can create salary components."
+            "Only HR Admin can create salary components."
         )
 
     if request.method == "POST":
@@ -370,7 +425,7 @@ def component_update(request, pk):
 
     if not require_payroll_management(request):
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can update salary components."
+            "Only HR Admin can update salary components."
         )
 
     component = get_object_or_404(
@@ -418,7 +473,7 @@ def component_delete(request, pk):
 
     if not require_payroll_management(request):
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can delete salary components."
+            "Only HR Admin can delete salary components."
         )
 
     component = get_object_or_404(
@@ -449,6 +504,158 @@ def component_delete(request, pk):
         "payroll/component_confirm_delete.html",
         {
             "component": component,
+        },
+    )
+
+# ============================================================
+# SALARY STRUCTURES
+# ============================================================
+
+@login_required
+def structure_list(request):
+    if not require_payroll_management(request):
+        return HttpResponseForbidden(
+            "Only HR Admin can manage salary structures."
+        )
+
+    structures = SalaryStructure.objects.all().prefetch_related(
+        "structure_components__component"
+    )
+
+    return render(
+        request,
+        "payroll/structure_list.html",
+        {"structures": structures},
+    )
+
+
+@login_required
+def structure_create(request):
+    if not require_payroll_management(request):
+        return HttpResponseForbidden(
+            "Only HR Admin can create salary structures."
+        )
+
+    if request.method == "POST":
+        form = SalaryStructureForm(request.POST)
+
+        if form.is_valid():
+            structure = form.save()
+
+            messages.success(
+                request,
+                f"Salary structure '{structure.name}' created successfully.",
+            )
+            return redirect(
+                "payroll:structure_detail",
+                pk=structure.pk,
+            )
+    else:
+        form = SalaryStructureForm()
+
+    return render(
+        request,
+        "payroll/structure_form.html",
+        {
+            "form": form,
+            "title": "Create Salary Structure",
+            "button_text": "Create Structure",
+        },
+    )
+
+
+@login_required
+def structure_detail(request, pk):
+    if not require_payroll_management(request):
+        return HttpResponseForbidden(
+            "Only HR Admin can manage salary structures."
+        )
+
+    structure = get_object_or_404(
+        SalaryStructure,
+        pk=pk,
+    )
+
+    components = structure.structure_components.select_related(
+        "component"
+    ).all()
+
+    return render(
+        request,
+        "payroll/structure_detail.html",
+        {
+            "structure": structure,
+            "components": components,
+        },
+    )
+
+
+@login_required
+def structure_component_add(request, pk):
+    if not require_payroll_management(request):
+        return HttpResponseForbidden(
+            "Only HR Admin can add salary components."
+        )
+
+    structure = get_object_or_404(
+        SalaryStructure,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = SalaryStructureComponentForm(request.POST)
+
+        # Prevent adding the same component twice.
+        form.fields["component"].queryset = (
+            SalaryComponent.objects.filter(is_active=True)
+            .exclude(
+                pk__in=structure.structure_components.values_list(
+                    "component_id",
+                    flat=True,
+                )
+            )
+        )
+
+        if form.is_valid():
+            structure_component = form.save(commit=False)
+            structure_component.structure = structure
+
+            try:
+                structure_component.save()
+            except Exception:
+                form.add_error(
+                    "component",
+                    "Could not add this component. Check whether it is already linked.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Salary component added to the structure successfully.",
+                )
+                return redirect(
+                    "payroll:structure_detail",
+                    pk=structure.pk,
+                )
+    else:
+        form = SalaryStructureComponentForm()
+        form.fields["component"].queryset = (
+            SalaryComponent.objects.filter(is_active=True)
+            .exclude(
+                pk__in=structure.structure_components.values_list(
+                    "component_id",
+                    flat=True,
+                )
+            )
+        )
+
+    return render(
+        request,
+        "payroll/structure_component_form.html",
+        {
+            "form": form,
+            "structure": structure,
+            "title": "Add Component to Salary Structure",
+            "button_text": "Add Component",
         },
     )
 
@@ -507,11 +714,11 @@ def salary_list(request):
 @login_required
 def salary_create(request):
 
-    current_employee = require_payroll_management(request)
+    current_employee = require_salary_assignment(request)
 
     if not current_employee:
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can create salary records."
+            "Only HR Admin or Super Admin can assign salary within their permitted employee scope."
         )
 
     if request.method == "POST":
@@ -610,11 +817,11 @@ def salary_detail(request, pk):
 @login_required
 def salary_update(request, pk):
 
-    current_employee = require_payroll_management(request)
+    current_employee = require_salary_assignment(request)
 
     if not current_employee:
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can update salaries."
+            "Only HR Admin or Super Admin can update salary within their permitted employee scope."
         )
 
     salary = get_object_or_404(
@@ -713,7 +920,7 @@ def period_create(request):
 
     if not require_payroll_management(request):
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can create payroll periods."
+            "Only HR Admin can create payroll periods."
         )
 
     if request.method == "POST":
@@ -767,9 +974,9 @@ def period_create(request):
     )
 
 
+
 @login_required
 def period_detail(request, pk):
-
     current_employee = require_payroll_access(request)
 
     if not current_employee:
@@ -796,11 +1003,18 @@ def period_detail(request, pk):
         total_overtime=Sum("overtime_amount"),
     )
 
+    # HR Admin and Super Admin can process payroll
+    can_manage = current_employee.role in [
+        Employee.Role.HR_ADMIN,
+        Employee.Role.SUPER_ADMIN,
+    ]
+
     context = {
         "period": period,
         "records": records,
         "summary": summary,
         "current_employee": current_employee,
+        "can_manage": can_manage,
     }
 
     return render(
@@ -885,40 +1099,32 @@ def calculate_component_amount(
 
 def get_attendance_data(employee, period):
     """
-    Read attendance information.
+    Calculate attendance for payroll.
 
-    The attendance application is treated as an optional
-    source here so Payroll remains usable even before
-    attendance records exist for a new employee.
+    Policy:
+    - Missing attendance records do not automatically create LOP.
+    - Only explicit ABSENT attendance creates LOP by itself.
+    - Approved paid leave is payable; approved unpaid leave creates LOP.
+    - Weekends and configured public holidays are excluded.
+    - HALF_DAY attendance counts as 0.5 present and does not automatically
+      create another 0.5 LOP.
     """
 
-    try:
-
-        from attendance.models import Attendance
-
-    except ImportError:
-
-        return {
-            "working_days": Decimal(
-                get_days_in_period(period)
-            ),
-            "present_days": Decimal("0.00"),
-            "leave_days": Decimal("0.00"),
-            "lop_days": Decimal("0.00"),
-            "payable_days": Decimal("0.00"),
-            "overtime_hours": Decimal("0.00"),
-        }
+    from datetime import timedelta
+    from attendance.models import Attendance
+    from leaves.models import LeaveRequest
 
     attendance_qs = Attendance.objects.filter(
         employee=employee,
-        date__range=[
-            period.start_date,
-            period.end_date,
-        ],
-    )
+        date__range=(period.start_date, period.end_date),
+    ).order_by("date")
+
+    attendance_by_date = {
+        item.date: item for item in attendance_qs
+    }
 
     working_days = Decimal(
-        get_days_in_period(period)
+        get_working_days(period.start_date, period.end_date)
     )
 
     present_days = Decimal("0.00")
@@ -926,52 +1132,95 @@ def get_attendance_data(employee, period):
     lop_days = Decimal("0.00")
     overtime_hours = Decimal("0.00")
 
+    # Approved leave requests are considered even if an attendance record
+    # was not created for the leave date.
+    approved_leaves = LeaveRequest.objects.filter(
+        employee=employee,
+        status="APPROVED",
+        start_date__lte=period.end_date,
+        end_date__gte=period.start_date,
+    ).select_related("leave_type").order_by("start_date", "id")
+
+    approved_leave_by_date = {}
+    for leave in approved_leaves:
+        leave_start = max(leave.start_date, period.start_date)
+        leave_end = min(leave.end_date, period.end_date)
+        current_day = leave_start
+        while current_day <= leave_end:
+            if not is_non_working_day(current_day):
+                day_amount = (
+                    Decimal("0.50")
+                    if leave.duration_type == "HALF_DAY"
+                    else Decimal("1.00")
+                )
+                # Overlapping approved requests should be prevented by
+                # LeaveRequest.clean(); setdefault avoids double counting
+                # if legacy data contains an overlap.
+                approved_leave_by_date.setdefault(
+                    current_day,
+                    (leave.leave_type.is_paid, day_amount),
+                )
+            current_day += timedelta(days=1)
+
+    handled_leave_dates = set()
+
     for attendance in attendance_qs:
+        day = attendance.date
+        status = str(getattr(attendance, "status", "")).upper()
 
-        status = str(
-            getattr(
-                attendance,
-                "status",
-                ""
-            )
-        ).upper()
+        if is_non_working_day(day):
+            continue
 
+        approved_leave = approved_leave_by_date.get(day)
+
+        # A present/half-day attendance record takes precedence over a leave
+        # request for the same date; do not count both.
         if status.endswith("PRESENT"):
             present_days += Decimal("1.00")
-
         elif status.endswith("HALF_DAY"):
             present_days += Decimal("0.50")
-
-        elif status.endswith("ON_LEAVE"):
-            leave_days += Decimal("1.00")
-
         elif status.endswith("ABSENT"):
-            lop_days += Decimal("1.00")
+            if approved_leave:
+                handled_leave_dates.add(day)
+            else:
+                lop_days += Decimal("1.00")
+        elif status.endswith("ON_LEAVE"):
+            if approved_leave:
+                handled_leave_dates.add(day)
+            else:
+                # Legacy ON_LEAVE attendance without a linked approved
+                # request remains treated as payable leave.
+                leave_days += Decimal("1.00")
+                handled_leave_dates.add(day)
 
-        overtime = getattr(
-            attendance,
-            "overtime",
-            None,
-        )
-
+        overtime = getattr(attendance, "overtime_hours", None)
         if overtime is None:
-            overtime = getattr(
-                attendance,
-                "overtime_hours",
-                Decimal("0.00"),
-            )
+            overtime = getattr(attendance, "overtime", Decimal("0.00"))
 
         try:
-            overtime_hours += Decimal(
-                str(overtime or 0)
-            )
-        except Exception:
+            overtime_hours += Decimal(str(overtime or 0))
+        except (TypeError, ValueError):
             pass
 
-    payable_days = (
-        present_days
-        + leave_days
-    )
+    # Apply approved leave on dates not already represented by present,
+    # half-day, or ON_LEAVE attendance. An ABSENT row is overridden by the
+    # approved leave entry for that date.
+    for leave_day, (is_paid, amount) in approved_leave_by_date.items():
+        attendance = attendance_by_date.get(leave_day)
+        status = str(getattr(attendance, "status", "")).upper() if attendance else ""
+
+        if status.endswith("PRESENT") or status.endswith("HALF_DAY"):
+            continue
+        if leave_day in handled_leave_dates:
+            # ON_LEAVE/ABSENT attendance already deferred to this request.
+            pass
+
+        if is_paid:
+            leave_days += amount
+        else:
+            lop_days += amount
+
+    payable_days = present_days + leave_days
 
     return {
         "working_days": working_days,
@@ -981,6 +1230,7 @@ def get_attendance_data(employee, period):
         "payable_days": payable_days,
         "overtime_hours": overtime_hours,
     }
+
 
 
 def calculate_payroll_record(
@@ -1208,15 +1458,18 @@ def calculate_payroll_record(
 # PROCESS PAYROLL
 # ============================================================
 
+
+
 @login_required
 @transaction.atomic
 def process_payroll(request, pk):
 
-    current_employee = require_payroll_management(request)
+    current_employee = require_payroll_processing(request)
 
     if not current_employee:
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can process payroll."
+            "Only HR Admin or Super Admin can process payroll "
+            "within their permitted employee scope."
         )
 
     period = get_object_or_404(
@@ -1224,77 +1477,39 @@ def process_payroll(request, pk):
         pk=pk,
     )
 
-    if period.status in [
-        PayrollPeriod.Status.PAID,
-        PayrollPeriod.Status.CANCELLED,
-    ]:
-
+    if period.status == PayrollPeriod.Status.CANCELLED:
         messages.error(
             request,
-            "This payroll period cannot be processed."
+            "Cancelled payroll periods cannot be processed.",
         )
-
         return redirect(
             "payroll:period_detail",
             pk=period.pk,
         )
 
-    if request.method != "POST":
+    # Super Admin can access a PAID period only to create
+    # payroll records that are genuinely missing from their scope.
+    # Existing PAID records must never be recalculated.
+    is_paid_period = (
+        period.status == PayrollPeriod.Status.PAID
+    )
 
-        accessible_employees = (
-            get_accessible_employees(request)
-            .filter(
-                employment_status__in=[
-                    Employee.EmploymentStatus.ACTIVE,
-                    Employee.EmploymentStatus.BENCH,
-                    Employee.EmploymentStatus.ON_LEAVE,
-                ]
-            )
-        )
-
-        salary_records = (
-            EmployeeSalary.objects.filter(
-                employee__in=accessible_employees,
-                is_active=True,
-                effective_from__lte=period.end_date,
-            )
-            .filter(
-                Q(effective_to__isnull=True)
-                | Q(effective_to__gte=period.start_date)
-            )
-            .select_related(
-                "employee",
-                "salary_structure",
-            )
-        )
-
-        context = {
-            "period": period,
-            "salary_records": salary_records,
-            "employee_count": salary_records.count(),
-        }
-
-        return render(
+    if is_paid_period and (
+        current_employee.role != Employee.Role.SUPER_ADMIN
+    ):
+        messages.error(
             request,
-            "payroll/payroll_process.html",
-            context,
+            "Only Super Admin can correct missing HR payroll "
+            "records in a paid period.",
+        )
+        return redirect(
+            "payroll:period_detail",
+            pk=period.pk,
         )
 
-    # --------------------------------------------------------
-    # Process
-    # --------------------------------------------------------
-
-    period.status = PayrollPeriod.Status.PROCESSING
-    period.save(
-        update_fields=[
-            "status",
-            "updated_at",
-        ]
-    )
-
-    accessible_employees = (
-        get_accessible_employees(request)
-    )
+    # Processing scope: Super Admin -> HR employees;
+    # HR Admin -> permitted non-HR employees.
+    accessible_employees = get_accessible_employees(request)
 
     salary_records = (
         EmployeeSalary.objects.filter(
@@ -1310,11 +1525,80 @@ def process_payroll(request, pk):
             "employee",
             "salary_structure",
         )
+        .order_by("employee__employee_id", "id")
     )
 
+    if not salary_records.exists():
+        messages.warning(
+            request,
+            "No active salary records were found for employees "
+            "in your permitted scope for this period.",
+        )
+        return redirect(
+            "payroll:period_detail",
+            pk=period.pk,
+        )
+
+    # Check that a PAID period actually has a missing payroll record
+    # in this user's processing scope before allowing correction.
+    if is_paid_period:
+        existing_period_employee_ids = (
+            PayrollRecord.objects.filter(
+                period=period,
+            ).values_list(
+                "employee_id",
+                flat=True,
+            )
+        )
+
+        missing_salary_records = salary_records.exclude(
+            employee_id__in=existing_period_employee_ids
+        )
+
+        if not missing_salary_records.exists():
+            messages.error(
+                request,
+                "No missing payroll records were found in your "
+                "permitted scope. Existing paid records were preserved.",
+            )
+            return redirect(
+                "payroll:period_detail",
+                pk=period.pk,
+            )
+
+    # GET: show eligible salary records for confirmation.
+    if request.method != "POST":
+
+        context = {
+            "period": period,
+            "salary_records": salary_records,
+            "employee_count": salary_records.count(),
+        }
+
+        return render(
+            request,
+            "payroll/payroll_process.html",
+            context,
+        )
+
+    # POST: process eligible employees.
     processed_count = 0
+    skipped_paid_count = 0
 
     for employee_salary in salary_records:
+
+        existing_record = PayrollRecord.objects.filter(
+            period=period,
+            employee=employee_salary.employee,
+        ).first()
+
+        # Never overwrite a payroll record marked PAID.
+        if (
+            existing_record
+            and existing_record.status == PayrollRecord.Status.PAID
+        ):
+            skipped_paid_count += 1
+            continue
 
         calculation = calculate_payroll_record(
             employee_salary,
@@ -1327,51 +1611,27 @@ def process_payroll(request, pk):
                 employee=employee_salary.employee,
                 defaults={
                     "employee_salary": employee_salary,
-                    "working_days": calculation[
-                        "working_days"
-                    ],
-                    "payable_days": calculation[
-                        "payable_days"
-                    ],
-                    "present_days": calculation[
-                        "present_days"
-                    ],
-                    "leave_days": calculation[
-                        "leave_days"
-                    ],
-                    "lop_days": calculation[
-                        "lop_days"
-                    ],
-                    "overtime_hours": calculation[
-                        "overtime_hours"
-                    ],
-                    "gross_salary": calculation[
-                        "gross_salary"
-                    ],
-                    "total_earnings": calculation[
-                        "total_earnings"
-                    ],
-                    "total_deductions": calculation[
-                        "total_deductions"
-                    ],
+                    "working_days": calculation["working_days"],
+                    "payable_days": calculation["payable_days"],
+                    "present_days": calculation["present_days"],
+                    "leave_days": calculation["leave_days"],
+                    "lop_days": calculation["lop_days"],
+                    "overtime_hours": calculation["overtime_hours"],
+                    "gross_salary": calculation["gross_salary"],
+                    "total_earnings": calculation["total_earnings"],
+                    "total_deductions": calculation["total_deductions"],
                     "employer_contribution": calculation[
                         "employer_contribution"
                     ],
-                    "lop_amount": calculation[
-                        "lop_amount"
-                    ],
-                    "overtime_amount": calculation[
-                        "overtime_amount"
-                    ],
-                    "net_salary": calculation[
-                        "net_salary"
-                    ],
+                    "lop_amount": calculation["lop_amount"],
+                    "overtime_amount": calculation["overtime_amount"],
+                    "net_salary": calculation["net_salary"],
                     "status": PayrollRecord.Status.PROCESSED,
                 },
             )
         )
 
-        # Remove old component values when recalculating.
+        # Replace component values only for records that are not PAID.
         payroll_record.components.all().delete()
 
         PayrollComponent.objects.bulk_create(
@@ -1380,20 +1640,12 @@ def process_payroll(request, pk):
                     payroll_record=payroll_record,
                     component=item["component"],
                     amount=item["amount"],
-                    calculated_from=item[
-                        "calculated_from"
-                    ],
-                    percentage=item[
-                        "percentage"
-                    ],
+                    calculated_from=item["calculated_from"],
+                    percentage=item["percentage"],
                 )
                 for item in calculation["components"]
             ]
         )
-
-        # ----------------------------------------------------
-        # Payslip
-        # ----------------------------------------------------
 
         payslip_number = (
             f"PS-{period.year}"
@@ -1411,10 +1663,10 @@ def process_payroll(request, pk):
 
         processed_count += 1
 
+    # The period cannot remain globally PAID when a newly created
+    # payroll record is still awaiting actual salary payment.
     period.status = PayrollPeriod.Status.PROCESSED
-
     period.processed_at = timezone.now()
-
     period.processed_by = request.user
 
     period.save(
@@ -1428,14 +1680,19 @@ def process_payroll(request, pk):
 
     messages.success(
         request,
-        f"Payroll processed successfully for "
-        f"{processed_count} employees."
+        (
+            f"Payroll processed successfully for {processed_count} "
+            f"employee(s). {skipped_paid_count} already-paid "
+            "record(s) were left unchanged."
+        ),
     )
 
     return redirect(
         "payroll:period_detail",
         pk=period.pk,
     )
+
+
 
 
 # ============================================================
@@ -1446,11 +1703,11 @@ def process_payroll(request, pk):
 @transaction.atomic
 def mark_payroll_paid(request, pk):
 
-    current_employee = require_payroll_management(request)
+    current_employee = require_payroll_processing(request)
 
     if not current_employee:
         return HttpResponseForbidden(
-            "Only HR Admin or Super Admin can mark payroll as paid."
+            "Only HR Admin or Super Admin can mark payroll records as paid within their permitted employee scope."
         )
 
     period = get_object_or_404(
@@ -1485,23 +1742,32 @@ def mark_payroll_paid(request, pk):
 
     payment_date = timezone.localdate()
 
-    payroll_records.update(
+    updated_count = payroll_records.update(
         status=PayrollRecord.Status.PAID,
         payment_date=payment_date,
     )
 
-    period.status = PayrollPeriod.Status.PAID
-
-    period.save(
-        update_fields=[
-            "status",
-            "updated_at",
-        ]
+    # PayrollPeriod has a single global status, while HR Admin and Super Admin
+    # may operate on different employee scopes. Mark the whole period PAID only
+    # when every payroll record in it is paid.
+    all_records_paid = (
+        PayrollRecord.objects.filter(period=period).exists()
+        and not PayrollRecord.objects.filter(period=period).exclude(
+            status=PayrollRecord.Status.PAID
+        ).exists()
     )
+
+    if all_records_paid:
+        period.status = PayrollPeriod.Status.PAID
+        period.save(update_fields=["status", "updated_at"])
 
     messages.success(
         request,
-        f"Payroll for {period.display_name} marked as paid."
+        (
+            f"{updated_count} payroll record(s) marked as paid."
+            if updated_count
+            else "No payroll records in your permitted scope needed payment updates."
+        )
     )
 
     return redirect(
@@ -1514,9 +1780,9 @@ def mark_payroll_paid(request, pk):
 # PAYSLIPS
 # ============================================================
 
+
 @login_required
 def payslip_list(request):
-
     current_employee = require_payroll_access(request)
 
     if not current_employee:
@@ -1524,42 +1790,42 @@ def payslip_list(request):
             "You do not have permission to view payslips."
         )
 
-    payroll_records = (
-        get_accessible_payroll_queryset(request)
-        .filter(
-            payslip__isnull=False
-        )
-        .order_by(
-            "-period__year",
-            "-period__month",
-            "employee__first_name",
-        )
+    # Only payroll records the current user is permitted to access.
+    accessible_records = get_accessible_payroll_queryset(request)
+
+    # Query actual Payslip objects through their related PayrollRecord.
+    payslips = Payslip.objects.filter(
+        payroll_record__in=accessible_records
+    ).select_related(
+        "payroll_record",
+        "payroll_record__employee",
+        "payroll_record__employee__company",
+        "payroll_record__employee__department",
+        "payroll_record__period",
+    ).order_by(
+        "-payroll_record__period__year",
+        "-payroll_record__period__month",
+        "payroll_record__employee__first_name",
     )
 
-    search = request.GET.get(
-        "search",
-        ""
-    ).strip()
+    search = request.GET.get("search", "").strip()
 
     if search:
-
-        payroll_records = payroll_records.filter(
-            Q(
-                employee__first_name__icontains=search
+        payslips = payslips.filter(
+            Q(payslip_number__icontains=search)
+            | Q(
+                payroll_record__employee__first_name__icontains=search
             )
             | Q(
-                employee__last_name__icontains=search
+                payroll_record__employee__last_name__icontains=search
             )
             | Q(
-                employee__employee_id__icontains=search
-            )
-            | Q(
-                payslip__payslip_number__icontains=search
+                payroll_record__employee__employee_id__icontains=search
             )
         )
 
     context = {
-        "payroll_records": payroll_records,
+        "payslips": payslips,
         "search": search,
         "current_employee": current_employee,
     }
@@ -1569,7 +1835,6 @@ def payslip_list(request):
         "payroll/payslip_list.html",
         context,
     )
-
 
 @login_required
 def payslip_detail(request, pk):
@@ -1623,8 +1888,9 @@ def payslip_detail(request, pk):
     )
 
     context = {
-        "payslip": payslip,
         "payroll_record": payroll_record,
+        "payslip": payslip,
+        "components": components,
         "earnings": earnings,
         "deductions": deductions,
         "employer_contributions": employer_contributions,
@@ -1636,6 +1902,8 @@ def payslip_detail(request, pk):
         "payroll/payslip_detail.html",
         context,
     )
+
+  
 
 
 @login_required

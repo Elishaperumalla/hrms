@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Salary Component{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                        Delete Salary Component
+                    </h2>
+                    <p>Are you sure you want to delete <strong>{{ component.name }}</strong> ({{ component.code }})?</p>
+                    <p class="text-muted small">Components already used in payroll records cannot be deleted.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <a href="{% url 'payroll:component_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Delete Component</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

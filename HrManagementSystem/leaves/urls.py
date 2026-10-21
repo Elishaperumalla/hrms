@@ -82,4 +82,10 @@ urlpatterns = [
         views.leave_report,
         name="leave_report",
     ),
+    
+    path(
+    "month/<int:year>/<int:month>/",
+    views.leave_month_detail,
+    name="leave_month_detail",
+),
 ]

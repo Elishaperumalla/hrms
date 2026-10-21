@@ -1,210 +1,119 @@
-// document.addEventListener("DOMContentLoaded", function () {
 
-//     const sidebar = document.getElementById("sidebar");
-//     const sidebarToggle = document.getElementById("sidebarToggle");
-//     const sidebarClose = document.getElementById("sidebarClose");
-//     const sidebarOverlay = document.getElementById("sidebarOverlay");
+/* ==========================================
+   SIDEBAR RESPONSIVE CONTROLLER
+========================================== */
 
-
-//     // OPEN SIDEBAR
-//     if (sidebarToggle) {
-
-//         sidebarToggle.addEventListener("click", function () {
-
-//             sidebar.classList.add("show");
-
-//             if (sidebarOverlay) {
-//                 sidebarOverlay.classList.add("show");
-//             }
-
-//         });
-
-//     }
-
-
-//     // CLOSE SIDEBAR
-//     if (sidebarClose) {
-
-//         sidebarClose.addEventListener("click", function () {
-
-//             sidebar.classList.remove("show");
-
-//             if (sidebarOverlay) {
-//                 sidebarOverlay.classList.remove("show");
-//             }
-
-//         });
-
-//     }
-
-
-//     // CLOSE WHEN CLICKING OUTSIDE
-//     if (sidebarOverlay) {
-
-//         sidebarOverlay.addEventListener("click", function () {
-
-//             sidebar.classList.remove("show");
-
-//             sidebarOverlay.classList.remove("show");
-
-//         });
-
-//     }
-
-
-//     // CLOSE SIDEBAR AFTER CLICKING A MENU ITEM ON MOBILE
-//     const sidebarLinks = document.querySelectorAll(".sidebar-link");
-
-//     sidebarLinks.forEach(function (link) {
-
-//         link.addEventListener("click", function () {
-
-//             if (window.innerWidth <= 991) {
-
-//                 sidebar.classList.remove("show");
-
-//                 if (sidebarOverlay) {
-//                     sidebarOverlay.classList.remove("show");
-//                 }
-
-//             }
-
-//         });
-
-//     });
-
-// });
 document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarClose = document.getElementById("sidebarClose");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-    /*
-    ============================================================
-    SIDEBAR
-    ============================================================
-    */
-
-    const sidebar =
-        document.getElementById("sidebar");
-
-    const sidebarToggle =
-        document.getElementById("sidebarToggle");
-
-    const sidebarClose =
-        document.getElementById("sidebarClose");
-
-    const sidebarOverlay =
-        document.getElementById("sidebarOverlay");
-
-
-    /*
-    OPEN SIDEBAR
-    */
-
-    if (sidebarToggle && sidebar) {
-
-        sidebarToggle.addEventListener(
-            "click",
-            function () {
-
-                sidebar.classList.add("show");
-
-                if (sidebarOverlay) {
-
-                    sidebarOverlay.classList.add("show");
-
-                }
-
-            }
-        );
-
+    if (!sidebar) {
+        return;
     }
 
-
-    /*
-    CLOSE SIDEBAR
-    */
-
-    if (sidebarClose && sidebar) {
-
-        sidebarClose.addEventListener(
-            "click",
-            function () {
-
-                sidebar.classList.remove("show");
-
-                if (sidebarOverlay) {
-
-                    sidebarOverlay.classList.remove("show");
-
-                }
-
-            }
-        );
-
+    function isMobileView() {
+        return window.matchMedia("(max-width: 991px)").matches;
     }
 
+    function openSidebar() {
+        if (!isMobileView()) {
+            return;
+        }
 
-    /*
-    CLOSE USING OVERLAY
-    */
+        sidebar.classList.add("show");
 
-    if (sidebarOverlay && sidebar) {
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.add("show");
+        }
 
-        sidebarOverlay.addEventListener(
-            "click",
-            function () {
+        document.body.classList.add("sidebar-open");
 
-                sidebar.classList.remove("show");
-
-                sidebarOverlay.classList.remove("show");
-
-            }
-        );
-
+        if (sidebarToggle) {
+            sidebarToggle.setAttribute("aria-expanded", "true");
+        }
     }
 
+    function closeSidebar() {
+        sidebar.classList.remove("show");
 
-    /*
-    CLOSE SIDEBAR AFTER MENU CLICK
-    */
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove("show");
+        }
 
-    const sidebarLinks =
-        document.querySelectorAll(
-            ".sidebar-link"
-        );
+        document.body.classList.remove("sidebar-open");
 
+        if (sidebarToggle) {
+            sidebarToggle.setAttribute("aria-expanded", "false");
+        }
+    }
 
-    sidebarLinks.forEach(function (link) {
+    // Hamburger button
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-        link.addEventListener(
-            "click",
-            function () {
-
-                if (
-                    window.innerWidth <= 991 &&
-                    sidebar
-                ) {
-
-                    sidebar.classList.remove(
-                        "show"
-                    );
-
-
-                    if (sidebarOverlay) {
-
-                        sidebarOverlay.classList.remove(
-                            "show"
-                        );
-
-                    }
-
-                }
-
+            if (sidebar.classList.contains("show")) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
-        );
+        });
+    }
 
+    // Close button
+    if (sidebarClose) {
+        sidebarClose.addEventListener("click", function (event) {
+            event.preventDefault();
+            closeSidebar();
+        });
+    }
+
+    // Click outside sidebar
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", function () {
+            closeSidebar();
+        });
+    }
+
+    // Close after selecting a navigation link.
+    // Do not interfere with Bootstrap collapse menus.
+    sidebar.querySelectorAll(".sidebar-link").forEach(function (link) {
+        link.addEventListener("click", function () {
+            if (!isMobileView()) {
+                return;
+            }
+
+            if (link.getAttribute("data-bs-toggle") === "collapse") {
+                return;
+            }
+
+            closeSidebar();
+        });
     });
 
+    // Close sidebar when pressing Escape
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeSidebar();
+        }
+    });
 
+    // Reset mobile state when returning to desktop
+    window.addEventListener("resize", function () {
+        if (!isMobileView()) {
+            closeSidebar();
+        }
+    });
+});
+
+
+/* ==========================================
+   HRMS THEME SYSTEM
+   Nee existing theme code ikkada continue avvali.
+========================================== */
 
     /*
     ============================================================

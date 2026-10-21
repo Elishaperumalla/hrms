@@ -32,8 +32,7 @@ urlpatterns = [
     path("recruitment/", include("recruitment.urls")),
     path("performance/", include("performance.urls")),
     path("reports/", include("reports.urls")),
-
-   
+    path("chat/", include("chat.urls")),   
 
 ]
 if settings.DEBUG:

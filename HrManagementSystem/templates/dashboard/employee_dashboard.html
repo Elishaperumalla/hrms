@@ -35,19 +35,13 @@
 
         <div class="d-flex align-items-center">
 
-            <div
-                class="rounded-circle
-                       bg-primary
-                       bg-opacity-10
-                       text-primary
-                       d-flex
-                       align-items-center
-                       justify-content-center
-                       me-3"
-                style="width:64px;height:64px;"
-            >
-                <i class="bi bi-person-fill fs-3"></i>
-            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3 overflow-hidden" style="width:64px;height:64px;flex-shrink:0;">
+    {% if current_employee and current_employee.profile_photo %}
+        <img src="{{ current_employee.profile_photo.url }}" alt="{{ current_employee.get_full_name }}" class="w-100 h-100" style="object-fit:cover;">
+    {% else %}
+        <i class="bi bi-person-fill fs-3"></i>
+    {% endif %}
+</div>
 
 
             <div>

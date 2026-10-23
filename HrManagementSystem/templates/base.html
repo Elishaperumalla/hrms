@@ -415,10 +415,19 @@
 
                         <button type="button" class="btn user-menu dropdown-toggle" data-bs-toggle="dropdown">
 
-                            <div class="user-avatar">
-
-                                {{ user.first_name|first|default:user.username|first|upper }}
-
+                            <div class="user-avatar overflow-hidden d-flex align-items-center justify-content-center"
+                                 style="width:42px; height:42px; min-width:42px; border-radius:50%;">
+                                {% if user.employee_profile.profile_photo %}
+                                    <img src="{{ user.employee_profile.profile_photo.url }}"
+                                         alt="{{ user.get_full_name|default:user.username }}"
+                                         style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                                {% elif user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}"
+                                         alt="{{ user.get_full_name|default:user.username }}"
+                                         style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                                {% else %}
+                                    {{ user.first_name|first|default:user.username|first|upper }}
+                                {% endif %}
                             </div>
 
 

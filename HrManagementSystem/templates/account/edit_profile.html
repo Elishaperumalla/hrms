@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - HRMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Edit Profile</h3>
+            <p class="text-muted mb-0">
+                Update your personal details and profile photo.
+            </p>
+        </div>
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Profile
+        </a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if user_form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ user_form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="card dashboard-card mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Account Information</h5>
+
+                {% for field in user_form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}"
+                               class="form-label fw-semibold">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+
+                        {% if field.name == "profile_picture" and user.profile_picture %}
+                            <div class="mt-2">
+                                <img src="{{ user.profile_picture.url }}"
+                                     alt="Current profile photo"
+                                     style="width:90px;height:90px;object-fit:cover;border-radius:50%;">
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if employee_form %}
+            {% if employee_form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ employee_form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="card dashboard-card mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Personal Information</h5>
+
+                    {% if employee.profile_photo %}
+                        <div class="mb-3">
+                            <img src="{{ employee.profile_photo.url }}"
+                                 alt="Current employee photo"
+                                 style="width:100px;height:100px;object-fit:cover;border-radius:50%;">
+                        </div>
+                    {% endif %}
+
+                    {% for field in employee_form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <p class="text-muted small mb-0">
+                        Employee ID, role, department, designation, salary,
+                        and access permissions cannot be changed here.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-1"></i> Save Changes
+            </button>
+            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

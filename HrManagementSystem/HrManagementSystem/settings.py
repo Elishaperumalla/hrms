@@ -351,9 +351,9 @@ if VERCEL_URL:
 # =========================================================
 
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "True").strip().lower() in ("true", "1", "yes")
+    CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "True").strip().lower() in ("true", "1", "yes")
+    SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT","True").lower() in ("true","1","yes")
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
 

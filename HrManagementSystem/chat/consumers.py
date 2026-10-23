@@ -173,6 +173,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     **saved,
                 },
             )
+            await self.broadcast_sidebar_updates(
+                self.conversation_id,
+                user.pk,
+                text,
+            )
         # ------------------------------------------
         # EDIT OWN MESSAGE
         # ------------------------------------------
@@ -420,6 +425,95 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "online": online,
                 },
             )
+
+    async def broadcast_sidebar_updates(
+        self, conversation_id, sender_id, message_text
+    ):
+        updates = await self.get_sidebar_update_data(
+            conversation_id, sender_id, message_text
+        )
+        for update in updates:
+            await self.channel_layer.group_send(
+                f"chat_sidebar_{update['user_id']}",
+                {
+                    "type": "sidebar_update",
+                    "conversationId": conversation_id,
+                    "senderName": update["sender_name"],
+                    "message": message_text,
+                    "unreadCount": update["unread_count"],
+                    "href": update["href"],
+                    "chatTitle": update["chat_title"],
+                    "chatType": update["chat_type"],
+                },
+            )
+
+    @database_sync_to_async
+    def get_sidebar_update_data(
+        self, conversation_id, sender_id, message_text
+    ):
+        from django.urls import reverse
+
+        conversation = Conversation.objects.filter(
+            pk=conversation_id
+        ).first()
+        if conversation is None:
+            return []
+
+        members = list(
+            ConversationMember.objects.filter(
+                conversation_id=conversation_id
+            ).select_related("user")
+        )
+        result = []
+        for membership in members:
+            user = membership.user
+            unread_count = MessageReceipt.objects.filter(
+                user_id=user.pk,
+                message__conversation_id=conversation_id,
+                read_at__isnull=True,
+            ).exclude(message__sender_id=user.pk).count()
+
+            if conversation.chat_type == Conversation.ChatType.INDIVIDUAL:
+                other = next(
+                    (m.user for m in members if m.user_id != user.pk),
+                    None,
+                )
+                title = (
+                    (other.get_full_name().strip() or other.username)
+                    if other else "Individual Chat"
+                )
+            else:
+                title = (
+                    conversation.name
+                    or (
+                        f"{conversation.department.name} Department"
+                        if conversation.department_id else None
+                    )
+                    or (
+                        f"{conversation.branch.name} Branch"
+                        if conversation.branch_id else None
+                    )
+                    or f"{conversation.get_chat_type_display()} Chat"
+                )
+
+            result.append({
+                "user_id": user.pk,
+                "sender_name": (
+                    "You" if user.pk == sender_id
+                    else (
+                        self_name
+                        if (self_name := (
+                            get_user_model().objects.filter(pk=sender_id)
+                            .values_list("first_name", flat=True).first()
+                        )) else "Message"
+                    )
+                ),
+                "unread_count": unread_count,
+                "href": reverse("chat:room", args=[conversation_id]),
+                "chat_title": title,
+                "chat_type": conversation.chat_type,
+            })
+        return result
 
     @database_sync_to_async
     def is_member(self, user_id, conversation_id):
@@ -834,3 +928,38 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         ).update(last_read_at=now)
 
         return ids
+
+
+class ChatSidebarConsumer(AsyncJsonWebsocketConsumer):
+    """Per-user live updates for the chat sidebar."""
+
+    async def connect(self):
+        user = self.scope["user"]
+        if not user.is_authenticated:
+            await self.close(code=4401)
+            return
+
+        self.sidebar_group = f"chat_sidebar_{user.pk}"
+        await self.channel_layer.group_add(
+            self.sidebar_group, self.channel_name
+        )
+        await self.accept()
+        await self.send_json({"type": "sidebar_connected"})
+
+    async def disconnect(self, close_code):
+        if hasattr(self, "sidebar_group"):
+            await self.channel_layer.group_discard(
+                self.sidebar_group, self.channel_name
+            )
+
+    async def sidebar_update(self, event):
+        await self.send_json({
+            "type": "sidebar_update",
+            "conversationId": event.get("conversationId"),
+            "senderName": event.get("senderName", "Message"),
+            "message": event.get("message", ""),
+            "unreadCount": event.get("unreadCount", 0),
+            "href": event.get("href", ""),
+            "chatTitle": event.get("chatTitle", ""),
+            "chatType": event.get("chatType", "INDIVIDUAL"),
+        })

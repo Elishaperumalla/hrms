@@ -8,6 +8,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from .presence import checked_in_user_ids, user_is_checked_in
+
 from .models import (
     ChatPresenceConnection,
     Conversation,
@@ -54,7 +56,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             self.presence_connection_id,
         )
 
-        if not was_online:
+        if (
+            not was_online
+            and await self.is_attendance_checked_in(user.pk)
+        ):
             await self.broadcast_presence(
                 conversation_ids, user.pk, True
             )
@@ -68,21 +73,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             "members": snapshot,
         })
 
-        receipt_data = await self.mark_unread_as_read(
-            self.conversation_id,
-            user.pk,
-        )
-
-        if receipt_data:
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "receipt_update",
-                    "action": "read",
-                    "user_id": user.pk,
-                    "message_ids": receipt_data,
-                },
-            )
+        can_write = await self.can_write_chat(user)
+        await self.send_json({
+            "type": "chat_permission",
+            "can_write": can_write,
+            "message": (
+                "You’re currently checked out. "
+                "Please check in to start chatting with your colleagues."
+            ),
+        })
 
     async def disconnect(self, close_code):
         if hasattr(self, "room_group_name"):
@@ -131,7 +130,30 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 user.pk,
                 self.presence_connection_id,
             )
+            can_write = await self.can_write_chat(user)
+            await self.send_json({
+                "type": "chat_permission",
+                "can_write": can_write,
+                "message": (
+                    "You’re currently checked out. "
+                    "Please check in to start chatting with your colleagues."
+                ),
+            })
             return
+
+        # Checked-out users can receive and read messages, but cannot
+        # create, edit, delete, reply to, or forward messages.
+        if action in {"message", "edit", "delete", "forward"}:
+            if not await self.can_write_chat(user):
+                await self.send_json({
+                    "type": "chat_permission",
+                    "can_write": False,
+                    "message": (
+                        "You’re currently checked out. "
+                        "Please check in to start chatting with your colleagues."
+                    ),
+                })
+                return
 
         # ------------------------------------------
         # NORMAL MESSAGE + OPTIONAL REPLY
@@ -526,6 +548,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         ).exists()
 
     @database_sync_to_async
+    def is_attendance_checked_in(self, user_id):
+        return user_is_checked_in(user_id)
+
+    async def can_write_chat(self, user):
+        # HR Admin and Super Admin are exempt from attendance restrictions.
+        if getattr(user, "role", "") in {"HR_ADMIN", "SUPER_ADMIN"}:
+            return True
+
+        return await self.is_attendance_checked_in(user.pk)
+
+    @database_sync_to_async
     def register_presence(self, user_id, connection_id):
         now = timezone.now()
         cutoff = now - timedelta(
@@ -538,10 +571,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 last_seen__lt=cutoff,
             ).delete()
 
-            was_online = ChatPresenceConnection.objects.filter(
-                user_id=user_id,
-                last_seen__gte=cutoff,
-            ).exists()
+            was_online = (
+                user_is_checked_in(user_id)
+                and ChatPresenceConnection.objects.filter(
+                    user_id=user_id,
+                    last_seen__gte=cutoff,
+                ).exists()
+            )
 
             ChatPresenceConnection.objects.create(
                 user_id=user_id,
@@ -574,10 +610,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 last_seen__lt=cutoff,
             ).delete()
 
-            still_online = ChatPresenceConnection.objects.filter(
-                user_id=user_id,
-                last_seen__gte=cutoff,
-            ).exists()
+            still_online = (
+                user_is_checked_in(user_id)
+                and ChatPresenceConnection.objects.filter(
+                    user_id=user_id,
+                    last_seen__gte=cutoff,
+                ).exists()
+            )
 
             conversation_ids = list(
                 ConversationMember.objects.filter(
@@ -612,6 +651,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 last_seen__gte=cutoff,
             ).values_list("user_id", flat=True).distinct()
         )
+
+        online_ids &= checked_in_user_ids(member_ids)
 
         return [
             {
@@ -939,12 +980,86 @@ class ChatSidebarConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4401)
             return
 
+        self.user_id = user.pk
         self.sidebar_group = f"chat_sidebar_{user.pk}"
+
         await self.channel_layer.group_add(
             self.sidebar_group, self.channel_name
         )
         await self.accept()
+
         await self.send_json({"type": "sidebar_connected"})
+
+        # Send existing unread counts immediately after connecting.
+        unread_counts = await self.get_initial_unread_counts(self.user_id)
+        for item in unread_counts:
+            await self.send_json({
+                "type": "sidebar_update",
+                "conversationId": item["conversation_id"],
+                "unreadCount": item["unread_count"],
+                "href": item["href"],
+                "chatTitle": item["chat_title"],
+                "chatType": item["chat_type"],
+            })
+
+    @database_sync_to_async
+    def get_initial_unread_counts(self, user_id):
+        from django.urls import reverse
+
+        memberships = ConversationMember.objects.filter(
+            user_id=user_id
+        ).select_related(
+            "conversation",
+            "conversation__department",
+            "conversation__branch",
+        )
+
+        result = []
+
+        for membership in memberships:
+            conversation = membership.conversation
+
+            unread_count = MessageReceipt.objects.filter(
+                user_id=user_id,
+                message__conversation_id=conversation.pk,
+                read_at__isnull=True,
+            ).exclude(
+                message__sender_id=user_id
+            ).count()
+
+            if conversation.chat_type == Conversation.ChatType.INDIVIDUAL:
+                other_members = ConversationMember.objects.filter(
+                    conversation_id=conversation.pk
+                ).exclude(user_id=user_id).select_related("user")
+
+                other = next(iter(other_members), None)
+                title = (
+                    (other.user.get_full_name().strip() or other.user.username)
+                    if other else "Individual Chat"
+                )
+            else:
+                title = (
+                    conversation.name
+                    or (
+                        f"{conversation.department.name} Department"
+                        if conversation.department_id else None
+                    )
+                    or (
+                        f"{conversation.branch.name} Branch"
+                        if conversation.branch_id else None
+                    )
+                    or f"{conversation.get_chat_type_display()} Chat"
+                )
+
+            result.append({
+                "conversation_id": conversation.pk,
+                "unread_count": unread_count,
+                "href": reverse("chat:room", args=[conversation.pk]),
+                "chat_title": title,
+                "chat_type": conversation.chat_type,
+            })
+
+        return result
 
     async def disconnect(self, close_code):
         if hasattr(self, "sidebar_group"):

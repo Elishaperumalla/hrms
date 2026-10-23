@@ -508,13 +508,12 @@
             name="chatFrame"
             id="chatFrame"
             title="Chat conversation"
-            src="{% if conversations %}{% url 'chat:room' conversations.0.id %}{% else %}about:blank{% endif %}"
-            {% if not conversations %}style="display:none;"{% endif %}>
+            src="about:blank"
+            style="display:none;">
         </iframe>
 
         <div class="welcome-panel"
-             id="welcomePanel"
-             {% if conversations %}style="display:none;"{% endif %}>
+             id="welcomePanel">
 
             <div>
                 <div class="welcome-icon">
@@ -945,12 +944,7 @@ window.addEventListener("message", function (event) {
 });
 
 
-/* Set the initially selected conversation. */
-const initialItem = getConversationItems()[0];
-
-if (initialItem) {
-    selectConversation(initialItem);
-}
+/* No conversation is selected automatically. */
 
 /* New chat modal controls. */
 function updateChatForm() {
@@ -1069,18 +1063,19 @@ function connectChatSidebarSocket() {
 
         if (data.type !== "sidebar_update" || !data.conversationId) return;
 
-        // Keep the existing active chat selected while updating other chats.
-        const item = ensureConversationItem(data, true);
+        // Initial unread-count updates must not change conversation order.
+        // Move a conversation to the top only when a message update arrives.
+        const hasNewMessage = typeof data.message !== "undefined";
+        const item = ensureConversationItem(data, hasNewMessage);
         if (!item) return;
 
-        if (typeof data.message !== "undefined") {
+        if (hasNewMessage) {
             updateSidebarMessage(data);
         }
 
-        // The server's receipt-based count is authoritative.
-        // If this conversation is currently active, don't show stale unread.
-        const active = item.classList.contains("active");
-        setSidebarUnread(item, active ? 0 : data.unreadCount);
+        // Keep the server's receipt-based unread count.
+        // Opening a room will clear messages through actual read receipts.
+        setSidebarUnread(item, data.unreadCount);
     });
 
     socket.addEventListener("close", function () {
@@ -1095,13 +1090,6 @@ function connectChatSidebarSocket() {
 // Make sure existing server-rendered sidebar items have badges too.
 conversationList.querySelectorAll(".conversation-item").forEach(function (item) {
     ensureUnreadBadge(item);
-});
-
-// Clicking a conversation clears its visible count; the room consumer
-// remains responsible for marking the actual message receipts as read.
-conversationList.addEventListener("click", function (event) {
-    const item = event.target.closest(".conversation-item");
-    if (item) setSidebarUnread(item, 0);
 });
 
 connectChatSidebarSocket();

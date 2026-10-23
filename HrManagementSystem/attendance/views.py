@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from employees.models import Employee
+from chat.presence import broadcast_user_presence
 
 from .forms import AttendanceForm
 from .models import Attendance
@@ -1028,6 +1029,8 @@ def attendance_clock_in(request):
         attendance.check_in = current_time
         attendance.save()
 
+    broadcast_user_presence(request.user.pk)
+
     messages.success(
         request,
         f"Clock-in recorded at {current_time.strftime('%I:%M %p')}.",
@@ -1103,6 +1106,8 @@ def attendance_clock_out(request):
     attendance.check_out = current_time
     attendance.status = Attendance.Status.PRESENT
     attendance.save()
+
+    broadcast_user_presence(request.user.pk, False)
 
     messages.success(
         request,

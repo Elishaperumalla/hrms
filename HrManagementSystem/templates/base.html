@@ -86,6 +86,29 @@
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
+
+    <style>
+    /* Chat unread conversations badge */
+    .chat-total-unread-badge {
+        margin-left: auto;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #dc3545;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+    .chat-total-unread-badge[hidden] {
+        display: none !important;
+    }
+    </style>
+
 </head>
 
 
@@ -331,6 +354,9 @@
                     class="sidebar-link {% if request.resolver_match.namespace == 'chat' %}active{% endif %}">
                     <i class="bi bi-chat-dots me-2"></i>
                     <span>Chat</span>
+                    <span id="chatUnreadConversationsBadge"
+                          class="chat-total-unread-badge"
+                          hidden>0</span>
                 </a>
 
 
@@ -568,6 +594,166 @@
     {% block scripts %}
     {% endblock %}
 
+
+
+{% if request.user.is_authenticated %}
+<script id="hrmsAppPresenceHeartbeat">
+(function () {
+    "use strict";
+
+    const heartbeatUrl = "{% url 'chat:presence_heartbeat' %}";
+    const leaveUrl = "{% url 'chat:presence_leave' %}";
+    const csrfMatch = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : "";
+
+    let clientId = sessionStorage.getItem("hrms_presence_client_id");
+
+    if (!/^[a-f0-9]{32}$/.test(clientId || "")) {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+            clientId = window.crypto.randomUUID().replace(/-/g, "");
+        } else {
+            clientId = Array.from(
+                { length: 32 },
+                function () {
+                    return Math.floor(Math.random() * 16).toString(16);
+                }
+            ).join("");
+        }
+        sessionStorage.setItem("hrms_presence_client_id", clientId);
+    }
+
+    async function sendPresence(url) {
+        const response = await fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ client_id: clientId })
+        });
+
+        if (!response.ok) {
+            throw new Error("Presence request failed: " + response.status);
+        }
+    }
+
+    function heartbeat() {
+        sendPresence(heartbeatUrl).catch(function (error) {
+            console.warn("HRMS presence heartbeat failed.", error);
+        });
+    }
+
+    heartbeat();
+
+    const heartbeatTimer = window.setInterval(heartbeat, 25000);
+
+    document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) {
+            heartbeat();
+        }
+    });
+
+    document.querySelectorAll('form[action*="/logout/"]').forEach(function (form) {
+        form.addEventListener("submit", async function (event) {
+            if (form.dataset.presenceLeaving === "true") {
+                return;
+            }
+
+            event.preventDefault();
+            form.dataset.presenceLeaving = "true";
+            window.clearInterval(heartbeatTimer);
+
+            const submitButton = form.querySelector('[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            try {
+                await sendPresence(leaveUrl);
+            } catch (error) {
+                console.warn("HRMS presence cleanup failed.", error);
+            }
+
+            HTMLFormElement.prototype.submit.call(form);
+        });
+    });
+})();
+</script>
+{% endif %}
+
+
+<script>
+/* HRMS global chat unread conversations badge */
+(function () {
+    const badge = document.getElementById("chatUnreadConversationsBadge");
+    if (!badge || !("WebSocket" in window)) return;
+
+    const unreadByConversation = new Map();
+    let socket = null;
+    let retryDelay = 3000;
+
+    function renderBadge() {
+        let total = 0;
+        unreadByConversation.forEach(function (count) {
+            if (count > 0) total += 1;
+        });
+
+        badge.textContent = total > 99 ? "99+" : String(total);
+        badge.hidden = total === 0;
+        badge.setAttribute("aria-label", total + " unread conversations");
+    }
+
+    function connect() {
+        const scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+
+        try {
+            socket = new WebSocket(
+                scheme + window.location.host + "/ws/chat/sidebar/"
+            );
+        } catch (_) {
+            window.setTimeout(connect, retryDelay);
+            return;
+        }
+
+        socket.addEventListener("open", function () {
+            retryDelay = 3000;
+        });
+
+        socket.addEventListener("message", function (event) {
+            let data;
+            try {
+                data = JSON.parse(event.data);
+            } catch (_) {
+                return;
+            }
+
+            if (data.type !== "sidebar_update" || data.conversationId == null) {
+                return;
+            }
+
+            const conversationId = String(data.conversationId);
+            const unreadMessages = Math.max(0, Number(data.unreadCount) || 0);
+
+            unreadByConversation.set(conversationId, unreadMessages);
+            renderBadge();
+        });
+
+        socket.addEventListener("close", function () {
+            window.setTimeout(connect, retryDelay);
+            retryDelay = Math.min(retryDelay * 2, 30000);
+        });
+
+        socket.addEventListener("error", function () {
+            try {
+                socket.close();
+            } catch (_) {}
+        });
+    }
+
+    connect();
+})();
+</script>
 
 </body>
 

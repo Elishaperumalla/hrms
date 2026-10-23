@@ -1,8 +1,14 @@
 
+import json
+import re
+from datetime import timedelta
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -10,7 +16,17 @@ from django.views.decorators.http import require_POST
 from employees.models import Employee
 from organization.models import Branch, Department
 
-from .models import Conversation, ConversationMember, MessageReceipt
+from .presence import (
+    broadcast_user_presence,
+    user_is_checked_in,
+)
+
+from .models import (
+    ChatPresenceConnection,
+    Conversation,
+    ConversationMember,
+    MessageReceipt,
+)
 
 
 def get_employee(user):
@@ -120,13 +136,10 @@ def chat_home(request):
             .first()
         )
 
-    # Latest active conversations first
+    # Keep chat order consistent with the timestamp updated
+    # whenever a new message is saved.
     conversations.sort(
-        key=lambda conversation: (
-            conversation.last_message.created_at
-            if conversation.last_message
-            else conversation.created_at
-        ),
+        key=lambda conversation: conversation.updated_at,
         reverse=True,
     )
 
@@ -432,12 +445,12 @@ def chat_room(request, conversation_id):
     membership.last_read_at = timezone.now()
     membership.save(update_fields=["last_read_at"])
 
-    other_members = conversation.memberships.exclude(
+    chat_other_members = conversation.memberships.exclude(
         user=request.user
     ).select_related("user")
 
     if conversation.chat_type == Conversation.ChatType.INDIVIDUAL:
-        other = other_members.first()
+        other = chat_other_members.first()
         title = (
             other.user.get_full_name() or other.user.username
         ) if other else "Individual chat"
@@ -554,9 +567,124 @@ def chat_room(request, conversation_id):
         "conversation": conversation,
         "chat_title": title,
         "chat_messages": chat_messages,
-        "other_members": other_members,
+        "other_members": chat_other_members,
         "forward_conversations": forward_conversations,
     }
 
 
     return render(request, "chat/chat_room.html", context)
+
+# ------------------------------------------------------------
+# APP-LEVEL PRESENCE
+# ------------------------------------------------------------
+
+APP_PRESENCE_TIMEOUT_SECONDS = 75
+
+
+def _broadcast_user_presence(user_id, online):
+    broadcast_user_presence(user_id, online)
+
+
+def _get_app_presence_connection_id(user_id, client_id):
+    if not isinstance(client_id, str):
+        return None
+
+    if not re.fullmatch(r"[a-f0-9]{32}", client_id):
+        return None
+
+    return f"app-{user_id}-{client_id}"
+
+
+@login_required
+@require_POST
+def presence_heartbeat(request):
+    try:
+        payload = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    connection_id = _get_app_presence_connection_id(
+        request.user.pk,
+        payload.get("client_id") if isinstance(payload, dict) else None,
+    )
+    if not connection_id:
+        return JsonResponse({"error": "Invalid client ID"}, status=400)
+
+    now = timezone.now()
+    cutoff = now - timedelta(seconds=APP_PRESENCE_TIMEOUT_SECONDS)
+
+    stale_user_ids = set(
+        ChatPresenceConnection.objects.filter(
+            last_seen__lt=cutoff,
+        ).values_list("user_id", flat=True).distinct()
+    )
+    ChatPresenceConnection.objects.filter(last_seen__lt=cutoff).delete()
+
+    was_online = ChatPresenceConnection.objects.filter(
+        user_id=request.user.pk,
+        last_seen__gte=cutoff,
+    ).exists()
+
+    ChatPresenceConnection.objects.update_or_create(
+        connection_id=connection_id,
+        defaults={
+            "user": request.user,
+            "last_seen": now,
+        },
+    )
+
+    if not was_online:
+        _broadcast_user_presence(request.user.pk, True)
+
+    # Notify chat rooms when a user's last presence connection expired.
+    for stale_user_id in stale_user_ids:
+        still_online = ChatPresenceConnection.objects.filter(
+            user_id=stale_user_id,
+            last_seen__gte=cutoff,
+        ).exists()
+        if not still_online:
+            _broadcast_user_presence(stale_user_id, False)
+
+    return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+def presence_leave(request):
+    try:
+        payload = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    connection_id = _get_app_presence_connection_id(
+        request.user.pk,
+        payload.get("client_id") if isinstance(payload, dict) else None,
+    )
+    if not connection_id:
+        return JsonResponse({"error": "Invalid client ID"}, status=400)
+
+    ChatPresenceConnection.objects.filter(
+        user_id=request.user.pk,
+        connection_id=connection_id,
+    ).delete()
+
+    cutoff = timezone.now() - timedelta(
+        seconds=APP_PRESENCE_TIMEOUT_SECONDS
+    )
+    stale_user_ids = set(
+        ChatPresenceConnection.objects.filter(
+            last_seen__lt=cutoff,
+        ).values_list("user_id", flat=True).distinct()
+    )
+    ChatPresenceConnection.objects.filter(last_seen__lt=cutoff).delete()
+    stale_user_ids.add(request.user.pk)
+
+    for user_id in stale_user_ids:
+        still_online = ChatPresenceConnection.objects.filter(
+            user_id=user_id,
+            last_seen__gte=cutoff,
+        ).exists()
+        if not still_online:
+            _broadcast_user_presence(user_id, False)
+
+    return JsonResponse({"ok": True})

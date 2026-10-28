@@ -27,3 +27,7 @@ staticfiles/
 /HrManagementSystem/staticfiles/
 /HrManagementSystem/HrManagementSystem/__pycache__/
 HrManagementSystem/db.sqlite3
+
+# Backup files
+*.bak
+*.bak_*

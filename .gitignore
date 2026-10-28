@@ -26,3 +26,4 @@ staticfiles/
 /elisha/
 /HrManagementSystem/staticfiles/
 /HrManagementSystem/HrManagementSystem/__pycache__/
+HrManagementSystem/db.sqlite3

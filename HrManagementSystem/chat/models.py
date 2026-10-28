@@ -166,3 +166,67 @@ class ChatPresenceConnection(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.connection_id}"
+
+class GoogleMeetCredential(models.Model):
+    """
+    Stores encrypted Google OAuth tokens for each HRMS user.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="google_meet_credential",
+    )
+    encrypted_access_token = models.TextField()
+    encrypted_refresh_token = models.TextField(blank=True, default="")
+    token_expiry = models.DateTimeField(null=True, blank=True)
+    google_email = models.EmailField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Google Meet credential for user {self.user_id}"
+
+
+class ScheduledMeeting(models.Model):
+    class Status(models.TextChoices):
+        SCHEDULED = "SCHEDULED", "Scheduled"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    conversation = models.ForeignKey(
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name="scheduled_meetings",
+    )
+    organizer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="organized_scheduled_meetings",
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    timezone_name = models.CharField(
+        max_length=64,
+        default="Asia/Kolkata",
+    )
+    meeting_url = models.URLField(max_length=500, blank=True)
+    google_event_id = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
+    attendee_emails = models.JSONField(default=list, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.SCHEDULED,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["start_time"]
+
+    def __str__(self):
+        return f"{self.title} ({self.start_time:%Y-%m-%d %H:%M})"

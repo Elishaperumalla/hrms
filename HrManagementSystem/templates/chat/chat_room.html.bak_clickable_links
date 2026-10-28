@@ -1,0 +1,1730 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ chat_title }} | HRMS Chat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --purple: #6264a7;
+            --purple-light: #eeeeff;
+            --border: #e5e5e5;
+            --text: #242424;
+            --muted: #666;
+            --incoming: #f3f3f3;
+            --online: #22a06b;
+            --offline: #999;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background: #fff;
+        }
+
+        .chat-app {
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            min-height: 72px;
+            padding: 12px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .chat-heading {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-width: 0;
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--purple-light);
+            color: var(--purple);
+            font-size: 21px;
+        }
+
+        .chat-heading h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 650;
+            overflow-wrap: anywhere;
+        }
+
+        .chat-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .connection-dot, .presence-dot {
+            display: inline-block;
+            flex-shrink: 0;
+            border-radius: 50%;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+        }
+
+        .connection-dot.connected { background: #24a148; }
+        .connection-dot.disconnected { background: #d83b01; }
+
+        .presence-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #555;
+        }
+
+        .presence-dot {
+            width: 9px;
+            height: 9px;
+            background: var(--offline);
+        }
+
+        .presence-dot.online {
+            background: var(--online);
+            box-shadow: 0 0 0 2px #22a06b20;
+        }
+
+        .presence-dot.offline { background: var(--offline); }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .icon-button {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 9px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #555;
+        }
+
+        .icon-button:hover, .icon-button.active { background: #f2f2f2; }
+
+        .members-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .members-button .online-number {
+            color: var(--online);
+            font-weight: 650;
+        }
+
+        .members-panel {
+            display: none;
+            flex-shrink: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 12px 22px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .members-panel.open { display: block; }
+
+        .members-panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 650;
+            color: #555;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 2px;
+        }
+
+        .member-avatar {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--purple-light);
+            color: var(--purple);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .member-details { min-width: 0; flex: 1; }
+        .member-name { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+
+        .member-presence {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #777;
+        }
+
+        .message-area {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 24px clamp(14px, 4vw, 48px);
+            scroll-behavior: smooth;
+        }
+
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 0 0 25px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .date-divider::before, .date-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ededed;
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 9px;
+            margin-bottom: 20px;
+        }
+
+        .message-row.mine { justify-content: flex-end; }
+
+        .sender-avatar {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8e8f5;
+            color: var(--purple);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .message-content {
+            position: relative;
+            min-width: 0;
+            max-width: min(76%, 650px);
+        }
+
+        .message-meta {
+            margin: 0 0 5px 2px;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .mine .message-meta { text-align: right; }
+
+      .bubble {
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    padding: 10px 13px;
+    border-radius: 4px 12px 12px 12px;
+    background: var(--incoming);
+    font-size: 14px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+}
+
+        .mine .bubble {
+            background: var(--purple);
+            color: white;
+            border-radius: 12px 4px 12px 12px;
+        }
+
+        .message-status {
+            min-height: 15px;
+            padding-top: 4px;
+            text-align: right;
+            font-size: 11px;
+            color: #777;
+        }
+
+        .message-status .ticks { letter-spacing: -2px; }
+        .message-status .read { color: #4779e5; }
+
+        /* Click-to-open side menu: no extra space below messages */
+        .message-actions {
+            display: none;
+            position: absolute;
+            top: 18px;
+            z-index: 100;
+            width: 135px;
+            padding: 5px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 2px;
+            background: #fff;
+            border: 1px solid #e2e2e2;
+            border-radius: 9px;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, .15);
+        }
+
+        /* Incoming/receiver message is left-aligned: menu to its right */
+        .message-row:not(.mine) .message-actions {
+            left: calc(100% + 9px);
+            right: auto;
+        }
+
+        /* Own/sender message is right-aligned: menu to its left */
+        .message-row.mine .message-actions {
+            right: calc(100% + 9px);
+            left: auto;
+        }
+
+        /* Flip the menu if it would cross the viewport edge */
+        .message-row:not(.mine) .message-actions.actions-flip {
+            left: auto;
+            right: calc(100% + 9px);
+        }
+
+        .message-row.mine .message-actions.actions-flip {
+            right: auto;
+            left: calc(100% + 9px);
+        }
+
+        .message-row.message-selected .message-actions { display: flex; }
+
+        .message-row.message-selected .bubble {
+            outline: 2px solid var(--purple);
+            outline-offset: 2px;
+        }
+
+        .message-actions button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: #444;
+            padding: 8px 9px;
+            font-size: 12px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .message-actions button:hover {
+            background: var(--purple-light);
+            color: var(--purple);
+        }
+
+        .message-actions button.danger-action { color: #c62828; }
+        .message-actions button.danger-action:hover {
+            background: #fff0f0;
+            color: #a31515;
+        }
+
+        .message-quote {
+            margin-bottom: 7px;
+            padding: 7px 10px;
+            border-left: 3px solid var(--purple);
+            border-radius: 4px;
+            background: #e8e8e8;
+            color: #333;
+            font-size: 12px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .mine .message-quote {
+            background: #51538e;
+            border-left-color: #fff;
+            color: #fff;
+        }
+
+        .quote-sender { display: block; margin-bottom: 3px; font-weight: 700; }
+        .quote-text { display: block; opacity: .9; }
+
+        .forwarded-label {
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #777;
+            
+        }
+        
+
+        .mine .forwarded-label { color: #eee; }
+
+        .edited-label {
+            margin-left: 5px;
+            font-size: 10px;
+            opacity: .8;
+            font-style: italic;
+        }
+
+        .reply-preview {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 9px;
+            padding: 9px 12px;
+            border-left: 4px solid var(--purple);
+            border-radius: 6px;
+            background: #f5f5fb;
+        }
+
+        .reply-preview.visible { display: flex; }
+        .reply-preview-content { flex: 1; min-width: 0; }
+
+        .reply-preview-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--purple);
+        }
+
+        .reply-preview-text {
+            margin-top: 3px;
+            font-size: 12px;
+            color: #555;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cancel-reply {
+            border: 0;
+            background: transparent;
+            color: #666;
+            padding: 5px;
+        }
+
+        .composer-wrap {
+            padding: 12px 20px 17px;
+            border-top: 1px solid var(--border);
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 9px;
+            padding: 7px 10px;
+            border: 1px solid #d5d5d5;
+            border-radius: 9px;
+            background: white;
+        }
+
+        .composer:focus-within {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 2px #6264a71a;
+        }
+
+        #messageInput {
+            flex: 1;
+            min-width: 0;
+            max-height: 120px;
+            resize: none;
+            border: 0;
+            outline: none;
+            padding: 8px 2px;
+            font: inherit;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        #sendButton {
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--purple);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        #sendButton:hover { background: #50528d; }
+        #sendButton:disabled { opacity: .45; }
+        .composer-hint { padding: 6px 3px 0; font-size: 11px; color: #777; }
+
+        .empty-chat {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #777;
+        }
+
+        .empty-chat i { color: var(--purple); font-size: 38px; margin-bottom: 12px; }
+
+        #chatError { display: none; margin: 8px 20px 0; font-size: 12px; }
+
+        .forward-conversation-option {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fff;
+            text-align: left;
+        }
+
+        .forward-conversation-option:hover {
+            border-color: var(--purple);
+            background: var(--purple-light);
+        }
+
+        .forward-chat-icon {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: var(--purple-light);
+            color: var(--purple);
+            flex-shrink: 0;
+        }
+
+        .forward-chat-title {
+            min-width: 0;
+            flex: 1;
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .edit-message-input {
+            display: block;
+            width: 100%;
+            min-height: 75px;
+            resize: vertical;
+            padding: 9px 11px;
+            border: 1px solid var(--purple);
+            border-radius: 8px;
+            font: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .edit-message-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 7px;
+            margin-top: 7px;
+        }
+
+        .edit-message-controls button {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 5px 10px;
+            background: white;
+            font-size: 12px;
+        }
+
+        .edit-message-controls .save-edit {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .chat-header { padding: 10px 12px; gap: 6px; }
+            .chat-heading { gap: 9px; }
+            .chat-avatar { width: 38px; height: 38px; }
+            .chat-heading h1 { font-size: 15px; }
+            .message-area { padding: 18px 12px; }
+            .composer-wrap { padding: 10px; }
+            .message-content { max-width: 86%; }
+            .header-actions { gap: 0; }
+            .members-panel { padding: 10px 14px; }
+            .members-button { padding: 0 6px; }
+            .message-actions { width: 125px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="chat-app">
+    <header class="chat-header">
+        <div class="chat-heading">
+            <div class="chat-avatar">
+                {% if conversation.chat_type == "INDIVIDUAL" %}
+                    <i class="bi bi-person-fill"></i>
+                {% elif conversation.chat_type == "TEAM" %}
+                    <i class="bi bi-people-fill"></i>
+                {% elif conversation.chat_type == "DEPARTMENT" %}
+                    <i class="bi bi-diagram-3-fill"></i>
+                {% elif conversation.chat_type == "BRANCH" %}
+                    <i class="bi bi-geo-alt-fill"></i>
+                {% else %}
+                    <i class="bi bi-building-fill"></i>
+                {% endif %}
+            </div>
+            <div>
+                <h1>{{ chat_title }}</h1>
+                <div class="chat-subtitle">
+                    <span id="connectionDot" class="connection-dot"></span>
+                    <span id="connectionStatus">Connecting...</span>
+                    {% if conversation.chat_type == "INDIVIDUAL" %}
+                        {% for member in other_members %}
+                            <span aria-hidden="true">·</span>
+                            <span class="presence-label" id="personPresence" data-presence-user-id="{{ member.user_id }}">
+                                <span class="presence-dot offline" id="personPresenceDot"></span>
+                                <span id="personPresenceText">Offline</span>
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        <span aria-hidden="true">·</span>
+                        <span>{{ conversation.get_chat_type_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            {% if conversation.chat_type != "INDIVIDUAL" %}
+            <button class="icon-button members-button" type="button" id="membersToggle"
+                    aria-expanded="false" aria-controls="membersPanel" title="View members">
+                <i class="bi bi-people"></i>
+                <span id="groupOnlineCount" class="online-number">0 online</span>
+            </button>
+            {% endif %}
+            <button class="icon-button" type="button" id="soundToggle"
+                    title="Toggle notification sounds" aria-label="Toggle notification sounds">
+                <i class="bi bi-volume-up"></i>
+            </button>
+        </div>
+    </header>
+
+    {% if conversation.chat_type != "INDIVIDUAL" %}
+    <section class="members-panel" id="membersPanel" aria-label="Conversation members">
+        <div class="members-panel-heading">
+            <span>Members</span>
+            <span id="membersSummary">Checking status...</span>
+        </div>
+        {% for membership in conversation.memberships.all %}
+        <div class="member-item" data-member-user-id="{{ membership.user_id }}">
+            <div class="member-avatar">
+                {% if membership.user.get_full_name %}
+                    {{ membership.user.get_full_name|slice:":1"|upper }}
+                {% else %}
+                    {{ membership.user.username|slice:":1"|upper }}
+                {% endif %}
+            </div>
+            <div class="member-details">
+                <div class="member-name">
+                    {% if membership.user.get_full_name %}
+                        {{ membership.user.get_full_name }}
+                    {% else %}
+                        {{ membership.user.username }}
+                    {% endif %}
+                    {% if membership.user_id == request.user.id %}
+                        <span class="text-muted fw-normal">(You)</span>
+                    {% endif %}
+                </div>
+                <div class="member-presence">
+                    <span class="presence-dot offline" data-member-presence-dot></span>
+                    <span data-member-presence-text>Offline</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <div class="text-muted small">No members found.</div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <div id="chatError" class="alert alert-warning py-2"></div>
+
+    <main class="message-area" id="messageArea">
+        <div class="date-divider"><span>Conversation</span></div>
+        <div id="messageList">
+            {% for message in chat_messages %}
+            <div class="message-row {% if message.sender_id == request.user.id %}mine{% endif %}"
+                 data-message-id="{{ message.id }}" data-sender-id="{{ message.sender_id }}">
+                {% if message.sender_id != request.user.id %}
+                <div class="sender-avatar">
+                    {{ message.sender.get_full_name|default:message.sender.username|slice:":1"|upper }}
+                </div>
+                {% endif %}
+
+                <div class="message-content">
+                    <div class="message-meta">
+                        {% if message.sender_id != request.user.id %}
+                            {{ message.sender.get_full_name|default:message.sender.username }} ·
+                        {% else %}
+                            You ·
+                        {% endif %}
+                        {{ message.created_at|date:"h:i A" }}
+                        {% if message.edited_at %}<span class="edited-label">(Edited)</span>{% endif %}
+                    </div>
+
+                    {% if message.forwarded_from %}
+                    <div class="forwarded-label text-secondary"><i class="bi bi-forward-fill"></i> Forwarded</div>
+                    {% endif %}
+
+                    {% if message.reply_to %}
+                    <div class="message-quote">
+                        <span class="quote-sender">
+                            {{ message.reply_to.sender.get_full_name|default:message.reply_to.sender.username }}
+                        </span>
+                        <span class="quote-text">{{ message.reply_to.content|truncatechars:180 }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="bubble">{{ message.content }}</div>
+
+                    <div class="message-actions">
+                        <button type="button" data-message-action="reply"
+                                data-message-id="{{ message.id }}"
+                                data-message-text="{{ message.content }}"
+                                data-message-sender="{{ message.sender.get_full_name|default:message.sender.username }}">
+                            <i class="bi bi-reply"></i> Reply
+                        </button>
+                        <button type="button" data-message-action="forward" data-message-id="{{ message.id }}">
+                            <i class="bi bi-forward"></i> Forward
+                        </button>
+                        {% if message.sender_id == request.user.id %}
+                        <button type="button" data-message-action="edit" data-message-id="{{ message.id }}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                        <button type="button" class="danger-action" data-message-action="delete"
+                                data-message-id="{{ message.id }}">
+                            <i class="bi bi-trash3"></i> Delete
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% if message.sender_id == request.user.id %}
+                    <div class="message-status" data-status>
+                        {% if message.receipt_status == "read" %}
+                            <span class="ticks read" title="Read">✓✓</span>
+                        {% elif message.receipt_status == "delivered" %}
+                            <span class="ticks" title="Delivered">✓✓</span>
+                        {% else %}
+                            <span class="ticks" title="Sent">✓</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-chat" id="emptyChat">
+                <i class="bi bi-chat-square-dots"></i>
+                <h5 class="text-dark">Start the conversation</h5>
+                <p class="small">Send a message to get things started.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer class="composer-wrap">
+        <div id="chatReadOnlyNotice" role="status" aria-live="polite"
+             style="display:none; padding:10px 14px; margin-bottom:10px;
+                    border-radius:8px; background:#fff4e5; color:#7c4a03;
+                    font-size:14px;">
+            You’re currently checked out. Please check in to start chatting with your colleagues.
+        </div>
+        <form id="messageForm">
+            <div class="reply-preview" id="replyPreview">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-title" id="replyPreviewTitle">Replying to message</div>
+                    <div class="reply-preview-text" id="replyPreviewText"></div>
+                </div>
+                <button type="button" class="cancel-reply" id="cancelReplyButton"
+                        aria-label="Cancel reply" title="Cancel reply">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="composer">
+                <textarea id="messageInput" rows="1" maxlength="5000"
+                          placeholder="Type a message..." aria-label="Message" required></textarea>
+                <button id="sendButton" type="submit" title="Send message" aria-label="Send message">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+            <div class="composer-hint">Press Enter to send · Shift + Enter for a new line</div>
+        </form>
+    </footer>
+</div>
+
+<div class="modal fade" id="forwardModal" tabindex="-1" aria-labelledby="forwardModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forwardModalTitle">
+                    <i class="bi bi-forward me-2"></i>Forward message
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-3">Choose a conversation to forward this message to.</div>
+                <div id="forwardMessagePreview" class="message-quote mb-3"></div>
+                <div id="forwardConversationList" class="d-grid gap-2">
+                    {% for target in forward_conversations %}
+                    <button type="button" class="forward-conversation-option"
+                            data-target-conversation-id="{{ target.id }}"
+                            data-target-conversation-title="{{ target.title }}">
+                        <span class="forward-chat-icon"><i class="bi bi-chat-dots"></i></span>
+                        <span class="forward-chat-title">{{ target.title }}</span>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </button>
+                    {% empty %}
+                    <div class="text-muted small py-3">No other conversations available for forwarding.</div>
+                    {% endfor %}
+                </div>
+                <div id="forwardResult" class="small mt-3" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-read-only [data-message-action="reply"],
+.chat-read-only [data-message-action="forward"],
+.chat-read-only [data-message-action="edit"],
+.chat-read-only [data-message-action="delete"] {
+    display: none !important;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+"use strict";
+
+const conversationId = Number("{{ conversation.id|default:0 }}");
+const currentUserId = Number("{{ request.user.id|default:0 }}");
+const chatType = "{{ conversation.chat_type|escapejs }}";
+
+const messageArea = document.getElementById("messageArea");
+const messageList = document.getElementById("messageList");
+const messageForm = document.getElementById("messageForm");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const connectionDot = document.getElementById("connectionDot");
+const connectionStatus = document.getElementById("connectionStatus");
+const chatError = document.getElementById("chatError");
+const soundToggle = document.getElementById("soundToggle");
+
+const replyPreview = document.getElementById("replyPreview");
+const replyPreviewTitle = document.getElementById("replyPreviewTitle");
+const replyPreviewText = document.getElementById("replyPreviewText");
+const cancelReplyButton = document.getElementById("cancelReplyButton");
+
+const forwardModalElement = document.getElementById("forwardModal");
+const forwardModal = forwardModalElement ? new bootstrap.Modal(forwardModalElement) : null;
+const forwardMessagePreview = document.getElementById("forwardMessagePreview");
+const forwardResult = document.getElementById("forwardResult");
+
+let replyToMessageId = null;
+let forwardMessageId = null;
+let socket = null;
+let chatReadOnly = false;
+let soundEnabled = true;
+let audioContext = null;
+let reconnectTimer = null;
+
+const presenceByUser = new Map();
+
+const personPresence = document.getElementById("personPresence");
+const personPresenceDot = document.getElementById("personPresenceDot");
+const personPresenceText = document.getElementById("personPresenceText");
+const membersToggle = document.getElementById("membersToggle");
+const membersPanel = document.getElementById("membersPanel");
+const groupOnlineCount = document.getElementById("groupOnlineCount");
+const membersSummary = document.getElementById("membersSummary");
+
+function scrollToBottom() {
+    messageArea.scrollTop = messageArea.scrollHeight;
+}
+
+function showError(text) {
+    chatError.textContent = text;
+    chatError.style.display = "block";
+}
+
+function hideError() {
+    chatError.textContent = "";
+    chatError.style.display = "none";
+}
+
+function setConnection(connected) {
+    connectionDot.classList.toggle("connected", connected);
+    connectionDot.classList.toggle("disconnected", !connected);
+    connectionStatus.textContent = connected ? "Connected" : "Reconnecting...";
+    sendButton.disabled = !connected || chatReadOnly;
+}
+
+function setChatReadOnly(readOnly) {
+    chatReadOnly = Boolean(readOnly);
+
+    document.body.classList.toggle("chat-read-only", chatReadOnly);
+
+    const notice = document.getElementById("chatReadOnlyNotice");
+    if (notice) {
+        notice.style.display = chatReadOnly ? "block" : "none";
+    }
+
+    messageInput.disabled = chatReadOnly;
+    messageInput.placeholder = chatReadOnly
+        ? "Check in to send messages"
+        : "Type a message...";
+
+    sendButton.disabled = chatReadOnly ||
+        !(socket && socket.readyState === WebSocket.OPEN);
+
+    document.querySelectorAll(
+        ".edit-message-input, .message-editor button"
+    ).forEach(function(control) {
+        control.disabled = chatReadOnly;
+    });
+
+    if (chatReadOnly) {
+        replyToMessageId = null;
+        if (replyPreview) replyPreview.style.display = "none";
+    }
+}
+
+function setPresence(userId, online) {
+    userId = Number(userId);
+    online = Boolean(online);
+    presenceByUser.set(userId, online);
+
+    if (personPresence && Number(personPresence.dataset.presenceUserId) === userId) {
+        personPresenceDot.classList.toggle("online", online);
+        personPresenceDot.classList.toggle("offline", !online);
+        personPresenceText.textContent = online ? "Online" : "Offline";
+    }
+
+    document.querySelectorAll("[data-member-user-id]").forEach(function(row) {
+        if (Number(row.dataset.memberUserId) !== userId) return;
+
+        const dot = row.querySelector("[data-member-presence-dot]");
+        const label = row.querySelector("[data-member-presence-text]");
+
+        if (dot) {
+            dot.classList.toggle("online", online);
+            dot.classList.toggle("offline", !online);
+        }
+        if (label) label.textContent = online ? "Online" : "Offline";
+    });
+
+    // Notify the parent chat page that this conversation is open.
+if (window.parent !== window) {
+    window.parent.postMessage({
+        type: "chat_room_opened",
+        conversationId: String(conversationId),
+        href: window.location.pathname,
+        chatTitle: document.querySelector(".chat-heading h1")?.textContent.trim() || "",
+        chatType: chatType
+    }, window.location.origin);
+}
+
+updateGroupOnlineCount();
+}
+
+function updateGroupOnlineCount() {
+    if (!groupOnlineCount) return;
+
+    const rows = Array.from(document.querySelectorAll("[data-member-user-id]"));
+    let count = 0;
+
+    rows.forEach(function(row) {
+        if (presenceByUser.get(Number(row.dataset.memberUserId)) === true) count++;
+    });
+
+    groupOnlineCount.textContent = count + " online";
+    if (membersSummary) membersSummary.textContent = count + " of " + rows.length + " online";
+}
+
+function applyPresenceSnapshot(members) {
+    if (!Array.isArray(members)) return;
+    members.forEach(function(member) {
+        if (member && member.user_id !== undefined) setPresence(member.user_id, member.online);
+    });
+    updateGroupOnlineCount();
+}
+
+if (membersToggle && membersPanel) {
+    membersToggle.addEventListener("click", function() {
+        const open = membersPanel.classList.toggle("open");
+        membersToggle.classList.toggle("active", open);
+        membersToggle.setAttribute("aria-expanded", String(open));
+    });
+}
+
+function playNotificationSound() {
+    if (!soundEnabled) return;
+
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        audioContext = audioContext || new AudioContextClass();
+
+        if (audioContext.state === "suspended") audioContext.resume();
+
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = 780;
+
+        gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.16);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.17);
+    } catch (error) {
+        console.warn("Notification sound could not be played.", error);
+    }
+}
+
+soundToggle.addEventListener("click", function() {
+    soundEnabled = !soundEnabled;
+    soundToggle.innerHTML = soundEnabled
+        ? '<i class="bi bi-volume-up"></i>'
+        : '<i class="bi bi-volume-mute"></i>';
+
+    if (soundEnabled) {
+        playNotificationSound();
+        if (audioContext && audioContext.state === "suspended") audioContext.resume();
+    }
+});
+
+function sendSocketData(data) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(data));
+        return true;
+    }
+    return false;
+}
+
+// Keep the Meet URL until the server echoes it back as a saved message.
+let pendingGoogleMeetUrl = null;
+let googleMeetLinkInFlight = false;
+
+function sendPendingGoogleMeetLink() {
+    if (
+        !pendingGoogleMeetUrl ||
+        googleMeetLinkInFlight ||
+        chatReadOnly ||
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) return;
+
+    const sent = sendSocketData({
+        action: "message",
+        message: pendingGoogleMeetUrl,
+        reply_to_id: null
+    });
+
+    if (sent) {
+        googleMeetLinkInFlight = true;
+    }
+}
+
+window.addEventListener("message", function(event) {
+    if (event.origin !== window.location.origin) return;
+    if (event.source !== window.parent) return;
+
+    const data = event.data;
+    if (!data || data.type !== "share_google_meet_link") return;
+    if (String(data.conversationId) !== String(conversationId)) return;
+    if (typeof data.meetingUrl !== "string" ||
+        !/^https:\/\/meet\.google\.com\//i.test(data.meetingUrl)) return;
+
+    pendingGoogleMeetUrl = data.meetingUrl;
+    sendPendingGoogleMeetLink();
+});
+
+function formatTime(value) {
+    return value || new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function removeEmptyMessage() {
+    const empty = document.getElementById("emptyChat");
+    if (empty) empty.remove();
+}
+
+function startReply(messageId, senderName, messageText) {
+    replyToMessageId = Number(messageId);
+    replyPreviewTitle.textContent = "Replying to " + senderName;
+    replyPreviewText.textContent = messageText;
+    replyPreview.classList.add("visible");
+    messageInput.placeholder = "Type your reply...";
+    messageInput.focus();
+}
+
+function cancelReply() {
+    replyToMessageId = null;
+    replyPreview.classList.remove("visible");
+    replyPreviewTitle.textContent = "Replying to message";
+    replyPreviewText.textContent = "";
+    messageInput.placeholder = "Type a message...";
+}
+
+cancelReplyButton.addEventListener("click", cancelReply);
+
+/* Open the side menu on the opposite side and flip it near viewport edges. */
+function positionMessageMenu(row) {
+    const menu = row.querySelector(".message-actions");
+    if (!menu) return;
+
+    menu.classList.remove("actions-flip");
+
+    requestAnimationFrame(function() {
+        if (!row.classList.contains("message-selected")) return;
+
+        const rect = menu.getBoundingClientRect();
+        const edge = 8;
+
+        if (rect.right > window.innerWidth - edge || rect.left < edge) {
+            menu.classList.add("actions-flip");
+        }
+    });
+}
+
+function closeAllMessageMenus(exceptRow) {
+    messageList.querySelectorAll(".message-row.message-selected").forEach(function(row) {
+        if (row !== exceptRow) row.classList.remove("message-selected");
+    });
+}
+
+function createMessageAction(actions, name, icon, label, id, extraClass) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.messageAction = name;
+    button.dataset.messageId = id;
+    button.innerHTML = '<i class="bi ' + icon + '"></i> ' + label;
+    if (extraClass) button.classList.add(extraClass);
+    actions.appendChild(button);
+    return button;
+}
+
+function addMessage(data) {
+    if (document.querySelector('[data-message-id="' + String(data.id) + '"]')) return;
+
+    removeEmptyMessage();
+
+    const mine = Number(data.sender_id) === Number(currentUserId);
+    const row = document.createElement("div");
+    row.className = "message-row" + (mine ? " mine" : "");
+    row.dataset.messageId = data.id;
+    row.dataset.senderId = data.sender_id;
+
+    if (!mine) {
+        const avatar = document.createElement("div");
+        avatar.className = "sender-avatar";
+        avatar.textContent = (data.sender_name || "?").trim().slice(0, 1).toUpperCase();
+        row.appendChild(avatar);
+    }
+
+    const content = document.createElement("div");
+    content.className = "message-content";
+
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+    meta.appendChild(document.createTextNode(
+        (mine ? "You" : (data.sender_name || "Message")) + " · " + formatTime(data.created_at)
+    ));
+    content.appendChild(meta);
+
+    if (data.forwarded_from) {
+        const forwarded = document.createElement("div");
+        forwarded.className = "forwarded-label";
+        forwarded.innerHTML = '<i class="bi bi-forward-fill"></i> Forwarded';
+        content.appendChild(forwarded);
+    }
+
+    if (data.reply_to) {
+        const quote = document.createElement("div");
+        quote.className = "message-quote";
+
+        const quoteSender = document.createElement("span");
+        quoteSender.className = "quote-sender";
+        quoteSender.textContent = data.reply_to.sender_name || "Message";
+
+        const quoteText = document.createElement("span");
+        quoteText.className = "quote-text";
+        quoteText.textContent = data.reply_to.message || "";
+
+        quote.appendChild(quoteSender);
+        quote.appendChild(quoteText);
+        content.appendChild(quote);
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = data.message || "";
+    content.appendChild(bubble);
+
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
+
+    const replyButton = createMessageAction(actions, "reply", "bi-reply", "Reply", data.id);
+    replyButton.dataset.messageText = data.message || "";
+    replyButton.dataset.messageSender = data.sender_name || "Message";
+
+    createMessageAction(actions, "forward", "bi-forward", "Forward", data.id);
+
+    if (mine) {
+        createMessageAction(actions, "edit", "bi-pencil", "Edit", data.id);
+        createMessageAction(actions, "delete", "bi-trash3", "Delete", data.id, "danger-action");
+    }
+
+    content.appendChild(actions);
+
+    if (mine) {
+        const status = document.createElement("div");
+        status.className = "message-status";
+        status.dataset.status = "";
+        status.innerHTML = '<span class="ticks" title="Sent">✓</span>';
+        content.appendChild(status);
+    }
+
+    row.appendChild(content);
+    messageList.appendChild(row);
+    scrollToBottom();
+    return row;
+}
+
+function openMessageEditor(row) {
+    if (!row || row.dataset.senderId !== String(currentUserId)) return;
+    if (row.querySelector(".edit-message-input")) return;
+
+    const bubble = row.querySelector(".bubble");
+    if (!bubble) return;
+
+    const originalText = bubble.textContent;
+    const messageId = Number(row.dataset.messageId);
+
+    const editor = document.createElement("div");
+    editor.className = "message-editor";
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "edit-message-input";
+    textarea.maxLength = 5000;
+    textarea.value = originalText;
+    textarea.setAttribute("aria-label", "Edit message");
+
+    const controls = document.createElement("div");
+    controls.className = "edit-message-controls";
+
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
+
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "save-edit";
+    saveButton.textContent = "Save";
+
+    cancelButton.addEventListener("click", function() {
+        editor.remove();
+        bubble.hidden = false;
+    });
+
+    saveButton.addEventListener("click", function() {
+        const newText = textarea.value.trim();
+
+        if (!newText) {
+            textarea.focus();
+            return;
+        }
+        if (newText.length > 5000) {
+            showError("Message cannot exceed 5000 characters.");
+            return;
+        }
+        if (newText === originalText) {
+            editor.remove();
+            bubble.hidden = false;
+            return;
+        }
+
+        if (!sendSocketData({
+            action: "edit",
+            message_id: messageId,
+            message: newText
+        })) {
+            showError("Chat is reconnecting. Please try again.");
+            return;
+        }
+
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+        hideError();
+    });
+
+    controls.appendChild(cancelButton);
+    controls.appendChild(saveButton);
+    editor.appendChild(textarea);
+    editor.appendChild(controls);
+
+    bubble.hidden = true;
+    bubble.insertAdjacentElement("afterend", editor);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+}
+
+function updateReceipt(action, messageIds) {
+    messageIds.forEach(function(id) {
+        const row = document.querySelector('[data-message-id="' + String(id) + '"]');
+        if (!row || Number(row.dataset.senderId) !== Number(currentUserId)) return;
+
+        const status = row.querySelector("[data-status]");
+        if (!status) return;
+
+        if (action === "read") {
+            status.innerHTML = '<span class="ticks read" title="Read">✓✓</span>';
+        } else if (action === "delivered") {
+            status.innerHTML = '<span class="ticks" title="Delivered">✓✓</span>';
+        }
+    });
+}
+
+/* Message click opens its menu. Clicking a menu option runs that action. */
+messageList.addEventListener("click", function(event) {
+    const button = event.target.closest("[data-message-action]");
+
+    if (button) {
+        event.stopPropagation();
+
+        const messageId = Number(button.dataset.messageId);
+        const action = button.dataset.messageAction;
+        const row = button.closest(".message-row");
+
+        if (!messageId || !row) return;
+
+        if (action === "reply") {
+            startReply(
+                messageId,
+                button.dataset.messageSender || "Message",
+                button.dataset.messageText || ""
+            );
+            row.classList.remove("message-selected");
+            return;
+        }
+
+        if (action === "forward") {
+            forwardMessageId = messageId;
+            const bubble = row.querySelector(".bubble");
+            forwardMessagePreview.textContent = bubble ? bubble.textContent : "Selected message";
+            forwardResult.textContent = "";
+            forwardResult.className = "small mt-3";
+            if (forwardModal) forwardModal.show();
+            row.classList.remove("message-selected");
+            return;
+        }
+
+        if (Number(row.dataset.senderId) !== Number(currentUserId)) {
+            showError("You can edit or delete only your own messages.");
+            return;
+        }
+
+        if (action === "edit") {
+            row.classList.remove("message-selected");
+            openMessageEditor(row);
+            return;
+        }
+
+        if (action === "delete") {
+            if (!window.confirm("Delete this message? This will remove it for everyone in this chat.")) {
+                return;
+            }
+
+            if (!sendSocketData({ action: "delete", message_id: messageId })) {
+                showError("Chat is reconnecting. Please try again.");
+            } else {
+                hideError();
+                row.classList.remove("message-selected");
+            }
+            return;
+        }
+    }
+
+    const row = event.target.closest(".message-row");
+    if (!row || !messageList.contains(row)) return;
+
+    if (event.target.closest(".message-editor")) return;
+
+    const wasSelected = row.classList.contains("message-selected");
+    closeAllMessageMenus(row);
+    row.classList.toggle("message-selected", !wasSelected);
+
+    if (!wasSelected) positionMessageMenu(row);
+});
+
+/* Clicking outside a message closes all open menus. */
+document.addEventListener("click", function(event) {
+    if (event.target.closest(".message-row")) return;
+    closeAllMessageMenus(null);
+});
+
+/* Reposition menus on resize or scrolling. */
+window.addEventListener("resize", function() {
+    const selected = messageList.querySelector(".message-row.message-selected");
+    if (selected) positionMessageMenu(selected);
+});
+
+messageArea.addEventListener("scroll", function() {
+    const selected = messageList.querySelector(".message-row.message-selected");
+    if (selected) positionMessageMenu(selected);
+}, { passive: true });
+
+document.getElementById("forwardConversationList").addEventListener("click", function(event) {
+    const button = event.target.closest("[data-target-conversation-id]");
+    if (!button || !forwardMessageId) return;
+
+    const targetConversationId = Number(button.dataset.targetConversationId);
+    if (!targetConversationId) return;
+
+    const sent = sendSocketData({
+        action: "forward",
+        message_id: forwardMessageId,
+        target_conversation_id: targetConversationId
+    });
+
+    if (!sent) {
+        forwardResult.textContent = "Chat is reconnecting. Please try again.";
+        forwardResult.className = "small mt-3 text-danger";
+        return;
+    }
+
+    forwardResult.textContent = "Forward request sent...";
+    forwardResult.className = "small mt-3 text-muted";
+});
+
+function markVisibleMessagesRead() {
+    if (document.visibilityState !== "visible") return;
+
+    const ids = [];
+    document.querySelectorAll(".message-row").forEach(function(row) {
+        if (Number(row.dataset.senderId) !== Number(currentUserId)) {
+            const id = Number(row.dataset.messageId);
+            if (id) ids.push(id);
+        }
+    });
+
+    if (ids.length) sendSocketData({ action: "read", message_ids: ids });
+}
+
+function connectWebSocket() {
+    if (socket && (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+    )) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const url = protocol + "//" + window.location.host + "/ws/chat/" + conversationId + "/";
+    socket = new WebSocket(url);
+
+    socket.onopen = function() {
+        setConnection(true);
+        hideError();
+        sendSocketData({ action: "heartbeat" });
+        sendPendingGoogleMeetLink();
+
+        document.querySelectorAll(".message-row").forEach(function(row) {
+            const senderId = Number(row.dataset.senderId);
+            const messageId = Number(row.dataset.messageId);
+
+            if (senderId !== Number(currentUserId) && messageId) {
+                sendSocketData({ action: "delivered", message_id: messageId });
+            }
+        });
+
+        if (document.visibilityState === "visible") markVisibleMessagesRead();
+    };
+
+    socket.onmessage = function(event) {
+        let data;
+        try {
+            data = JSON.parse(event.data);
+        } catch (error) {
+            return;
+        }
+
+        if (data.type === "presence_snapshot") {
+            applyPresenceSnapshot(data.members);
+            return;
+        }
+
+        if (data.type === "presence_update") {
+            setPresence(data.user_id, data.online);
+            return;
+        }
+
+        if (data.type === "message") {
+            const mine = Number(data.sender_id) === Number(currentUserId);
+
+            if (mine && pendingGoogleMeetUrl &&
+                String(data.message || "").trim() === pendingGoogleMeetUrl) {
+                pendingGoogleMeetUrl = null;
+                googleMeetLinkInFlight = false;
+
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: "google_meet_link_shared",
+                        conversationId: String(conversationId)
+                    }, window.location.origin);
+                }
+            }
+
+            addMessage(data);
+
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: "chat_message_update",
+                    conversationId: conversationId,
+                    href: window.location.pathname,
+                    chatTitle: document.querySelector(".chat-heading h1")?.textContent.trim() || "",
+                    chatType: chatType,
+                    senderName: mine ? "You" : (data.sender_name || "Message"),
+                    message: data.message || ""
+                }, window.location.origin);
+            }
+
+            if (!mine) {
+                sendSocketData({ action: "delivered", message_id: data.id });
+
+                if (document.visibilityState === "visible") {
+                    sendSocketData({ action: "read", message_ids: [data.id] });
+                }
+
+                playNotificationSound();
+            }
+            return;
+        }
+
+        if (data.type === "forward_result") {
+            if (data.success) {
+                forwardResult.textContent = data.message || "Message forwarded.";
+                forwardResult.className = "small mt-3 text-success";
+                forwardMessageId = null;
+
+                window.setTimeout(function() {
+                    if (forwardModal) forwardModal.hide();
+                }, 700);
+            } else {
+                forwardResult.textContent = data.message || "Unable to forward this message.";
+                forwardResult.className = "small mt-3 text-danger";
+            }
+            return;
+        }
+
+        if (data.type === "message_edited") {
+            const row = document.querySelector('[data-message-id="' + String(data.id) + '"]');
+
+            if (row) {
+                const bubble = row.querySelector(".bubble");
+                const editor = row.querySelector(".message-editor");
+
+                if (bubble) {
+                    bubble.textContent = data.message;
+                    bubble.hidden = false;
+                }
+                if (editor) editor.remove();
+
+                const meta = row.querySelector(".message-meta");
+                if (meta && !meta.querySelector(".edited-label")) {
+                    const label = document.createElement("span");
+                    label.className = "edited-label";
+                    label.textContent = "(Edited)";
+                    meta.appendChild(label);
+                }
+
+                const replyButton = row.querySelector('[data-message-action="reply"]');
+                if (replyButton) replyButton.dataset.messageText = data.message;
+            }
+            return;
+        }
+
+        if (data.type === "message_deleted") {
+            const row = document.querySelector('[data-message-id="' + String(data.id) + '"]');
+            if (row) row.remove();
+
+            if (!messageList.querySelector(".message-row")) {
+                const empty = document.createElement("div");
+                empty.className = "empty-chat";
+                empty.id = "emptyChat";
+                empty.innerHTML =
+                    '<i class="bi bi-chat-square-dots"></i>' +
+                    '<h5 class="text-dark">Start the conversation</h5>' +
+                    '<p class="small">Send a message to get things started.</p>';
+                messageList.appendChild(empty);
+            }
+            return;
+        }
+
+        if (data.type === "chat_permission") {
+            setChatReadOnly(!data.can_write);
+            if (!data.can_write) {
+                googleMeetLinkInFlight = false;
+                showError(data.message ||
+                    "You’re currently checked out. Please check in to start chatting with your colleagues.");
+            } else {
+                hideError();
+                sendPendingGoogleMeetLink();
+            }
+            return;
+        }
+
+        if (data.type === "message_action_result") {
+            if (!data.success) showError(data.message || "Unable to update the message.");
+            else hideError();
+            return;
+        }
+
+        if (data.type === "receipt") {
+            updateReceipt(data.action, data.message_ids || []);
+        }
+    };
+
+    socket.onclose = function(event) {
+        setConnection(false);
+
+        if (event.code === 4401 || event.code === 4403) {
+            showError("You are not authorized to access this chat. Refresh or contact your administrator.");
+            return;
+        }
+
+        if (event.code === 4400) {
+            showError("Invalid conversation. Please return to Chat.");
+            return;
+        }
+
+        if (reconnectTimer) window.clearTimeout(reconnectTimer);
+        reconnectTimer = window.setTimeout(function() {
+            reconnectTimer = null;
+            connectWebSocket();
+        }, 2000);
+    };
+
+    socket.onerror = function() {
+        setConnection(false);
+    };
+}
+
+messageForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    if (chatReadOnly) {
+        showError("You’re currently checked out. Please check in to start chatting with your colleagues.");
+        return;
+    }
+
+    const text = messageInput.value.trim();
+    if (!text || text.length > 5000) return;
+
+    const sent = sendSocketData({
+        action: "message",
+        message: text,
+        reply_to_id: replyToMessageId
+    });
+
+    if (!sent) {
+        showError("Chat is reconnecting. Please try again.");
+        return;
+    }
+    playNotificationSound();
+
+    hideError();
+    messageInput.value = "";
+    messageInput.style.height = "auto";
+    cancelReply();
+    messageInput.focus();
+});
+
+messageInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        messageForm.requestSubmit();
+    }
+});
+
+messageInput.addEventListener("input", function() {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 120) + "px";
+});
+
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+        markVisibleMessagesRead();
+        sendSocketData({ action: "heartbeat" });
+    }
+});
+
+window.setInterval(function() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        sendSocketData({ action: "heartbeat" });
+    }
+}, 25000);
+
+updateGroupOnlineCount();
+setConnection(false);
+scrollToBottom();
+connectWebSocket();
+</script>
+</body>
+</html>

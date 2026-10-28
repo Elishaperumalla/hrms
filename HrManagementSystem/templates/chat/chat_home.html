@@ -395,19 +395,23 @@
 .chat-sidebar-heading {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     flex-direction: row;
     width: 100%;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 20px;
 }
 
 .chat-sidebar-heading h1 {
     margin: 0;
+    margin-right: auto;
+    flex: 0 0 auto;
 }
 
 .chat-sidebar .new-chat-btn {
     flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
     margin: 0;
 }
 
@@ -570,6 +574,15 @@ body:has(.app-layout) .content-area {
 
                 <button type="button"
                         class="new-chat-btn"
+                        title="Start Google Meet"
+                        aria-label="Start Google Meet"
+                        data-bs-toggle="modal"
+                        data-bs-target="#googleMeetModal">
+                    <i class="bi bi-camera-video-fill"></i>
+                </button>
+
+                <button type="button"
+                        class="new-chat-btn"
                         title="New chat"
                         data-bs-toggle="modal"
                         data-bs-target="#newChatModal">
@@ -690,6 +703,154 @@ body:has(.app-layout) .content-area {
 
     </main>
 
+</div>
+
+
+<!-- GOOGLE MEET MODAL -->
+<div class="modal fade" id="googleMeetModal" tabindex="-1"
+     aria-labelledby="googleMeetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="googleMeetModalLabel">
+                        <i class="bi bi-camera-video-fill me-2"
+                           style="color: var(--teams-purple);"></i>
+                        Start a Google Meet
+                    </h5>
+                    <div class="small text-secondary mt-1">
+                        Create a meeting and share its link in a conversation.
+                    </div>
+                </div>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="googleMeetStatus" class="small mb-3" role="status"
+                     aria-live="polite">
+                    Choose the conversation where you want to share the meeting link.
+                </div>
+                <label for="googleMeetConversation" class="form-label">
+                    Share meeting with
+                </label>
+                <select id="googleMeetConversation" class="form-select">
+                    <option value="">Select a conversation</option>
+                </select>
+                <div class="d-grid mt-3">
+                    <button type="button" class="btn btn-teams"
+                            id="googleMeetCreateButton">
+                        <i class="bi bi-camera-video me-1"></i>
+                        Create meeting and share link
+                    </button>
+                </div>
+                <div id="googleMeetResult" class="mt-3 d-none"></div>
+
+                <hr class="my-3">
+                <div class="small text-secondary mb-2">
+                    Want to meet later? Schedule a calendar event with a Meet link.
+                </div>
+                <button type="button" class="btn btn-outline-primary w-100"
+                        id="openScheduleMeetingButton">
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    Schedule a meeting
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCHEDULE GOOGLE MEET MODAL -->
+<div class="modal fade" id="scheduleMeetingModal" tabindex="-1"
+     aria-labelledby="scheduleMeetingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="scheduleMeetingModalLabel">
+                        <i class="bi bi-calendar2-event me-2"></i>
+                        Schedule a Google Meet
+                    </h5>
+                    <div class="small text-secondary mt-1">
+                        Create a calendar event and share its meeting link in HRMS chat.
+                    </div>
+                </div>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="scheduleMeetingForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="scheduledMeetingTitle" class="form-label">
+                            Meeting title *
+                        </label>
+                        <input type="text" class="form-control"
+                               id="scheduledMeetingTitle" maxlength="200"
+                               required placeholder="e.g. Weekly team meeting">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="scheduledMeetingConversation" class="form-label">
+                            HRMS conversation *
+                        </label>
+                        <select id="scheduledMeetingConversation"
+                                class="form-select" required>
+                            <option value="">Select a conversation</option>
+                        </select>
+                        <div class="form-text">
+                            Members of this conversation with email addresses will be invited.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="scheduledMeetingDescription" class="form-label">
+                            Description
+                        </label>
+                        <textarea id="scheduledMeetingDescription"
+                                  class="form-control" rows="2"
+                                  maxlength="8000"
+                                  placeholder="Agenda or meeting details (optional)"></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="scheduledMeetingStart" class="form-label">
+                                Start date and time *
+                            </label>
+                            <input type="datetime-local" class="form-control"
+                                   id="scheduledMeetingStart" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="scheduledMeetingEnd" class="form-label">
+                                End date and time *
+                            </label>
+                            <input type="datetime-local" class="form-control"
+                                   id="scheduledMeetingEnd" required>
+                        </div>
+                    </div>
+
+                    <div class="small text-secondary mt-2">
+                        Times use India Standard Time (IST).
+                    </div>
+
+                    <div id="scheduleMeetingStatus" class="small mt-3"
+                         role="status" aria-live="polite"></div>
+                    <div id="scheduleMeetingResult" class="mt-2 d-none"></div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-light"
+                                data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary"
+                                id="scheduleMeetingSubmit">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            Schedule meeting
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- NEW CHAT MODAL -->
@@ -1081,6 +1242,26 @@ window.addEventListener("message", function (event) {
     if (data.type === "chat_room_opened") {
         // Opening a chat must NOT move an existing chat to the top.
         ensureConversationItem(data, false);
+
+        const pendingMeet = window.pendingGoogleMeetShare;
+        if (pendingMeet &&
+            String(pendingMeet.conversationId) === String(data.conversationId)) {
+            chatFrame.contentWindow.postMessage({
+                type: "share_google_meet_link",
+                conversationId: String(pendingMeet.conversationId),
+                meetingUrl: pendingMeet.meetingUrl
+            }, window.location.origin);
+            // Keep the pending link until the chat confirms it was saved.
+        }
+        return;
+    }
+
+    if (data.type === "google_meet_link_shared") {
+        const pendingMeet = window.pendingGoogleMeetShare;
+        if (pendingMeet &&
+            String(pendingMeet.conversationId) === String(data.conversationId)) {
+            window.pendingGoogleMeetShare = null;
+        }
         return;
     }
 
@@ -1094,6 +1275,307 @@ window.addEventListener("message", function (event) {
     }
 });
 
+
+
+/* Google Meet creation and conversation selection. */
+(function () {
+    const modalElement = document.getElementById("googleMeetModal");
+    const conversationSelect = document.getElementById("googleMeetConversation");
+    const createButton = document.getElementById("googleMeetCreateButton");
+    const statusElement = document.getElementById("googleMeetStatus");
+    const resultElement = document.getElementById("googleMeetResult");
+
+    if (!modalElement || !conversationSelect || !createButton) return;
+
+    function populateMeetConversations() {
+        const previousValue = conversationSelect.value;
+        conversationSelect.innerHTML =
+            '<option value="">Select a conversation</option>';
+
+        getConversationItems().forEach(function (item) {
+            const option = document.createElement("option");
+            option.value = item.dataset.chatId;
+            option.textContent =
+                item.querySelector(".conversation-title")?.textContent.trim()
+                || item.dataset.chatName
+                || "Conversation " + item.dataset.chatId;
+            conversationSelect.appendChild(option);
+        });
+
+        if (previousValue &&
+            Array.from(conversationSelect.options).some(
+                option => option.value === previousValue
+            )) {
+            conversationSelect.value = previousValue;
+        } else {
+            const active = getConversationItems().find(
+                item => item.classList.contains("active")
+            );
+            if (active) conversationSelect.value = active.dataset.chatId;
+        }
+    }
+
+    modalElement.addEventListener("show.bs.modal", function () {
+        populateMeetConversations();
+        statusElement.textContent =
+            "Choose where to share the meeting link.";
+        resultElement.classList.add("d-none");
+        resultElement.replaceChildren();
+        createButton.disabled = false;
+        createButton.innerHTML =
+            '<i class="bi bi-camera-video me-1"></i> Create meeting and share link';
+    });
+
+    createButton.addEventListener("click", async function () {
+        const conversationId = conversationSelect.value;
+        console.log("MEET BUTTON CLICKED", {conversationId});
+        if (!conversationId) {
+            statusElement.textContent = "Please select a conversation first.";
+            return;
+        }
+
+        const csrfToken = document.querySelector(
+            '#googleMeetModal input[name="csrfmiddlewaretoken"]'
+        )?.value || document.querySelector(
+            'input[name="csrfmiddlewaretoken"]'
+        )?.value || "";
+
+        createButton.disabled = true;
+        createButton.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span>Creating meeting...';
+        statusElement.textContent = "Contacting Google Meet…";
+        resultElement.classList.add("d-none");
+        resultElement.replaceChildren();
+
+        try {
+            const response = await fetch("{% url 'chat:meet_create' %}", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({conversation_id: conversationId})
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.ok || !data.meeting_url) {
+                if (data.connect_url) {
+                    statusElement.textContent =
+                        data.error || "Connect your Google account first.";
+                    const connectLink = document.createElement("a");
+                    connectLink.href = data.connect_url;
+                    connectLink.className = "btn btn-outline-primary mt-2";
+                    connectLink.textContent = "Connect Google account";
+                    resultElement.replaceChildren(connectLink);
+                    resultElement.classList.remove("d-none");
+                } else {
+                    statusElement.textContent =
+                        data.error || "Could not create the meeting.";
+                }
+                return;
+            }
+
+            const selectedItem = getConversationItems().find(
+                item => item.dataset.chatId === conversationId
+            );
+
+            if (!selectedItem) {
+                statusElement.textContent =
+                    "Meeting created, but that conversation is no longer available in the list.";
+                const link = document.createElement("a");
+                link.href = data.meeting_url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = "Open Google Meet";
+                resultElement.replaceChildren(link);
+                resultElement.classList.remove("d-none");
+                return;
+            }
+
+            window.pendingGoogleMeetShare = {
+                conversationId: conversationId,
+                meetingUrl: data.meeting_url
+            };
+
+            statusElement.textContent =
+                "Meeting created. Opening the selected chat to share the link…";
+
+            selectedItem.click();
+
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+        } catch (error) {
+            console.error("Google Meet creation failed.", error);
+            statusElement.textContent =
+                "Could not create the meeting. Please try again.";
+        } finally {
+            createButton.disabled = false;
+            createButton.innerHTML =
+                '<i class="bi bi-camera-video me-1"></i> Create meeting and share link';
+        }
+    });
+})();
+
+
+/* Scheduled Google Meet form. */
+(function () {
+    const instantModal = document.getElementById("googleMeetModal");
+    const openButton = document.getElementById("openScheduleMeetingButton");
+    const modalElement = document.getElementById("scheduleMeetingModal");
+    const form = document.getElementById("scheduleMeetingForm");
+
+    if (!instantModal || !openButton || !modalElement || !form) return;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const instantModalInstance = bootstrap.Modal.getOrCreateInstance(instantModal);
+    const conversationSelect =
+        document.getElementById("scheduledMeetingConversation");
+    const statusElement = document.getElementById("scheduleMeetingStatus");
+    const resultElement = document.getElementById("scheduleMeetingResult");
+    const submitButton = document.getElementById("scheduleMeetingSubmit");
+
+    function populateConversations() {
+        const previous = conversationSelect.value;
+        conversationSelect.replaceChildren();
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select a conversation";
+        conversationSelect.appendChild(placeholder);
+
+        const items = getConversationItems();
+
+        items.forEach(function (item) {
+            const option = document.createElement("option");
+            option.value = item.dataset.chatId;
+            option.textContent =
+                item.querySelector(".conversation-title")?.textContent.trim()
+                || item.dataset.chatName
+                || "Conversation " + item.dataset.chatId;
+            conversationSelect.appendChild(option);
+        });
+
+        if (previous && Array.from(conversationSelect.options)
+            .some(option => option.value === previous)) {
+            conversationSelect.value = previous;
+        } else {
+            const active = items.find(item => item.classList.contains("active"));
+            if (active) conversationSelect.value = active.dataset.chatId;
+        }
+    }
+
+    openButton.addEventListener("click", function () {
+        populateConversations();
+        instantModalInstance.hide();
+
+        // Wait until the first modal has finished closing before opening another.
+        instantModal.addEventListener("hidden.bs.modal", function openScheduleOnce() {
+            instantModal.removeEventListener("hidden.bs.modal", openScheduleOnce);
+            modal.show();
+        }, {once: true});
+    });
+
+    modalElement.addEventListener("show.bs.modal", function () {
+        populateConversations();
+        statusElement.textContent = "";
+        resultElement.replaceChildren();
+        resultElement.classList.add("d-none");
+        submitButton.disabled = false;
+    });
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const title = document.getElementById("scheduledMeetingTitle").value.trim();
+        const conversationId = conversationSelect.value;
+        const startTime = document.getElementById("scheduledMeetingStart").value;
+        const endTime = document.getElementById("scheduledMeetingEnd").value;
+        const description =
+            document.getElementById("scheduledMeetingDescription").value.trim();
+
+        if (!title || !conversationId || !startTime || !endTime) {
+            statusElement.textContent = "Please complete all required fields.";
+            return;
+        }
+
+        if (new Date(endTime) <= new Date(startTime)) {
+            statusElement.textContent = "End time must be after start time.";
+            return;
+        }
+
+        const csrfToken = form.querySelector(
+            'input[name="csrfmiddlewaretoken"]'
+        )?.value || "";
+
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span>Scheduling...';
+        statusElement.textContent = "Creating your Google Calendar event...";
+        resultElement.replaceChildren();
+        resultElement.classList.add("d-none");
+
+        try {
+            const response = await fetch("{% url 'chat:meet_schedule' %}", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: description,
+                    conversation_id: conversationId,
+                    start_time: startTime,
+                    end_time: endTime
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                statusElement.textContent =
+                    data.error || "Could not schedule the meeting.";
+
+                if (data.connect_url) {
+                    const connectLink = document.createElement("a");
+                    connectLink.href = data.connect_url;
+                    connectLink.className = "btn btn-outline-primary mt-2";
+                    connectLink.textContent = "Connect Google account";
+                    resultElement.appendChild(connectLink);
+                    resultElement.classList.remove("d-none");
+                }
+                return;
+            }
+
+            statusElement.textContent =
+                "Meeting scheduled successfully and shared in the selected chat.";
+
+            const link = document.createElement("a");
+            link.href = data.meeting_url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.className = "btn btn-outline-primary";
+            link.textContent = "Open Google Meet";
+
+            resultElement.replaceChildren(link);
+            resultElement.classList.remove("d-none");
+
+        } catch (error) {
+            console.error("Scheduled meeting request failed.", error);
+            statusElement.textContent =
+                "Request failed. Please try again.";
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML =
+                '<i class="bi bi-calendar-check me-1"></i> Schedule meeting';
+        }
+    });
+})();
 
 /* No conversation is selected automatically. */
 

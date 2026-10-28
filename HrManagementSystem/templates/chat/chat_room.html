@@ -594,7 +594,22 @@
             .members-button { padding: 0 6px; }
             .message-actions { width: 125px; }
         }
-    </style>
+    
+/* Chat message links */
+.chat-message-link,
+.chat-message-link:visited {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.chat-message-link:hover,
+.chat-message-link:focus-visible {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+</style>
 </head>
 
 <body>
@@ -726,7 +741,7 @@
                     </div>
                     {% endif %}
 
-                    <div class="bubble">{{ message.content }}</div>
+                    <div class="bubble" data-linkify-message>{{ message.content }}</div>
 
                     <div class="message-actions">
                         <button type="button" data-message-action="reply"
@@ -963,7 +978,18 @@ function setPresence(userId, online) {
         if (label) label.textContent = online ? "Online" : "Offline";
     });
 
-    updateGroupOnlineCount();
+    // Notify the parent chat page that this conversation is open.
+if (window.parent !== window) {
+    window.parent.postMessage({
+        type: "chat_room_opened",
+        conversationId: String(conversationId),
+        href: window.location.pathname,
+        chatTitle: document.querySelector(".chat-heading h1")?.textContent.trim() || "",
+        chatType: chatType
+    }, window.location.origin);
+}
+
+updateGroupOnlineCount();
 }
 
 function updateGroupOnlineCount() {
@@ -1046,6 +1072,44 @@ function sendSocketData(data) {
     return false;
 }
 
+// Keep the Meet URL until the server echoes it back as a saved message.
+let pendingGoogleMeetUrl = null;
+let googleMeetLinkInFlight = false;
+
+function sendPendingGoogleMeetLink() {
+    if (
+        !pendingGoogleMeetUrl ||
+        googleMeetLinkInFlight ||
+        chatReadOnly ||
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) return;
+
+    const sent = sendSocketData({
+        action: "message",
+        message: pendingGoogleMeetUrl,
+        reply_to_id: null
+    });
+
+    if (sent) {
+        googleMeetLinkInFlight = true;
+    }
+}
+
+window.addEventListener("message", function(event) {
+    if (event.origin !== window.location.origin) return;
+    if (event.source !== window.parent) return;
+
+    const data = event.data;
+    if (!data || data.type !== "share_google_meet_link") return;
+    if (String(data.conversationId) !== String(conversationId)) return;
+    if (typeof data.meetingUrl !== "string" ||
+        !/^https:\/\/meet\.google\.com\//i.test(data.meetingUrl)) return;
+
+    pendingGoogleMeetUrl = data.meetingUrl;
+    sendPendingGoogleMeetLink();
+});
+
 function formatTime(value) {
     return value || new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -1113,6 +1177,54 @@ function createMessageAction(actions, name, icon, label, id, extraClass) {
     return button;
 }
 
+function linkifyMessage(bubble, messageText) {
+    const text = String(messageText || "");
+    const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+    let lastIndex = 0;
+    let match;
+
+    bubble.replaceChildren();
+
+    while ((match = urlPattern.exec(text)) !== null) {
+        const rawUrl = match[0];
+        const trailing = rawUrl.match(/[),.!?;:]+$/)?.[0] || "";
+        const url = trailing ? rawUrl.slice(0, -trailing.length) : rawUrl;
+
+        bubble.appendChild(
+            document.createTextNode(text.slice(lastIndex, match.index))
+        );
+
+        try {
+            const parsedUrl = new URL(url);
+
+            if (
+                url &&
+                (parsedUrl.protocol === "https:" || parsedUrl.protocol === "http:")
+            ) {
+                const link = document.createElement("a");
+                link.href = parsedUrl.href;
+                link.textContent = url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.className = "chat-message-link";
+                bubble.appendChild(link);
+            } else {
+                bubble.appendChild(document.createTextNode(url));
+            }
+        } catch (_) {
+            bubble.appendChild(document.createTextNode(url));
+        }
+
+        if (trailing) {
+            bubble.appendChild(document.createTextNode(trailing));
+        }
+
+        lastIndex = match.index + rawUrl.length;
+    }
+
+    bubble.appendChild(document.createTextNode(text.slice(lastIndex)));
+}
+
 function addMessage(data) {
     if (document.querySelector('[data-message-id="' + String(data.id) + '"]')) return;
 
@@ -1167,7 +1279,8 @@ function addMessage(data) {
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.textContent = data.message || "";
+
+    linkifyMessage(bubble, data.message || "");
     content.appendChild(bubble);
 
     const actions = document.createElement("div");
@@ -1199,6 +1312,10 @@ function addMessage(data) {
     scrollToBottom();
     return row;
 }
+
+document.querySelectorAll(".bubble[data-linkify-message]").forEach(function(bubble) {
+    linkifyMessage(bubble, bubble.textContent);
+});
 
 function openMessageEditor(row) {
     if (!row || row.dataset.senderId !== String(currentUserId)) return;
@@ -1434,6 +1551,7 @@ function connectWebSocket() {
         setConnection(true);
         hideError();
         sendSocketData({ action: "heartbeat" });
+        sendPendingGoogleMeetLink();
 
         document.querySelectorAll(".message-row").forEach(function(row) {
             const senderId = Number(row.dataset.senderId);
@@ -1467,6 +1585,20 @@ function connectWebSocket() {
 
         if (data.type === "message") {
             const mine = Number(data.sender_id) === Number(currentUserId);
+
+            if (mine && pendingGoogleMeetUrl &&
+                String(data.message || "").trim() === pendingGoogleMeetUrl) {
+                pendingGoogleMeetUrl = null;
+                googleMeetLinkInFlight = false;
+
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: "google_meet_link_shared",
+                        conversationId: String(conversationId)
+                    }, window.location.origin);
+                }
+            }
+
             addMessage(data);
 
             if (window.parent !== window) {
@@ -1517,7 +1649,7 @@ function connectWebSocket() {
                 const editor = row.querySelector(".message-editor");
 
                 if (bubble) {
-                    bubble.textContent = data.message;
+                    linkifyMessage(bubble, data.message || "");
                     bubble.hidden = false;
                 }
                 if (editor) editor.remove();
@@ -1556,10 +1688,12 @@ function connectWebSocket() {
         if (data.type === "chat_permission") {
             setChatReadOnly(!data.can_write);
             if (!data.can_write) {
+                googleMeetLinkInFlight = false;
                 showError(data.message ||
                     "You’re currently checked out. Please check in to start chatting with your colleagues.");
             } else {
                 hideError();
+                sendPendingGoogleMeetLink();
             }
             return;
         }

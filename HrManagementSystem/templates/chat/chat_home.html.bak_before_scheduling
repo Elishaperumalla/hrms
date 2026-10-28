@@ -1,0 +1,1468 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+
+        :root {
+            --teams-purple: #6264a7;
+            --teams-purple-light: #e8e8f5;
+            --teams-bg: #f5f5f5;
+            --teams-border: #e5e5e5;
+            --teams-text: #242424;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body { font-family: "Segoe UI", Arial, sans-serif; color: var(--teams-text); }
+
+        .app-layout {
+            display: flex;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* LEFT SIDEBAR */
+
+        .chat-sidebar {
+            width: 340px;
+            min-width: 300px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #f8f8f8;
+            border-right: 1px solid var(--teams-border);
+            flex-shrink: 0;
+        }
+
+        .chat-sidebar-top {
+            padding: 22px 16px 14px;
+        }
+
+        .chat-sidebar-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chat-sidebar-heading h1 {
+            font-size: 23px;
+            font-weight: 650;
+            margin: 0;
+        }
+
+        .new-chat-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d5d5d5;
+            border-radius: 7px;
+            background: #fff;
+            color: var(--teams-text);
+        }
+
+        .new-chat-btn:hover {
+            background: var(--teams-purple-light);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        #chatSearch {
+            padding-left: 36px;
+            height: 40px;
+            border: 1px solid #d5d5d5;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .chat-sidebar-label {
+            padding: 13px 18px 8px;
+            color: #616161;
+            font-size: 12px;
+            font-weight: 650;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .conversation-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 0 8px 12px;
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            padding: 12px 10px;
+            margin-bottom: 3px;
+            border-radius: 7px;
+            color: var(--teams-text);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+
+        .conversation-item:hover {
+            background: #ededed;
+            color: var(--teams-text);
+        }
+
+        .conversation-item.active {
+            background: var(--teams-purple-light);
+            box-shadow: inset 3px 0 var(--teams-purple);
+        }
+
+        .conversation-avatar {
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: #e5e5f5;
+            color: var(--teams-purple);
+            font-size: 21px;
+        }
+
+        .conversation-item[data-type="INDIVIDUAL"] .conversation-avatar {
+            border-radius: 50%;
+            background: #e0eee8;
+            color: #287858;
+        }
+
+        .conversation-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-title {
+            font-size: 14px;
+            font-weight: 650;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .conversation-preview {
+            margin-top: 4px;
+            color: #616161;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-sidebar-bottom {
+            padding: 13px 16px;
+            border-top: 1px solid var(--teams-border);
+            background: #fff;
+        }
+
+        .chat-sidebar-bottom a {
+            font-size: 13px;
+            color: #555;
+            text-decoration: none;
+        }
+
+        /* RIGHT CONTENT */
+
+        .main-panel {
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            background: #fff;
+            position: relative;
+        }
+
+        #chatFrame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+        }
+
+        .welcome-panel {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            width: 86px;
+            height: 86px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 22px;
+            border-radius: 24px;
+            background: var(--teams-purple-light);
+            color: var(--teams-purple);
+            font-size: 38px;
+        }
+
+        .welcome-panel h2 {
+            font-size: 25px;
+            font-weight: 650;
+        }
+
+        .welcome-panel p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* EMPTY / FILTERED LIST */
+
+        .no-chats {
+            padding: 35px 15px;
+            text-align: center;
+            color: #777;
+            font-size: 13px;
+        }
+
+        /* NEW CHAT MODAL */
+
+        .modal-content {
+            border: 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid var(--teams-border);
+        }
+
+        .modal-header h5 {
+            font-weight: 650;
+        }
+
+        .modal-body {
+            padding: 22px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-select,
+        .form-control {
+            min-height: 42px;
+            border-color: #d5d5d5;
+            font-size: 14px;
+        }
+
+        .btn-teams {
+            background: var(--teams-purple);
+            border-color: var(--teams-purple);
+            color: white;
+        }
+
+        .btn-teams:hover {
+            background: #50528d;
+            border-color: #50528d;
+            color: white;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 700px) {
+            .chat-sidebar {
+                width: 40%;
+                min-width: 135px;
+                max-width: 250px;
+            }
+
+            .chat-sidebar-top {
+                padding: 14px 8px 10px;
+            }
+
+            .chat-sidebar-heading h1 {
+                font-size: 18px;
+            }
+
+            .conversation-list {
+                padding: 0 4px 8px;
+            }
+
+            .conversation-item {
+                gap: 7px;
+                padding: 10px 5px;
+            }
+
+            .conversation-avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 16px;
+            }
+
+            .conversation-title {
+                font-size: 12px;
+            }
+
+            .conversation-preview {
+                font-size: 10px;
+            }
+
+            .chat-sidebar-bottom {
+                padding: 10px 7px;
+            }
+
+            #chatSearch {
+                padding-left: 30px;
+                font-size: 11px;
+            }
+
+            .chat-sidebar-label {
+                padding-left: 10px;
+                font-size: 10px;
+            }
+        }
+    
+/* Live chat unread counter */
+.conversation-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+.conversation-title-row .conversation-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.chat-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+.chat-unread-badge[hidden] {
+    display: none !important;
+}
+
+
+
+/* Chat page: fit the shared HRMS content area */
+.content-area:has(.app-layout) {
+    padding: 0 !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+}
+
+.app-layout {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.chat-sidebar-heading h1 {
+    margin: 0;
+    margin-right: auto;
+    flex: 0 0 auto;
+}
+
+.chat-sidebar .new-chat-btn {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+}
+
+.main-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#chatFrame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.welcome-panel {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+/* Chat-only: keep the HRMS navbar fixed and prevent page scrolling */
+html:has(.app-layout),
+body:has(.app-layout) {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden !important;
+}
+
+body:has(.app-layout) > .d-flex.min-vh-100 {
+    height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden;
+}
+
+body:has(.app-layout) .main-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+body:has(.app-layout) .top-navbar {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 20;
+}
+
+body:has(.app-layout) .content-area {
+    flex: 1 1 auto;
+    height: 0;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Final layout sizing inside the shared HRMS base template */
+.content-area:has(.app-layout) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0 !important;
+    height: 100%;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.app-layout {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar-top,
+.chat-sidebar-label {
+    flex-shrink: 0;
+}
+
+.conversation-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #6264a7 #eeeeee;
+}
+
+.conversation-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+    background: #eeeeee;
+    border-radius: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+    background: #6264a7;
+    border-radius: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+    background: #50528d;
+}
+
+.main-panel {
+    display: flex;
+    flex: 1 1 0;
+    width: 0;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.welcome-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    background: #ffffff;
+}
+
+#chatFrame {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+</style>
+<div class="app-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="chat-sidebar">
+
+        <div class="chat-sidebar-top">
+            <div class="chat-sidebar-heading">
+                <h1>
+                    <i class="bi bi-chat-dots-fill"
+                       style="color: var(--teams-purple);"></i>
+                    Chat
+                </h1>
+
+                <button type="button"
+                        class="new-chat-btn"
+                        title="Start Google Meet"
+                        aria-label="Start Google Meet"
+                        data-bs-toggle="modal"
+                        data-bs-target="#googleMeetModal">
+                    <i class="bi bi-camera-video-fill"></i>
+                </button>
+
+                <button type="button"
+                        class="new-chat-btn"
+                        title="New chat"
+                        data-bs-toggle="modal"
+                        data-bs-target="#newChatModal">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+
+                <input type="search"
+                       id="chatSearch"
+                       class="form-control"
+                       placeholder="Search chats"
+                       aria-label="Search conversations">
+            </div>
+        </div>
+
+        <div class="chat-sidebar-label">
+            Your conversations
+        </div>
+
+        <div class="conversation-list" id="conversationList">
+
+            {% for conversation in conversations %}
+
+                <a href="{% url 'chat:room' conversation.id %}"
+                   target="chatFrame"
+                   class="conversation-item"
+                   data-chat-id="{{ conversation.id }}"
+                   data-chat-name="{{ conversation.display_name|lower }}"
+                   data-type="{{ conversation.chat_type }}">
+
+                    <div class="conversation-avatar">
+                        {% if conversation.chat_type == "INDIVIDUAL" %}
+                            <i class="bi bi-person-fill"></i>
+                        {% elif conversation.chat_type == "TEAM" %}
+                            <i class="bi bi-people-fill"></i>
+                        {% elif conversation.chat_type == "DEPARTMENT" %}
+                            <i class="bi bi-diagram-3-fill"></i>
+                        {% elif conversation.chat_type == "BRANCH" %}
+                            <i class="bi bi-geo-alt-fill"></i>
+                        {% else %}
+                            <i class="bi bi-building-fill"></i>
+                        {% endif %}
+                    </div>
+
+                    <div class="conversation-details">
+                        <div class="conversation-title">
+                            {{ conversation.display_name }}
+                        </div>
+
+                        <div class="conversation-preview">
+                            {% if conversation.last_message %}
+                                {{ conversation.last_message.sender.get_full_name|default:conversation.last_message.sender.username }}:
+                                {{ conversation.last_message.content }}
+                            {% else %}
+                                {{ conversation.get_chat_type_display }} · Start chatting
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </a>
+
+            {% empty %}
+
+                <div class="no-chats" id="noChats">
+                    <i class="bi bi-chat-square-text fs-2 d-block mb-2"></i>
+                    No conversations yet.
+                    <br>
+                    Start a new chat.
+                </div>
+
+            {% endfor %}
+
+            <div class="no-chats d-none" id="noSearchResults">
+                No matching conversations found.
+            </div>
+
+        </div>
+</aside>
+
+    <!-- RIGHT CHAT ROOM -->
+    <main class="main-panel">
+
+        <iframe
+            name="chatFrame"
+            id="chatFrame"
+            title="Chat conversation"
+            src="about:blank"
+            style="display:none;">
+        </iframe>
+
+        <div class="welcome-panel"
+             id="welcomePanel">
+
+            <div>
+                <div class="welcome-icon">
+                    <i class="bi bi-chat-square-dots"></i>
+                </div>
+
+                <h2>Your conversations start here</h2>
+
+                <p>
+                    Choose a chat from the sidebar or start a new conversation.
+                </p>
+
+                <button class="btn btn-teams mt-2"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#newChatModal">
+                    <i class="bi bi-plus-lg me-1"></i>
+                    New chat
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- GOOGLE MEET MODAL -->
+<div class="modal fade" id="googleMeetModal" tabindex="-1"
+     aria-labelledby="googleMeetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="googleMeetModalLabel">
+                        <i class="bi bi-camera-video-fill me-2"
+                           style="color: var(--teams-purple);"></i>
+                        Start a Google Meet
+                    </h5>
+                    <div class="small text-secondary mt-1">
+                        Create a meeting and share its link in a conversation.
+                    </div>
+                </div>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="googleMeetStatus" class="small mb-3" role="status"
+                     aria-live="polite">
+                    Choose the conversation where you want to share the meeting link.
+                </div>
+                <label for="googleMeetConversation" class="form-label">
+                    Share meeting with
+                </label>
+                <select id="googleMeetConversation" class="form-select">
+                    <option value="">Select a conversation</option>
+                </select>
+                <div class="d-grid mt-3">
+                    <button type="button" class="btn btn-teams"
+                            id="googleMeetCreateButton">
+                        <i class="bi bi-camera-video me-1"></i>
+                        Create meeting and share link
+                    </button>
+                </div>
+                <div id="googleMeetResult" class="mt-3 d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NEW CHAT MODAL -->
+<div class="modal fade"
+     id="newChatModal"
+     tabindex="-1"
+     aria-labelledby="newChatModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="newChatModalLabel">
+                        <i class="bi bi-pencil-square me-2"
+                           style="color: var(--teams-purple);"></i>
+                        New conversation
+                    </h5>
+
+                    <div class="small text-secondary mt-1">
+                        Start a chat with your colleagues.
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                {% if error %}
+                    <div class="alert alert-warning">{{ error }}</div>
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post"
+                      action="{% url 'chat:create' %}"
+                      target="chatFrame"
+                      id="newChatForm">
+
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label" for="chatType">
+                            Chat type
+                        </label>
+
+                        <select class="form-select"
+                                name="chat_type"
+                                id="chatType"
+                                required>
+
+                            <option value="INDIVIDUAL">Individual chat</option>
+                            <option value="TEAM">Team group chat</option>
+                            <option value="DEPARTMENT">My department chat</option>
+                            <option value="BRANCH">My branch chat</option>
+                            <option value="COMPANY">Company chat</option>
+
+                        </select>
+                    </div>
+
+                    <div id="individualFields" class="mb-3">
+                        <label class="form-label" for="individualUser">
+                            Select employee
+                        </label>
+
+                        <select class="form-select"
+                                name="user_id"
+                                id="individualUser">
+
+                            <option value="">Choose employee</option>
+
+                            {% for emp in employees %}
+                                <option value="{{ emp.user_id }}">
+                                    {{ emp.get_full_name }} · {{ emp.employee_id }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                    <div id="teamFields" class="d-none">
+
+                        <div class="mb-3">
+                            <label class="form-label" for="groupName">
+                                Group name
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   name="name"
+                                   id="groupName"
+                                   maxlength="150"
+                                   placeholder="e.g. Project Alpha">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="groupMembers">
+                                Select group members
+                            </label>
+
+                            <select class="form-select"
+                                    name="user_ids"
+                                    id="groupMembers"
+                                    multiple
+                                    size="5">
+
+                                {% for emp in employees %}
+                                    <option value="{{ emp.user_id }}">
+                                        {{ emp.get_full_name }} · {{ emp.employee_id }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+
+                            <div class="form-text">
+                                Hold Ctrl to select multiple employees on Windows.
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="scopeNotice"
+                         class="alert alert-light border small">
+                        Individual messages are private to the conversation members.
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+
+                        <button type="button"
+                                class="btn btn-light border"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-teams"
+                                id="createChatButton">
+                            <i class="bi bi-chat-dots me-1"></i>
+                            Open chat
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+"use strict";
+
+const searchInput = document.getElementById("chatSearch");
+const conversationList = document.getElementById("conversationList");
+const noSearchResults = document.getElementById("noSearchResults");
+const chatFrame = document.getElementById("chatFrame");
+const welcomePanel = document.getElementById("welcomePanel");
+
+const chatType = document.getElementById("chatType");
+const individualFields = document.getElementById("individualFields");
+const individualUser = document.getElementById("individualUser");
+const teamFields = document.getElementById("teamFields");
+const groupName = document.getElementById("groupName");
+const groupMembers = document.getElementById("groupMembers");
+const scopeNotice = document.getElementById("scopeNotice");
+const newChatForm = document.getElementById("newChatForm");
+const createChatButton = document.getElementById("createChatButton");
+
+let createFormSubmitted = false;
+
+function getConversationItems() {
+    return Array.from(
+        conversationList.querySelectorAll(".conversation-item")
+    );
+}
+
+function selectConversation(item) {
+    getConversationItems().forEach(function (chat) {
+        chat.classList.remove("active");
+    });
+
+    if (item) item.classList.add("active");
+}
+
+function applyChatSearch() {
+    const query = searchInput.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    getConversationItems().forEach(function (item) {
+        const name = (item.dataset.chatName || "").toLowerCase();
+        const preview = (
+            item.querySelector(".conversation-preview")?.textContent || ""
+        ).toLowerCase();
+
+        const matches = name.includes(query) || preview.includes(query);
+
+        item.classList.toggle("d-none", !matches);
+
+        if (matches) visibleCount++;
+    });
+
+    if (noSearchResults) {
+        noSearchResults.classList.toggle(
+            "d-none",
+            query === "" || visibleCount > 0
+        );
+    }
+}
+
+searchInput.addEventListener("input", applyChatSearch);
+
+conversationList.addEventListener("click", function (event) {
+    const item = event.target.closest(".conversation-item");
+    if (!item) return;
+
+    selectConversation(item);
+
+    if (chatFrame) {
+        chatFrame.style.display = "block";
+    }
+
+    if (welcomePanel) {
+        welcomePanel.style.display = "none";
+    }
+});
+
+function getChatIcon(type) {
+    const icons = {
+        INDIVIDUAL: "bi-person-fill",
+        TEAM: "bi-people-fill",
+        DEPARTMENT: "bi-diagram-3-fill",
+        BRANCH: "bi-geo-alt-fill",
+        COMPANY: "bi-building-fill"
+    };
+
+    return icons[type] || "bi-chat-dots-fill";
+}
+
+function getChatTypeLabel(type) {
+    const labels = {
+        INDIVIDUAL: "Individual",
+        TEAM: "Team",
+        DEPARTMENT: "Department",
+        BRANCH: "Branch",
+        COMPANY: "Company"
+    };
+
+    return labels[type] || "Chat";
+}
+
+
+function ensureConversationItem(data, moveToTop = false) {
+    if (!data || !data.conversationId || !data.href) {
+        return null;
+    }
+
+    const id = String(data.conversationId);
+
+    let item = conversationList.querySelector(
+        '.conversation-item[data-chat-id="' + id + '"]'
+    );
+
+    const isNewItem = !item;
+
+    if (isNewItem) {
+        const noChats = document.getElementById("noChats");
+        if (noChats) noChats.remove();
+
+        item = document.createElement("a");
+        item.className = "conversation-item";
+        item.dataset.chatId = id;
+        item.dataset.type = data.chatType || "INDIVIDUAL";
+        item.target = "chatFrame";
+
+        const avatar = document.createElement("div");
+        avatar.className = "conversation-avatar";
+
+        const icon = document.createElement("i");
+        icon.className = "bi " + getChatIcon(data.chatType);
+        avatar.appendChild(icon);
+
+        const details = document.createElement("div");
+        details.className = "conversation-details";
+
+        const title = document.createElement("div");
+        title.className = "conversation-title";
+        title.textContent = data.chatTitle || "New conversation";
+
+        const preview = document.createElement("div");
+        preview.className = "conversation-preview";
+        preview.textContent =
+            getChatTypeLabel(data.chatType) + " · Start chatting";
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "conversation-title-row";
+        titleRow.appendChild(title);
+
+        const badge = document.createElement("span");
+        badge.className = "chat-unread-badge";
+        badge.dataset.unreadBadge = id;
+        badge.hidden = true;
+        badge.textContent = "0";
+        titleRow.appendChild(badge);
+
+        details.appendChild(titleRow);
+        details.appendChild(preview);
+
+        item.appendChild(avatar);
+        item.appendChild(details);
+    }
+
+    item.href = data.href;
+    item.dataset.chatName = (
+        data.chatTitle ||
+        item.querySelector(".conversation-title")?.textContent ||
+        ""
+    ).toLowerCase();
+
+    item.dataset.type = data.chatType || item.dataset.type;
+
+    const title = item.querySelector(".conversation-title");
+
+    if (title && data.chatTitle) {
+        title.textContent = data.chatTitle;
+    }
+
+    // New conversations can be added at the top.
+    // Existing conversations move to the top only when a message arrives.
+    if (isNewItem || moveToTop) {
+        conversationList.insertBefore(item, conversationList.firstChild);
+    }
+
+    // Background updates must NEVER change the active conversation.
+    // Selection happens only through the user's click handler.
+    applyChatSearch();
+
+    return item;
+}
+
+
+function updateSidebarMessage(data) {
+    if (!data || !data.conversationId) return;
+
+    const item = conversationList.querySelector(
+        '.conversation-item[data-chat-id="' +
+        String(data.conversationId) + '"]'
+    );
+
+    if (!item) return;
+
+    const preview = item.querySelector(".conversation-preview");
+
+    if (preview) {
+        preview.textContent =
+            (data.senderName || "Message") + ": " + (data.message || "");
+    }
+
+    // Move to the top only after a message is sent or received.
+    conversationList.insertBefore(item, conversationList.firstChild);
+
+    applyChatSearch();
+}
+
+
+/*
+ * Listen to messages sent by chat_room.html inside the iframe.
+ */
+
+window.addEventListener("message", function (event) {
+    if (event.origin !== window.location.origin) return;
+    if (!chatFrame || event.source !== chatFrame.contentWindow) return;
+
+    const data = event.data;
+
+    if (!data || typeof data !== "object") return;
+
+    if (data.type === "chat_room_opened") {
+        // Opening a chat must NOT move an existing chat to the top.
+        ensureConversationItem(data, false);
+
+        const pendingMeet = window.pendingGoogleMeetShare;
+        if (pendingMeet &&
+            String(pendingMeet.conversationId) === String(data.conversationId)) {
+            chatFrame.contentWindow.postMessage({
+                type: "share_google_meet_link",
+                conversationId: String(pendingMeet.conversationId),
+                meetingUrl: pendingMeet.meetingUrl
+            }, window.location.origin);
+            // Keep the pending link until the chat confirms it was saved.
+        }
+        return;
+    }
+
+    if (data.type === "google_meet_link_shared") {
+        const pendingMeet = window.pendingGoogleMeetShare;
+        if (pendingMeet &&
+            String(pendingMeet.conversationId) === String(data.conversationId)) {
+            window.pendingGoogleMeetShare = null;
+        }
+        return;
+    }
+
+    if (data.type === "chat_message_update") {
+        // A new message moves that conversation to the top.
+        const item = ensureConversationItem(data, true);
+
+        if (item) {
+            updateSidebarMessage(data);
+        }
+    }
+});
+
+
+
+/* Google Meet creation and conversation selection. */
+(function () {
+    const modalElement = document.getElementById("googleMeetModal");
+    const conversationSelect = document.getElementById("googleMeetConversation");
+    const createButton = document.getElementById("googleMeetCreateButton");
+    const statusElement = document.getElementById("googleMeetStatus");
+    const resultElement = document.getElementById("googleMeetResult");
+
+    if (!modalElement || !conversationSelect || !createButton) return;
+
+    function populateMeetConversations() {
+        const previousValue = conversationSelect.value;
+        conversationSelect.innerHTML =
+            '<option value="">Select a conversation</option>';
+
+        getConversationItems().forEach(function (item) {
+            const option = document.createElement("option");
+            option.value = item.dataset.chatId;
+            option.textContent =
+                item.querySelector(".conversation-title")?.textContent.trim()
+                || item.dataset.chatName
+                || "Conversation " + item.dataset.chatId;
+            conversationSelect.appendChild(option);
+        });
+
+        if (previousValue &&
+            Array.from(conversationSelect.options).some(
+                option => option.value === previousValue
+            )) {
+            conversationSelect.value = previousValue;
+        } else {
+            const active = getConversationItems().find(
+                item => item.classList.contains("active")
+            );
+            if (active) conversationSelect.value = active.dataset.chatId;
+        }
+    }
+
+    modalElement.addEventListener("show.bs.modal", function () {
+        populateMeetConversations();
+        statusElement.textContent =
+            "Choose where to share the meeting link.";
+        resultElement.classList.add("d-none");
+        resultElement.replaceChildren();
+        createButton.disabled = false;
+        createButton.innerHTML =
+            '<i class="bi bi-camera-video me-1"></i> Create meeting and share link';
+    });
+
+    createButton.addEventListener("click", async function () {
+        const conversationId = conversationSelect.value;
+        console.log("MEET BUTTON CLICKED", {conversationId});
+        if (!conversationId) {
+            statusElement.textContent = "Please select a conversation first.";
+            return;
+        }
+
+        const csrfToken = document.querySelector(
+            '#googleMeetModal input[name="csrfmiddlewaretoken"]'
+        )?.value || document.querySelector(
+            'input[name="csrfmiddlewaretoken"]'
+        )?.value || "";
+
+        createButton.disabled = true;
+        createButton.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span>Creating meeting...';
+        statusElement.textContent = "Contacting Google Meet…";
+        resultElement.classList.add("d-none");
+        resultElement.replaceChildren();
+
+        try {
+            const response = await fetch("{% url 'chat:meet_create' %}", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({conversation_id: conversationId})
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.ok || !data.meeting_url) {
+                if (data.connect_url) {
+                    statusElement.textContent =
+                        data.error || "Connect your Google account first.";
+                    const connectLink = document.createElement("a");
+                    connectLink.href = data.connect_url;
+                    connectLink.className = "btn btn-outline-primary mt-2";
+                    connectLink.textContent = "Connect Google account";
+                    resultElement.replaceChildren(connectLink);
+                    resultElement.classList.remove("d-none");
+                } else {
+                    statusElement.textContent =
+                        data.error || "Could not create the meeting.";
+                }
+                return;
+            }
+
+            const selectedItem = getConversationItems().find(
+                item => item.dataset.chatId === conversationId
+            );
+
+            if (!selectedItem) {
+                statusElement.textContent =
+                    "Meeting created, but that conversation is no longer available in the list.";
+                const link = document.createElement("a");
+                link.href = data.meeting_url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = "Open Google Meet";
+                resultElement.replaceChildren(link);
+                resultElement.classList.remove("d-none");
+                return;
+            }
+
+            window.pendingGoogleMeetShare = {
+                conversationId: conversationId,
+                meetingUrl: data.meeting_url
+            };
+
+            statusElement.textContent =
+                "Meeting created. Opening the selected chat to share the link…";
+
+            selectedItem.click();
+
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+
+        } catch (error) {
+            console.error("Google Meet creation failed.", error);
+            statusElement.textContent =
+                "Could not create the meeting. Please try again.";
+        } finally {
+            createButton.disabled = false;
+            createButton.innerHTML =
+                '<i class="bi bi-camera-video me-1"></i> Create meeting and share link';
+        }
+    });
+})();
+
+/* No conversation is selected automatically. */
+
+/* New chat modal controls. */
+function updateChatForm() {
+    const type = chatType.value;
+    const isIndividual = type === "INDIVIDUAL";
+    const isTeam = type === "TEAM";
+
+    individualFields.classList.toggle("d-none", !isIndividual);
+    teamFields.classList.toggle("d-none", !isTeam);
+
+    individualUser.required = isIndividual;
+    groupName.required = isTeam;
+    groupMembers.required = isTeam;
+
+    const descriptions = {
+        INDIVIDUAL:
+            "Individual messages are private to the conversation members.",
+        TEAM:
+            "Create a named group and select its members.",
+        DEPARTMENT:
+            "Opens the conversation for your department.",
+        BRANCH:
+            "Opens the conversation for your branch.",
+        COMPANY:
+            "Opens the conversation for your company."
+    };
+
+    scopeNotice.textContent =
+        descriptions[type] || "Choose your conversation type.";
+}
+
+chatType.addEventListener("change", updateChatForm);
+updateChatForm();
+
+newChatForm.addEventListener("submit", function () {
+    createFormSubmitted = true;
+    createChatButton.disabled = true;
+    createChatButton.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Opening...';
+});
+
+
+/*
+ * Only close the modal after the create form was submitted
+ * and the iframe has navigated to the resulting page.
+ */
+
+
+chatFrame.addEventListener("load", function () {
+    if (!createFormSubmitted) return;
+
+    createFormSubmitted = false;
+    createChatButton.disabled = false;
+    createChatButton.innerHTML =
+        '<i class="bi bi-chat-dots me-1"></i> Open chat';
+
+    const modalElement = document.getElementById("newChatModal");
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    if (modal) modal.hide();
+});
+
+/* Live per-user sidebar updates */
+function ensureUnreadBadge(item) {
+    if (!item) return null;
+
+    let badge = item.querySelector(".chat-unread-badge");
+    if (badge) return badge;
+
+    const title = item.querySelector(".conversation-title");
+    const details = item.querySelector(".conversation-details");
+    if (!details || !title) return null;
+
+    let row = details.querySelector(".conversation-title-row");
+    if (!row) {
+        row = document.createElement("div");
+        row.className = "conversation-title-row";
+        title.parentNode.insertBefore(row, title);
+        row.appendChild(title);
+    }
+
+    badge = document.createElement("span");
+    badge.className = "chat-unread-badge";
+    badge.dataset.unreadBadge = item.dataset.chatId || "";
+    badge.hidden = true;
+    badge.textContent = "0";
+    row.appendChild(badge);
+    return badge;
+}
+
+function setSidebarUnread(item, count) {
+    const badge = ensureUnreadBadge(item);
+    if (!badge) return;
+
+    const n = Math.max(0, Number(count) || 0);
+    badge.textContent = n > 99 ? "99+" : String(n);
+    badge.hidden = n === 0;
+    item.dataset.unreadCount = String(n);
+}
+
+function connectChatSidebarSocket() {
+    if (!("WebSocket" in window)) return;
+
+    const scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const socket = new WebSocket(
+        scheme + window.location.host + "/ws/chat/sidebar/"
+    );
+
+    socket.addEventListener("message", function (event) {
+        let data;
+        try {
+            data = JSON.parse(event.data);
+        } catch (_) {
+            return;
+        }
+
+        if (data.type !== "sidebar_update" || !data.conversationId) return;
+
+        // Initial unread-count updates must not change conversation order.
+        // Move a conversation to the top only when a message update arrives.
+        const hasNewMessage = typeof data.message !== "undefined";
+        const item = ensureConversationItem(data, hasNewMessage);
+        if (!item) return;
+
+        if (hasNewMessage) {
+            updateSidebarMessage(data);
+        }
+
+        // Keep the server's receipt-based unread count.
+        // Opening a room will clear messages through actual read receipts.
+        setSidebarUnread(item, data.unreadCount);
+    });
+
+    socket.addEventListener("close", function () {
+        window.setTimeout(connectChatSidebarSocket, 3000);
+    });
+
+    socket.addEventListener("error", function () {
+        try { socket.close(); } catch (_) {}
+    });
+}
+
+// Make sure existing server-rendered sidebar items have badges too.
+conversationList.querySelectorAll(".conversation-item").forEach(function (item) {
+    ensureUnreadBadge(item);
+});
+
+connectChatSidebarSocket();
+</script>
+{% endblock %}

@@ -268,16 +268,34 @@
 
 
                 <!-- ATTENDANCE -->
-
-                <a href="{% url 'attendance_dashboard' %}" class="sidebar-link">
+                <a class="sidebar-link" data-bs-toggle="collapse" href="#attendanceMenu"
+                    role="button" aria-expanded="false" aria-controls="attendanceMenu">
 
                     <i class="bi bi-clock"></i>
 
-                    <span>
+                    <span class="flex-grow-1">
                         Attendance
                     </span>
 
+                    <i class="bi bi-chevron-down organization-arrow"></i>
+
                 </a>
+
+                <div class="collapse sidebar-submenu" id="attendanceMenu">
+
+                    <a href="{% url 'attendance_dashboard' %}" class="sidebar-link sidebar-sublink">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Attendance Dashboard</span>
+                    </a>
+
+                    {% if request.user.is_superuser or request.user.role == "SUPER_ADMIN" or request.user.role == "HR_ADMIN" or request.user.role == "MANAGER" %}
+                    <a href="{% url 'attendance_photo_gallery' %}" class="sidebar-link sidebar-sublink">
+                        <i class="bi bi-camera"></i>
+                        <span>Attendance Photos</span>
+                    </a>
+                    {% endif %}
+
+                </div>
 
 
                 <!-- LEAVES -->

@@ -1,0 +1,1071 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ title }} - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- PAGE HEADER -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <a
+                href="{% url 'employee_list' %}"
+                class="text-decoration-none"
+            >
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Employees
+            </a>
+
+            <h3 class="fw-bold mt-3 mb-1">
+                {{ title }}
+            </h3>
+
+            <p class="text-muted mb-0">
+                {% if employee %}
+                    Update employee information.
+                {% else %}
+                    Add a new employee to your organization.
+                {% endif %}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        {% csrf_token %}
+
+
+        <!-- ==========================================
+             FORM ERRORS
+        =========================================== -->
+
+        {% if form.non_field_errors %}
+
+            <div class="alert alert-danger">
+
+                <div class="fw-semibold mb-1">
+
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+
+                    Please correct the following error:
+                </div>
+
+                {{ form.non_field_errors }}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- ==========================================
+             PERSONAL INFORMATION
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-person text-primary me-2"></i>
+
+                    Personal Information
+
+                </h5>
+
+                <small class="text-muted">
+                    Basic employee identity information.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="row">
+
+
+                    <!-- Employee ID -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Employee ID
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.employee_id }}
+
+                        {% if form.employee_id.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.employee_id.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- First Name -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            First Name
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.first_name }}
+
+                        {% if form.first_name.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.first_name.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Middle Name -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Middle Name
+
+                        </label>
+
+                        {{ form.middle_name }}
+
+                        {% if form.middle_name.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.middle_name.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Last Name -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Last Name
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.last_name }}
+
+                        {% if form.last_name.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.last_name.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Date of Birth -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Date of Birth
+
+                        </label>
+
+                        {{ form.date_of_birth }}
+
+                        {% if form.date_of_birth.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.date_of_birth.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Gender -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Gender
+
+                        </label>
+
+                        {{ form.gender }}
+
+                        {% if form.gender.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.gender.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             CONTACT INFORMATION
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-telephone text-primary me-2"></i>
+
+                    Contact Information
+
+                </h5>
+
+                <small class="text-muted">
+                    Employee contact details.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="row">
+
+
+                    <!-- Email -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Email Address
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.email }}
+
+                        {% if form.email.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.email.errors }}
+                            </div>
+
+                        {% endif %}
+
+                        <small class="text-muted">
+                            Login credentials will be sent to this email.
+                        </small>
+
+                    </div>
+
+
+                    <!-- Phone -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Phone Number
+
+                        </label>
+
+                        {{ form.phone }}
+
+                        {% if form.phone.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.phone.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Alternate Phone -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Alternate Phone
+
+                        </label>
+
+                        {{ form.alternate_phone }}
+
+                        {% if form.alternate_phone.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.alternate_phone.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             ADDRESS
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-geo-alt text-primary me-2"></i>
+
+                    Address
+
+                </h5>
+
+                <small class="text-muted">
+                    Employee residential address.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+
+                <!-- Address -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    {{ form.address }}
+
+                    {% if form.address.errors %}
+
+                        <div class="text-danger small mt-1">
+                            {{ form.address.errors }}
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="row">
+
+
+                    <!-- City -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            City
+
+                        </label>
+
+                        {{ form.city }}
+
+                        {% if form.city.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.city.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- State -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            State
+
+                        </label>
+
+                        {{ form.state }}
+
+                        {% if form.state.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.state.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Country -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Country
+
+                        </label>
+
+                        {{ form.country }}
+
+                        {% if form.country.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.country.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Postal Code -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Postal Code
+
+                        </label>
+
+                        {{ form.postal_code }}
+
+                        {% if form.postal_code.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.postal_code.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             ORGANIZATION
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-building text-primary me-2"></i>
+
+                    Organization
+
+                </h5>
+
+                <small class="text-muted">
+                    Assign the employee to the appropriate organizational units.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="row">
+
+
+                    <!-- Company -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Company
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.company }}
+
+                        {% if form.company.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.company.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Department -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Department
+
+                        </label>
+
+                        {{ form.department }}
+
+                        {% if form.department.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.department.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Designation -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Designation
+
+                        </label>
+
+                        {{ form.designation }}
+
+                        {% if form.designation.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.designation.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Branch -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Branch
+
+                        </label>
+
+                        {{ form.branch }}
+
+                        {% if form.branch.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.branch.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Work Location -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Work Location
+
+                        </label>
+
+                        {{ form.work_location }}
+
+                        {% if form.work_location.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.work_location.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             EMPLOYMENT INFORMATION
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-briefcase text-primary me-2"></i>
+
+                    Employment Information
+
+                </h5>
+
+                <small class="text-muted">
+                    Employment type, status and important dates.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="row">
+
+
+                    <!-- Role -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Role
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.role }}
+
+                        {% if form.role.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.role.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Employment Type -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Employment Type
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.employment_type }}
+
+                        {% if form.employment_type.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.employment_type.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Employment Status -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Employment Status
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.employment_status }}
+
+                        {% if form.employment_status.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.employment_status.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Joining Date -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Joining Date
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.joining_date }}
+
+                        {% if form.joining_date.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.joining_date.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Confirmation Date -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Confirmation Date
+
+                        </label>
+
+                        {{ form.confirmation_date }}
+
+                        {% if form.confirmation_date.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.confirmation_date.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Resignation Date -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Resignation Date
+
+                        </label>
+
+                        {{ form.resignation_date }}
+
+                        {% if form.resignation_date.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.resignation_date.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Termination Date -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Termination Date
+
+                        </label>
+
+                        {{ form.termination_date }}
+
+                        {% if form.termination_date.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.termination_date.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             REPORTING STRUCTURE
+        =========================================== -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-diagram-3 text-primary me-2"></i>
+
+                    Reporting Structure
+
+                </h5>
+
+                <small class="text-muted">
+
+                    Define who this employee reports to.
+
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Reporting Manager
+
+                            {% if not employee or employee.role == "EMPLOYEE" %}
+
+                                <span class="text-danger">*</span>
+
+                            {% endif %}
+
+                        </label>
+
+
+                        {{ form.reporting_manager }}
+
+
+                        {% if form.reporting_manager.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.reporting_manager.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+
+         <!-- REPORTING INFORMATION -->
+
+                        {% if form.role.value == "EMPLOYEE" %}
+
+                            <div class="alert alert-info mt-2 mb-0 py-2">
+
+                                <small>
+
+                                    <i class="bi bi-info-circle me-1"></i>
+
+                                    Select a Manager from the same company
+                                    and department.
+
+                                </small>
+
+                            </div>
+
+                        {% elif form.role.value == "MANAGER" %}
+
+                            <div class="alert alert-info mt-2 mb-0 py-2">
+
+                                <small>
+
+                                    <i class="bi bi-info-circle me-1"></i>
+
+                                    This Manager will report to the HR Admin
+                                    who creates the account.
+
+                                </small>
+
+                            </div>
+
+                        {% elif form.role.value == "HR_ADMIN" %}
+
+                            <div class="alert alert-info mt-2 mb-0 py-2">
+
+                                <small>
+
+                                    <i class="bi bi-info-circle me-1"></i>
+
+                                    This HR Admin will report to the
+                                    Super Admin.
+
+                                </small>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+             <!-- PROFILE PHOTO -->
+
+        <div class="card dashboard-card mb-4">
+
+            <div class="card-header bg-white border-0 pt-4 px-4">
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-camera text-primary me-2"></i>
+
+                    Profile Photo
+
+                </h5>
+
+                <small class="text-muted">
+                    Upload an employee profile picture.
+                </small>
+
+            </div>
+
+
+            <div class="card-body p-4">
+
+                {% if employee.profile_photo %}
+
+                    <div class="mb-3">
+
+                        <img
+                            src="{{ employee.profile_photo.url }}"
+                            alt="{{ employee.get_full_name }}"
+                            width="90"
+                            height="90"
+                            class="rounded-circle"
+                            style="object-fit: cover;"
+                        >
+
+                    </div>
+
+                {% endif %}
+
+
+                {{ form.profile_photo }}
+
+                {% if form.profile_photo.errors %}
+
+                    <div class="text-danger small mt-1">
+                        {{ form.profile_photo.errors }}
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+             <!-- FORM ACTIONS -->
+
+        <div class="d-flex justify-content-end gap-2 mb-5">
+
+            <a
+                href="{% url 'employee_list' %}"
+                class="btn btn-light"
+            >
+
+                <i class="bi bi-x-lg me-1"></i>
+
+                Cancel
+
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+
+                <i class="bi bi-check-lg me-1"></i>
+
+                {{ button_text }}
+
+            </button>
+
+        </div>
+
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -53,6 +53,22 @@ class Company(models.Model):
         blank=True
     )
 
+
+    # GPS geofence configuration for attendance
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+
+    radius_meters = models.PositiveIntegerField(
+        default=70,
+        help_text="Allowed office attendance radius in meters."
+    )
+
+
     logo = models.ImageField(
         upload_to="company/",
         blank=True,
@@ -260,6 +276,22 @@ class Branch(models.Model):
         blank=True
     )
 
+
+    # GPS geofence configuration for attendance
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+
+    radius_meters = models.PositiveIntegerField(
+        default=70,
+        help_text="Allowed office attendance radius in meters."
+    )
+
+
     phone = models.CharField(
         max_length=20,
         blank=True
@@ -354,6 +386,20 @@ class WorkLocation(models.Model):
         blank=True
     )
 
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+    )
+
     location_type = models.CharField(
         max_length=20,
         choices=LocationType.choices,
@@ -374,6 +420,49 @@ class WorkLocation(models.Model):
 
     class Meta:
         ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class OfficeAttendanceSettings(models.Model):
+    """
+    GPS geofence settings for office attendance.
+    Configure the office coordinates and permitted radius.
+    """
+
+    name = models.CharField(
+        max_length=150,
+        default="Main Office",
+    )
+
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+    )
+
+    radius_meters = models.PositiveIntegerField(
+        default=100,
+        help_text="Maximum distance allowed for office attendance, in meters.",
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Office Attendance Setting"
+        verbose_name_plural = "Office Attendance Settings"
 
     def __str__(self):
         return self.name

@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from calendar import monthrange
 from datetime import date
 
@@ -253,6 +254,19 @@ def attendance_dashboard(request):
         request.user
     )
 
+    # Face registration reminder; Super Admin is exempt.
+    face_registration_required = False
+    if not (
+        request.user.is_superuser
+        or getattr(request.user, "role", "") == "SUPER_ADMIN"
+    ):
+        from account.models import EmployeeFaceProfile
+
+        face_registration_required = not EmployeeFaceProfile.objects.filter(
+            user=request.user,
+            is_active=True,
+        ).exists()
+
     today_attendance = None
 
     if current_employee:
@@ -301,6 +315,7 @@ def attendance_dashboard(request):
             "late_today": late_today,
             "attendance_percentage": attendance_percentage,
             "today_attendance": today_attendance,
+            "face_registration_required": face_registration_required,
             "recent_records": recent_records,
             "can_manage_attendance": can_manage_attendance(
                 request.user
@@ -952,168 +967,546 @@ def attendance_report(request):
 # CLOCK IN
 # =========================================================
 
+
+# =========================================================
+# GPS ATTENDANCE VALIDATION
+# =========================================================
+
+
+def _reverse_geocode_attendance(latitude, longitude):
+    """Best-effort address lookup using OpenStreetMap Nominatim."""
+    import json
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
+
+    params = urlencode({
+        "format": "jsonv2",
+        "lat": str(latitude),
+        "lon": str(longitude),
+        "zoom": 18,
+        "addressdetails": 1,
+    })
+    url = "https://nominatim.openstreetmap.org/reverse?" + params
+    request_obj = Request(
+        url,
+        headers={
+            "User-Agent": "VoiceOrbitHRMS/1.0 (attendance location lookup)"
+        },
+    )
+
+    try:
+        with urlopen(request_obj, timeout=3) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        return (data.get("display_name") or "")[:2000]
+    except Exception:
+        # Attendance must still work if the free geocoding service is unavailable.
+        return ""
+
+
+def _validate_attendance_gps(request):
+    from math import asin, cos, radians, sin, sqrt
+    from organization.models import OfficeAttendanceSettings
+
+    mode = (request.POST.get("attendance_mode") or "").strip().upper()
+    if mode not in {"OFFICE", "OUTSIDE"}:
+        return None, "Please select Office or Outside before continuing."
+
+    try:
+        latitude = Decimal(request.POST.get("latitude", ""))
+        longitude = Decimal(request.POST.get("longitude", ""))
+        accuracy = float(request.POST.get("accuracy", ""))
+    except (InvalidOperation, TypeError, ValueError):
+        return None, "Please verify your GPS location and try again."
+
+    if not (Decimal("-90") <= latitude <= Decimal("90")):
+        return None, "GPS latitude is invalid."
+    if not (Decimal("-180") <= longitude <= Decimal("180")):
+        return None, "GPS longitude is invalid."
+    if accuracy < 0 or accuracy > 100:
+        return None, "GPS accuracy is too low. Please retry in an open area."
+
+    address = (request.POST.get("address") or "").strip()[:2000]
+
+    if mode == "OFFICE":
+        employee = get_current_employee(request.user)
+        fence = None
+
+        # Priority 1: the employee's assigned branch.
+        if employee and employee.branch_id:
+            branch = employee.branch
+            if branch.latitude is not None and branch.longitude is not None:
+                fence = (
+                    branch.latitude,
+                    branch.longitude,
+                    branch.radius_meters,
+                    f"branch {branch.name}",
+                )
+
+        # Priority 2: the employee's assigned company.
+        if fence is None and employee and employee.company_id:
+            company = employee.company
+            if company.latitude is not None and company.longitude is not None:
+                fence = (
+                    company.latitude,
+                    company.longitude,
+                    company.radius_meters,
+                    f"company {company.name}",
+                )
+
+        # Priority 3: legacy office settings for backward compatibility.
+        if fence is None:
+            settings_obj = OfficeAttendanceSettings.objects.filter(
+                is_active=True
+            ).first()
+            if (
+                settings_obj
+                and settings_obj.latitude is not None
+                and settings_obj.longitude is not None
+            ):
+                fence = (
+                    settings_obj.latitude,
+                    settings_obj.longitude,
+                    settings_obj.radius_meters,
+                    "configured office",
+                )
+
+        if fence is None:
+            return None, (
+                "Office GPS is not configured for your branch or company. "
+                "Please contact your Super Admin."
+            )
+
+        fence_latitude, fence_longitude, radius_meters, fence_name = fence
+
+        lat1, lon1 = radians(float(latitude)), radians(float(longitude))
+        lat2, lon2 = radians(float(fence_latitude)), radians(float(fence_longitude))
+        dlat, dlon = lat2 - lat1, lon2 - lon1
+        haversine = (
+            sin(dlat / 2) ** 2
+            + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        )
+        distance = 6371000 * 2 * asin(sqrt(min(1, haversine)))
+
+        if distance > radius_meters:
+            return None, (
+                f"You are {round(distance)} metres from the {fence_name}. "
+                f"Office attendance is allowed within {radius_meters} metres."
+            )
+
+    if not address:
+        address = _reverse_geocode_attendance(latitude, longitude)
+
+    return {
+        "mode": mode,
+        "latitude": latitude,
+        "longitude": longitude,
+        "accuracy": accuracy,
+        "address": address,
+    }, None
+
+
 @login_required
-def attendance_clock_in(request):
+def attendance_face_verify(request):
+    import secrets
+    import time
+    from io import BytesIO
+
+    from django.http import JsonResponse
+    from PIL import Image
+    from account.models import EmployeeFaceProfile
+    from account.face_service import (
+        FaceServiceError,
+        extract_embedding,
+        decrypt_embedding,
+        compare_embeddings,
+    )
 
     if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
 
-        return HttpResponseNotAllowed(
-            ["POST"]
-        )
+    user = request.user
+    action = (request.POST.get("action") or "").strip()
+    if action not in {"clock-in", "clock-out"}:
+        return JsonResponse({"ok": False, "message": "Invalid attendance action."}, status=400)
 
-    current_employee = get_current_employee(
-        request.user
+    employee = get_current_employee(user)
+    if not employee:
+        return JsonResponse({"ok": False, "message": "Your employee profile was not found."}, status=403)
+
+    gps, gps_error = _validate_attendance_gps(request)
+    if gps_error:
+        return JsonResponse({"ok": False, "message": gps_error}, status=400)
+
+    uploaded = request.FILES.get("face_image")
+    if not uploaded:
+        return JsonResponse({"ok": False, "message": "Capture a photo before continuing."}, status=400)
+    if uploaded.size > 5 * 1024 * 1024:
+        return JsonResponse({"ok": False, "message": "Photo must be 5 MB or smaller."}, status=400)
+
+    image_bytes = uploaded.read()
+    try:
+        with Image.open(BytesIO(image_bytes)) as image:
+            image.verify()
+    except Exception:
+        return JsonResponse({"ok": False, "message": "The captured photo is not a valid image."}, status=400)
+
+    is_super_admin = user.is_superuser or getattr(user, "role", "") == "SUPER_ADMIN"
+
+    if not is_super_admin:
+        profile = EmployeeFaceProfile.objects.filter(user=user, is_active=True).first()
+        if not profile:
+            return JsonResponse({
+                "ok": False,
+                "message": "Face registration is required before attendance.",
+                "registration_url": "/account/face-enrollment/",
+            }, status=403)
+
+        try:
+            live_embedding = extract_embedding(image_bytes)
+            registered_embedding = decrypt_embedding(profile.encrypted_template)
+            similarity = compare_embeddings(live_embedding, registered_embedding)
+        except FaceServiceError as exc:
+            return JsonResponse({"ok": False, "message": str(exc)}, status=400)
+        except Exception:
+            return JsonResponse({
+                "ok": False,
+                "message": "Face verification is temporarily unavailable. Please retry.",
+            }, status=503)
+
+        if similarity < 0.40:
+            return JsonResponse({
+                "ok": False,
+                "message": "Face did not match your registration. Please retry with good lighting.",
+            }, status=403)
+
+    verification_id = secrets.token_urlsafe(32)
+    try:
+        pending_photo = _store_pending_attendance_photo(image_bytes, verification_id)
+    except Exception:
+        return JsonResponse({
+            "ok": False,
+            "message": "Could not securely save the attendance photo. Please retry.",
+        }, status=503)
+
+    request.session["attendance_face_verification"] = {
+        "id": verification_id,
+        "user_id": user.pk,
+        "action": action,
+        "mode": gps["mode"],
+        "latitude": str(gps["latitude"]),
+        "longitude": str(gps["longitude"]),
+        "accuracy": str(gps["accuracy"]),
+        "pending_photo": pending_photo,
+        "expires_at": int(time.time()) + 120,
+    }
+    request.session.modified = True
+
+    message = (
+        "Photo captured. Super Admin face matching is exempt; complete attendance within 2 minutes."
+        if is_super_admin else
+        "Face verified and photo secured. Complete attendance within 2 minutes."
     )
+    return JsonResponse({"ok": True, "verification_id": verification_id, "message": message})
 
+
+
+def _consume_face_verification(request, action, gps):
+    """Validate and consume the short-lived face verification for this action."""
+    import hmac
+    import time
+
+    user = request.user
+
+    proof = request.session.get("attendance_face_verification")
+    submitted_id = request.POST.get("face_verification_id", "")
+
+    if not isinstance(proof, dict) or not submitted_id:
+        return False, "Please complete face verification before attendance."
+
+    try:
+        valid = (
+            proof.get("user_id") == user.pk
+            and proof.get("action") == action
+            and proof.get("mode") == gps["mode"]
+            and proof.get("latitude") == str(gps["latitude"])
+            and proof.get("longitude") == str(gps["longitude"])
+            and proof.get("accuracy") == str(gps["accuracy"])
+            and int(proof.get("expires_at", 0)) >= int(time.time())
+            and hmac.compare_digest(str(proof.get("id", "")), submitted_id)
+        )
+    except (TypeError, ValueError):
+        valid = False
+
+    if not valid:
+        request.session.pop("attendance_face_verification", None)
+        request.session.modified = True
+        return False, "Face verification expired or does not match this attendance request. Please verify again."
+
+    # One-time token: remove it so it cannot authorize another attendance action.
+    request.session.pop("attendance_face_verification", None)
+    request.session.modified = True
+    return True, None
+
+
+@login_required
+def attendance_clock_in(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    current_employee = get_current_employee(request.user)
     if not current_employee:
+        messages.error(request, "Your employee profile was not found.")
+        return redirect("attendance_dashboard")
 
-        messages.error(
-            request,
-            "Your employee profile was not found.",
-        )
+    gps, error = _validate_attendance_gps(request)
+    if error:
+        messages.error(request, error)
+        return redirect("attendance_dashboard")
 
-        return redirect(
-            "attendance_dashboard"
-        )
+    face_proof = request.session.get("attendance_face_verification", {})
+    allowed, face_error = _consume_face_verification(request, "clock-in", gps)
+    if not allowed:
+        messages.error(request, face_error)
+        return redirect("attendance_dashboard")
+    pending_photo = face_proof.get("pending_photo")
+    if not pending_photo:
+        messages.error(request, "Attendance photo is missing. Please capture it again.")
+        return redirect("attendance_dashboard")
 
     today = timezone.localdate()
-
-    current_time = timezone.localtime().time().replace(
-        microsecond=0
-    )
+    current_time = timezone.localtime().time().replace(microsecond=0)
 
     attendance, created = Attendance.objects.get_or_create(
         employee=current_employee,
         date=today,
-        defaults={
-            "status": Attendance.Status.PRESENT,
-            "check_in": current_time,
-        },
+        defaults={"status": Attendance.Status.PRESENT},
     )
 
     if not created:
-
         if attendance.status in {
             Attendance.Status.ABSENT,
             Attendance.Status.ON_LEAVE,
             Attendance.Status.HOLIDAY,
             Attendance.Status.WEEK_OFF,
         }:
-
             messages.error(
                 request,
-                "You cannot clock in because today's "
-                "attendance status is already marked as "
+                "You cannot clock in because today's attendance status is already "
                 f"{attendance.get_status_display()}.",
             )
-
-            return redirect(
-                "attendance_dashboard"
-            )
+            return redirect("attendance_dashboard")
 
         if attendance.check_in:
+            messages.warning(request, "You have already clocked in today.")
+            return redirect("attendance_dashboard")
 
-            messages.warning(
-                request,
-                "You have already clocked in today.",
-            )
-
-            return redirect(
-                "attendance_dashboard"
-            )
-
-        attendance.status = (
-            Attendance.Status.PRESENT
-        )
-
-        attendance.check_in = current_time
-        attendance.save()
+    attendance.status = Attendance.Status.PRESENT
+    attendance.check_in = current_time
+    attendance.attendance_mode = gps["mode"]
+    attendance.check_in_latitude = gps["latitude"]
+    attendance.check_in_longitude = gps["longitude"]
+    attendance.check_in_accuracy = gps["accuracy"]
+    attendance.check_in_address = gps["address"]
+    if not _attach_pending_attendance_photo(attendance, pending_photo, "check_in_photo"):
+        messages.error(request, "Could not attach the private Clock In photo. Please retry.")
+        return redirect("attendance_dashboard")
+    attendance.save()
 
     broadcast_user_presence(request.user.pk)
-
     messages.success(
         request,
-        f"Clock-in recorded at {current_time.strftime('%I:%M %p')}.",
+        f"Clock-in recorded at {current_time.strftime('%I:%M %p')} ({gps['mode'].title()}).",
     )
+    return redirect("attendance_dashboard")
 
-    return redirect(
-        "attendance_dashboard"
-    )
-
-
-# =========================================================
-# CLOCK OUT
-# =========================================================
 
 @login_required
 def attendance_clock_out(request):
-
     if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
 
-        return HttpResponseNotAllowed(
-            ["POST"]
-        )
-
-    current_employee = get_current_employee(
-        request.user
-    )
-
+    current_employee = get_current_employee(request.user)
     if not current_employee:
+        messages.error(request, "Your employee profile was not found.")
+        return redirect("attendance_dashboard")
 
-        messages.error(
-            request,
-            "Your employee profile was not found.",
-        )
+    gps, error = _validate_attendance_gps(request)
+    if error:
+        messages.error(request, error)
+        return redirect("attendance_dashboard")
 
-        return redirect(
-            "attendance_dashboard"
-        )
+    face_proof = request.session.get("attendance_face_verification", {})
+    allowed, face_error = _consume_face_verification(request, "clock-out", gps)
+    if not allowed:
+        messages.error(request, face_error)
+        return redirect("attendance_dashboard")
+    pending_photo = face_proof.get("pending_photo")
+    if not pending_photo:
+        messages.error(request, "Attendance photo is missing. Please capture it again.")
+        return redirect("attendance_dashboard")
 
     today = timezone.localdate()
-
-    attendance = get_object_or_404(
-        Attendance,
-        employee=current_employee,
-        date=today,
-    )
+    attendance = get_object_or_404(Attendance, employee=current_employee, date=today)
 
     if not attendance.check_in:
-
-        messages.error(
-            request,
-            "You cannot clock out because you have not clocked in.",
-        )
-
-        return redirect(
-            "attendance_dashboard"
-        )
+        messages.error(request, "You cannot clock out because you have not clocked in.")
+        return redirect("attendance_dashboard")
 
     if attendance.check_out:
+        messages.warning(request, "You have already clocked out today.")
+        return redirect("attendance_dashboard")
 
-        messages.warning(
-            request,
-            "You have already clocked out today.",
-        )
-
-        return redirect(
-            "attendance_dashboard"
-        )
-
-    current_time = timezone.localtime().time().replace(
-        microsecond=0
-    )
-
+    current_time = timezone.localtime().time().replace(microsecond=0)
     attendance.check_out = current_time
     attendance.status = Attendance.Status.PRESENT
+    attendance.check_out_mode = gps["mode"]
+    attendance.check_out_latitude = gps["latitude"]
+    attendance.check_out_longitude = gps["longitude"]
+    attendance.check_out_accuracy = gps["accuracy"]
+    attendance.check_out_address = gps["address"]
+    if not _attach_pending_attendance_photo(attendance, pending_photo, "check_out_photo"):
+        messages.error(request, "Could not attach the private Clock Out photo. Please retry.")
+        return redirect("attendance_dashboard")
     attendance.save()
 
     broadcast_user_presence(request.user.pk, False)
-
     messages.success(
         request,
-        f"Clock-out recorded at {current_time.strftime('%I:%M %p')}.",
+        f"Clock-out recorded at {current_time.strftime('%I:%M %p')} ({gps['mode'].title()}).",
+    )
+    return redirect("attendance_dashboard")
+
+
+# =========================================================
+# PRIVATE ATTENDANCE PHOTO HELPERS
+# =========================================================
+
+def _store_pending_attendance_photo(image_bytes, verification_id):
+    """Store a verified camera image outside public MEDIA_ROOT."""
+    from django.core.files.base import ContentFile
+    from attendance.storage_backends.private_attendance import (
+        PrivateAttendanceStorage,
     )
 
-    return redirect(
-        "attendance_dashboard"
+    storage = PrivateAttendanceStorage()
+    name = f"pending/{verification_id}.jpg"
+
+    # Never overwrite an existing file.
+    saved_name = storage.save(name, ContentFile(image_bytes))
+    return saved_name
+
+
+def _attach_pending_attendance_photo(attendance, pending_name, field_name):
+    """Move a pending private photo into its final attendance field."""
+    from django.core.files.base import ContentFile
+    from attendance.storage_backends.private_attendance import (
+        PrivateAttendanceStorage,
     )
+
+    if not pending_name:
+        return False
+
+    storage = PrivateAttendanceStorage()
+
+    try:
+        with storage.open(pending_name, "rb") as photo:
+            image_bytes = photo.read()
+
+        field = getattr(attendance, field_name)
+        field.save(
+            pending_name.rsplit("/", 1)[-1],
+            ContentFile(image_bytes),
+            save=False,
+        )
+        storage.delete(pending_name)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+# =========================================================
+# PRIVATE ATTENDANCE PHOTO GALLERY
+# =========================================================
+
+@login_required
+def attendance_photo_gallery(request):
+    from django.core.exceptions import PermissionDenied
+
+    user = request.user
+    if not (is_super_admin(user) or is_hr_admin(user) or is_manager(user)):
+        raise PermissionDenied("You do not have permission to view attendance photos.")
+
+    records = Attendance.objects.select_related(
+        "employee", "employee__user"
+    ).filter(
+        employee__isnull=False
+    ).order_by("-date", "-check_in")
+
+    if is_super_admin(user):
+        pass
+    elif is_hr_admin(user):
+        current_employee = get_current_employee(user)
+        if not current_employee:
+            raise PermissionDenied("Your employee profile was not found.")
+        records = records.filter(employee__company_id=current_employee.company_id)
+    else:
+        current_employee = get_current_employee(user)
+        if not current_employee:
+            raise PermissionDenied("Your employee profile was not found.")
+        # Direct reports only; exclude the manager's own attendance.
+        records = records.filter(employee__reporting_manager=current_employee)
+
+    return render(
+        request,
+        "attendance/attendance_photo_gallery.html",
+        {"attendance_records": records[:300]},
+    )
+
+
+@login_required
+def attendance_private_photo(request, pk, photo_type):
+    import mimetypes
+    from django.core.exceptions import PermissionDenied
+    from django.http import FileResponse, Http404, HttpResponse
+    from django.utils.cache import patch_cache_control
+
+    user = request.user
+    if not (is_super_admin(user) or is_hr_admin(user) or is_manager(user)):
+        raise PermissionDenied("You do not have permission to view attendance photos.")
+
+    if photo_type not in {"in", "out"}:
+        raise Http404("Photo not found.")
+
+    records = Attendance.objects.select_related("employee").all()
+    if is_super_admin(user):
+        pass
+    elif is_hr_admin(user):
+        current_employee = get_current_employee(user)
+        if not current_employee:
+            raise PermissionDenied("Your employee profile was not found.")
+        records = records.filter(employee__company_id=current_employee.company_id)
+    else:
+        current_employee = get_current_employee(user)
+        if not current_employee:
+            raise PermissionDenied("Your employee profile was not found.")
+        records = records.filter(employee__reporting_manager=current_employee)
+
+    attendance = records.filter(pk=pk).first()
+    if not attendance:
+        # Do not reveal whether another team's attendance record exists.
+        raise Http404("Photo not found.")
+
+    field = attendance.check_in_photo if photo_type == "in" else attendance.check_out_photo
+    if not field:
+        raise Http404("Photo not found.")
+
+    try:
+        photo_file = field.open("rb")
+    except (OSError, ValueError):
+        raise Http404("Photo not found.")
+
+    content_type = mimetypes.guess_type(field.name)[0] or "application/octet-stream"
+    response = FileResponse(photo_file, content_type=content_type)
+    patch_cache_control(response, private=True, no_store=True, max_age=0)
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

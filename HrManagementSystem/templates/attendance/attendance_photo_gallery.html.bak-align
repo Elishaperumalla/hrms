@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-camera me-2"></i>Attendance Photo Gallery
+            </h2>
+            <p class="text-muted mb-0">
+                Clock In and Clock Out photos · Private access · 5-day retention
+            </p>
+        </div>
+
+        <a class="btn btn-outline-secondary" href="{% url 'attendance_dashboard' %}">
+            <i class="bi bi-arrow-left me-1"></i> Back to Attendance
+        </a>
+    </div>
+
+    <div class="alert alert-info d-flex align-items-center gap-2">
+        <i class="bi bi-shield-lock fs-5"></i>
+        <span>Photos are available only to authorized viewers and are retained for five days.</span>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Date</th>
+                            <th>Employee</th>
+                            <th>Location Type</th>
+                            <th>Check In Photo</th>
+                            <th>Check Out Photo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td class="ps-3 text-nowrap">
+                                <span class="fw-semibold">{{ record.date|date:"d M Y" }}</span>
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ record.employee.user.get_full_name|default:record.employee.user.username|default:record.employee }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ record.employee.user.username }}
+                                </small>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column align-items-start gap-1">
+                                    {% if record.attendance_mode == "OFFICE" %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-building me-1"></i>Office · In
+                                        </span>
+                                    {% elif record.attendance_mode == "OUTSIDE" %}
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                            <i class="bi bi-geo-alt me-1"></i>Outside · In
+                                        </span>
+                                    {% endif %}
+
+                                    {% if record.check_out_mode == "OFFICE" %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-building me-1"></i>Office · Out
+                                        </span>
+                                    {% elif record.check_out_mode == "OUTSIDE" %}
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                            <i class="bi bi-geo-alt me-1"></i>Outside · Out
+                                        </span>
+                                    {% endif %}
+
+                                    {% if not record.attendance_mode and not record.check_out_mode %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if record.check_in_photo %}
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{% url 'attendance_private_photo' record.pk 'in' %}"
+                                       target="_blank" rel="noopener noreferrer">
+                                        <i class="bi bi-image me-1"></i>View Photo
+                                    </a>
+                                    <div class="small text-muted mt-1">
+                                        {{ record.check_in|time:"h:i A"|default:"Time unavailable" }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% if record.check_in %}
+                                        <div class="small text-muted mt-1">
+                                            {{ record.check_in|time:"h:i A" }}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if record.check_out_photo %}
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       href="{% url 'attendance_private_photo' record.pk 'out' %}"
+                                       target="_blank" rel="noopener noreferrer">
+                                        <i class="bi bi-image me-1"></i>View Photo
+                                    </a>
+                                    <div class="small text-muted mt-1">
+                                        {{ record.check_out|time:"h:i A"|default:"Time unavailable" }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% if record.check_out %}
+                                        <div class="small text-muted mt-1">
+                                            {{ record.check_out|time:"h:i A" }}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-camera fs-2 d-block mb-2"></i>
+                                No attendance records found for your permitted scope.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

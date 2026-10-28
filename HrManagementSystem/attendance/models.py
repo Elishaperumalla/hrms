@@ -3,6 +3,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from attendance.storage_backends.private_attendance import PrivateAttendanceStorage
 
 
 class Attendance(models.Model):
@@ -63,6 +64,65 @@ class Attendance(models.Model):
     )
 
     check_out = models.TimeField(
+        null=True,
+        blank=True,
+    )
+
+    # =========================================================
+    # GPS ATTENDANCE DETAILS
+    # =========================================================
+
+    class AttendanceMode(models.TextChoices):
+        OFFICE = "OFFICE", "Office"
+        OUTSIDE = "OUTSIDE", "Outside"
+
+    attendance_mode = models.CharField(
+        max_length=10,
+        choices=AttendanceMode.choices,
+        null=True,
+        blank=True,
+    )
+
+    check_out_mode = models.CharField(
+        max_length=10,
+        choices=AttendanceMode.choices,
+        null=True,
+        blank=True,
+    )
+
+    check_in_latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    check_in_longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    check_in_accuracy = models.FloatField(null=True, blank=True)
+    check_in_address = models.TextField(blank=True, default="")
+
+    check_out_latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    check_out_longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True
+    )
+    check_out_accuracy = models.FloatField(null=True, blank=True)
+    check_out_address = models.TextField(blank=True, default="")
+
+
+    # =========================================================
+    # PRIVATE ATTENDANCE PHOTOS
+    # =========================================================
+
+    check_in_photo = models.ImageField(
+        storage=PrivateAttendanceStorage(),
+        upload_to="check-in/",
+        null=True,
+        blank=True,
+    )
+
+    check_out_photo = models.ImageField(
+        storage=PrivateAttendanceStorage(),
+        upload_to="check-out/",
         null=True,
         blank=True,
     )

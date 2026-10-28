@@ -6,14 +6,67 @@ from .models import (
     Designation,
     Branch,
     WorkLocation,
+    OfficeAttendanceSettings,
 )
+
+
+class GPSConfigFormMixin:
+    """Shared styling and validation for company/branch GPS settings."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for name in ("latitude", "longitude", "radius_meters"):
+            self.fields[name].widget.attrs.setdefault("class", "form-control")
+
+        self.fields["latitude"].widget.attrs.update({
+            "step": "any",
+            "placeholder": "Latitude",
+        })
+        self.fields["longitude"].widget.attrs.update({
+            "step": "any",
+            "placeholder": "Longitude",
+        })
+        self.fields["radius_meters"].widget.attrs.update({
+            "min": "1",
+            "max": "50000",
+        })
+
+    def clean_latitude(self):
+        value = self.cleaned_data.get("latitude")
+        if value is not None and not -90 <= value <= 90:
+            raise forms.ValidationError("Latitude must be between -90 and 90.")
+        return value
+
+    def clean_longitude(self):
+        value = self.cleaned_data.get("longitude")
+        if value is not None and not -180 <= value <= 180:
+            raise forms.ValidationError("Longitude must be between -180 and 180.")
+        return value
+
+    def clean_radius_meters(self):
+        value = self.cleaned_data.get("radius_meters")
+        if value is None or not 1 <= value <= 50000:
+            raise forms.ValidationError("Radius must be between 1 and 50000 meters.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        latitude = cleaned.get("latitude")
+        longitude = cleaned.get("longitude")
+
+        if (latitude is None) != (longitude is None):
+            raise forms.ValidationError(
+                "Enter both latitude and longitude, or leave both empty."
+            )
+        return cleaned
 
 
 # =========================================================
 # COMPANY FORM
 # =========================================================
 
-class CompanyForm(forms.ModelForm):
+class CompanyForm(GPSConfigFormMixin, forms.ModelForm):
 
     class Meta:
 
@@ -30,6 +83,9 @@ class CompanyForm(forms.ModelForm):
             "state",
             "country",
             "postal_code",
+            "latitude",
+            "longitude",
+            "radius_meters",
             "logo",
             "established_date",
             "is_active",
@@ -254,7 +310,7 @@ class DesignationForm(forms.ModelForm):
 # BRANCH FORM
 # =========================================================
 
-class BranchForm(forms.ModelForm):
+class BranchForm(GPSConfigFormMixin, forms.ModelForm):
 
     class Meta:
 
@@ -269,6 +325,9 @@ class BranchForm(forms.ModelForm):
             "state",
             "country",
             "postal_code",
+            "latitude",
+            "longitude",
+            "radius_meters",
             "phone",
             "email",
             "is_head_office",
@@ -379,6 +438,8 @@ class WorkLocationForm(forms.ModelForm):
             "state",
             "country",
             "postal_code",
+            "latitude",
+            "longitude",
             "location_type",
             "is_active",
         ]
@@ -434,6 +495,18 @@ class WorkLocationForm(forms.ModelForm):
                 }
             ),
 
+            "latitude": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "any",
+                "placeholder": "Latitude",
+            }),
+
+            "longitude": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "any",
+                "placeholder": "Longitude",
+            }),
+
             "location_type": forms.Select(
                 attrs={
                     "class": "form-select",
@@ -446,3 +519,67 @@ class WorkLocationForm(forms.ModelForm):
                 }
             ),
         }
+
+class OfficeAttendanceSettingsForm(forms.ModelForm):
+    class Meta:
+        model = OfficeAttendanceSettings
+        fields = [
+            "name",
+            "latitude",
+            "longitude",
+            "radius_meters",
+            "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Main Office",
+            }),
+            "latitude": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "any",
+                "placeholder": "e.g. 17.3850",
+            }),
+            "longitude": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "any",
+                "placeholder": "e.g. 78.4867",
+            }),
+            "radius_meters": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": "1",
+                "max": "50000",
+            }),
+            "is_active": forms.CheckboxInput(attrs={
+                "class": "form-check-input",
+            }),
+        }
+
+    def clean_latitude(self):
+        value = self.cleaned_data.get("latitude")
+        if value is not None and not -90 <= value <= 90:
+            raise forms.ValidationError("Latitude must be between -90 and 90.")
+        return value
+
+    def clean_longitude(self):
+        value = self.cleaned_data.get("longitude")
+        if value is not None and not -180 <= value <= 180:
+            raise forms.ValidationError("Longitude must be between -180 and 180.")
+        return value
+
+    def clean_radius_meters(self):
+        value = self.cleaned_data.get("radius_meters")
+        if value is None or not 1 <= value <= 50000:
+            raise forms.ValidationError("Radius must be between 1 and 50000 meters.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        latitude = cleaned.get("latitude")
+        longitude = cleaned.get("longitude")
+
+        if (latitude is None) != (longitude is None):
+            raise forms.ValidationError(
+                "Enter both latitude and longitude, or leave both empty."
+            )
+        return cleaned

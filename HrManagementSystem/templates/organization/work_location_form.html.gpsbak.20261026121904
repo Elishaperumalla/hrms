@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Edit Work Location{% else %}Add Work Location{% endif %} - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <div class="mb-4">
+
+        <a
+            href="{% url 'work_location_list' %}"
+            class="text-decoration-none"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Work Locations
+        </a>
+
+        <h3 class="fw-bold mt-3 mb-1">
+            {% if object %}
+                Edit Work Location
+            {% else %}
+                Add Work Location
+            {% endif %}
+        </h3>
+
+        <p class="text-muted mb-0">
+            Manage your organization's workplace and office locations.
+        </p>
+
+    </div>
+
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+
+                <!-- LOCATION INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>
+                    Location Information
+                </h6>
+
+                <div class="row">
+
+                    <!-- COMPANY -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Company
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.company }}
+
+                        {% if form.company.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.company.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- LOCATION NAME -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Location Name
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.name }}
+
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- LOCATION TYPE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Location Type
+                        </label>
+
+                        {{ form.location_type }}
+
+                        {% if form.location_type.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.location_type.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label d-block">
+                            Status
+                        </label>
+
+                        <div class="form-check mt-2">
+
+                            {{ form.is_active }}
+
+                            <label class="form-check-label">
+                                Active Location
+                            </label>
+
+                        </div>
+
+                        {% if form.is_active.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.is_active.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ADDRESS -->
+
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-house me-2 text-primary"></i>
+                    Address
+                </h6>
+
+                <div class="row">
+
+                    <!-- ADDRESS -->
+
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        {{ form.address }}
+
+                        {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.address.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- CITY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            City
+                        </label>
+
+                        {{ form.city }}
+
+                        {% if form.city.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.city.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- STATE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            State
+                        </label>
+
+                        {{ form.state }}
+
+                        {% if form.state.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.state.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- COUNTRY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Country
+                        </label>
+
+                        {{ form.country }}
+
+                        {% if form.country.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.country.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- POSTAL CODE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Postal Code
+                        </label>
+
+                        {{ form.postal_code }}
+
+                        {% if form.postal_code.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.postal_code.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                
+    <!-- Work Location GPS Coordinates -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                        GPS Location
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Capture the actual coordinates of this work location.
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="getWorkLocationGPS">
+                    <i class="bi bi-crosshair me-2"></i>
+                    Get Current Location
+                </button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.latitude.id_for_label }}"
+                           class="form-label fw-semibold">
+                        Latitude
+                    </label>
+                    {{ form.latitude }}
+                    {% for error in form.latitude.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="{{ form.longitude.id_for_label }}"
+                           class="form-label fw-semibold">
+                        Longitude
+                    </label>
+                    {{ form.longitude }}
+                    {% for error in form.longitude.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="workLocationGPSStatus"
+                 class="small mt-3"
+                 role="status"
+                 aria-live="polite"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const button = document.getElementById("getWorkLocationGPS");
+        const status = document.getElementById("workLocationGPSStatus");
+        const latitude = document.getElementById("id_latitude");
+        const longitude = document.getElementById("id_longitude");
+
+        if (!button || !status || !latitude || !longitude) {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+            if (!navigator.geolocation) {
+                status.className = "small mt-3 text-danger";
+                status.textContent =
+                    "Your browser does not support location detection.";
+                return;
+            }
+
+            button.disabled = true;
+            status.className = "small mt-3 text-primary";
+            status.textContent =
+                "Requesting location permission and detecting GPS...";
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    latitude.value = position.coords.latitude.toFixed(7);
+                    longitude.value = position.coords.longitude.toFixed(7);
+
+                    latitude.dispatchEvent(
+                        new Event("change", { bubbles: true })
+                    );
+                    longitude.dispatchEvent(
+                        new Event("change", { bubbles: true })
+                    );
+
+                    status.className = "small mt-3 text-success";
+                    status.textContent =
+                        "Location captured successfully. Save the form to store these coordinates.";
+
+                    button.disabled = false;
+                },
+                function (error) {
+                    status.className = "small mt-3 text-danger";
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        status.textContent =
+                            "Location permission denied. Allow location access in your browser and try again.";
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        status.textContent =
+                            "Your current location is unavailable. Check device location settings and try again.";
+                    } else if (error.code === error.TIMEOUT) {
+                        status.textContent =
+                            "Location request timed out. Please try again.";
+                    } else {
+                        status.textContent =
+                            "Could not retrieve your location. Please try again.";
+                    }
+
+                    button.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
+        });
+    })();
+    </script>
+
+{% if form.errors %}
+
+                    <div class="alert alert-danger mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Please correct the errors above.
+                    </div>
+
+                {% endif %}
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2 mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        {% if object %}
+                            Update Location
+                        {% else %}
+                            Create Location
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'work_location_list' %}"
+                        class="btn btn-light"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

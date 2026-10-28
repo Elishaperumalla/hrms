@@ -1,0 +1,306 @@
+clear
+
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Edit Work Location{% else %}Add Work Location{% endif %} - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <div class="mb-4">
+
+        <a
+            href="{% url 'work_location_list' %}"
+            class="text-decoration-none"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Work Locations
+        </a>
+
+        <h3 class="fw-bold mt-3 mb-1">
+            {% if object %}
+                Edit Work Location
+            {% else %}
+                Add Work Location
+            {% endif %}
+        </h3>
+
+        <p class="text-muted mb-0">
+            Manage your organization's workplace and office locations.
+        </p>
+
+    </div>
+
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+
+                <!-- LOCATION INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>
+                    Location Information
+                </h6>
+
+                <div class="row">
+
+                    <!-- COMPANY -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Company
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.company }}
+
+                        {% if form.company.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.company.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- LOCATION NAME -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Location Name
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.name }}
+
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- LOCATION TYPE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Location Type
+                        </label>
+
+                        {{ form.location_type }}
+
+                        {% if form.location_type.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.location_type.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label d-block">
+                            Status
+                        </label>
+
+                        <div class="form-check mt-2">
+
+                            {{ form.is_active }}
+
+                            <label class="form-check-label">
+                                Active Location
+                            </label>
+
+                        </div>
+
+                        {% if form.is_active.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.is_active.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ADDRESS -->
+
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-house me-2 text-primary"></i>
+                    Address
+                </h6>
+
+                <div class="row">
+
+                    <!-- ADDRESS -->
+
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        {{ form.address }}
+
+                        {% if form.address.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.address.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- CITY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            City
+                        </label>
+
+                        {{ form.city }}
+
+                        {% if form.city.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.city.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- STATE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            State
+                        </label>
+
+                        {{ form.state }}
+
+                        {% if form.state.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.state.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- COUNTRY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Country
+                        </label>
+
+                        {{ form.country }}
+
+                        {% if form.country.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.country.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- POSTAL CODE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Postal Code
+                        </label>
+
+                        {{ form.postal_code }}
+
+                        {% if form.postal_code.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.postal_code.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                {% if form.errors %}
+
+                    <div class="alert alert-danger mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Please correct the errors above.
+                    </div>
+
+                {% endif %}
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2 mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        {% if object %}
+                            Update Location
+                        {% else %}
+                            Create Location
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'work_location_list' %}"
+                        class="btn btn-light"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

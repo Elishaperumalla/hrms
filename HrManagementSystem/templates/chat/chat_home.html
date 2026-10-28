@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>HRMS Teams | Chat</title>
+{% extends "base.html" %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-          rel="stylesheet">
+{% block content %}
+<style>
 
-    <style>
         :root {
             --teams-purple: #6264a7;
             --teams-purple-light: #e8e8f5;
@@ -23,14 +15,7 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-            font-family: "Segoe UI", Arial, sans-serif;
-            color: var(--teams-text);
-        }
+        body { font-family: "Segoe UI", Arial, sans-serif; color: var(--teams-text); }
 
         .app-layout {
             display: flex;
@@ -41,7 +26,7 @@
 
         /* LEFT SIDEBAR */
 
-        .sidebar {
+        .chat-sidebar {
             width: 340px;
             min-width: 300px;
             height: 100%;
@@ -52,11 +37,11 @@
             flex-shrink: 0;
         }
 
-        .sidebar-top {
+        .chat-sidebar-top {
             padding: 22px 16px 14px;
         }
 
-        .sidebar-heading {
+        .chat-sidebar-heading {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -64,7 +49,7 @@
             margin-bottom: 20px;
         }
 
-        .sidebar-heading h1 {
+        .chat-sidebar-heading h1 {
             font-size: 23px;
             font-weight: 650;
             margin: 0;
@@ -106,7 +91,7 @@
             font-size: 13px;
         }
 
-        .sidebar-label {
+        .chat-sidebar-label {
             padding: 13px 18px 8px;
             color: #616161;
             font-size: 12px;
@@ -189,13 +174,13 @@
             white-space: nowrap;
         }
 
-        .sidebar-bottom {
+        .chat-sidebar-bottom {
             padding: 13px 16px;
             border-top: 1px solid var(--teams-border);
             background: #fff;
         }
 
-        .sidebar-bottom a {
+        .chat-sidebar-bottom a {
             font-size: 13px;
             color: #555;
             text-decoration: none;
@@ -307,17 +292,17 @@
         /* MOBILE */
 
         @media (max-width: 700px) {
-            .sidebar {
+            .chat-sidebar {
                 width: 40%;
                 min-width: 135px;
                 max-width: 250px;
             }
 
-            .sidebar-top {
+            .chat-sidebar-top {
                 padding: 14px 8px 10px;
             }
 
-            .sidebar-heading h1 {
+            .chat-sidebar-heading h1 {
                 font-size: 18px;
             }
 
@@ -344,7 +329,7 @@
                 font-size: 10px;
             }
 
-            .sidebar-bottom {
+            .chat-sidebar-bottom {
                 padding: 10px 7px;
             }
 
@@ -353,7 +338,7 @@
                 font-size: 11px;
             }
 
-            .sidebar-label {
+            .chat-sidebar-label {
                 padding-left: 10px;
                 font-size: 10px;
             }
@@ -391,18 +376,192 @@
     display: none !important;
 }
 
+
+
+/* Chat page: fit the shared HRMS content area */
+.content-area:has(.app-layout) {
+    padding: 0 !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+}
+
+.app-layout {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 100%;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.chat-sidebar-heading h1 {
+    margin: 0;
+}
+
+.chat-sidebar .new-chat-btn {
+    flex: 0 0 38px;
+    margin: 0;
+}
+
+.main-panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+#chatFrame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.welcome-panel {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+/* Chat-only: keep the HRMS navbar fixed and prevent page scrolling */
+html:has(.app-layout),
+body:has(.app-layout) {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden !important;
+}
+
+body:has(.app-layout) > .d-flex.min-vh-100 {
+    height: 100dvh;
+    min-height: 0 !important;
+    overflow: hidden;
+}
+
+body:has(.app-layout) .main-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+body:has(.app-layout) .top-navbar {
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 20;
+}
+
+body:has(.app-layout) .content-area {
+    flex: 1 1 auto;
+    height: 0;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Final layout sizing inside the shared HRMS base template */
+.content-area:has(.app-layout) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0 !important;
+    height: 100%;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.app-layout {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-sidebar-top,
+.chat-sidebar-label {
+    flex-shrink: 0;
+}
+
+.conversation-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #6264a7 #eeeeee;
+}
+
+.conversation-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-track {
+    background: #eeeeee;
+    border-radius: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb {
+    background: #6264a7;
+    border-radius: 8px;
+}
+
+.conversation-list::-webkit-scrollbar-thumb:hover {
+    background: #50528d;
+}
+
+.main-panel {
+    display: flex;
+    flex: 1 1 0;
+    width: 0;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.welcome-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    background: #ffffff;
+}
+
+#chatFrame {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
 </style>
-</head>
-
-<body>
-
 <div class="app-layout">
 
     <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
+    <aside class="chat-sidebar">
 
-        <div class="sidebar-top">
-            <div class="sidebar-heading">
+        <div class="chat-sidebar-top">
+            <div class="chat-sidebar-heading">
                 <h1>
                     <i class="bi bi-chat-dots-fill"
                        style="color: var(--teams-purple);"></i>
@@ -429,7 +588,7 @@
             </div>
         </div>
 
-        <div class="sidebar-label">
+        <div class="chat-sidebar-label">
             Your conversations
         </div>
 
@@ -491,15 +650,7 @@
             </div>
 
         </div>
-
-        <div class="sidebar-bottom">
-            <a href="{% url 'dashboard' %}">
-                <i class="bi bi-house-door me-2"></i>
-                Back to Dashboard
-            </a>
-        </div>
-
-    </aside>
+</aside>
 
     <!-- RIGHT CHAT ROOM -->
     <main class="main-panel">
@@ -697,9 +848,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+{% block scripts %}
 <script>
 "use strict";
 
@@ -1093,8 +1244,5 @@ conversationList.querySelectorAll(".conversation-item").forEach(function (item) 
 });
 
 connectChatSidebarSocket();
-
 </script>
-
-</body>
-</html>
+{% endblock %}

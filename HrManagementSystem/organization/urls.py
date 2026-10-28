@@ -25,10 +25,12 @@ from .views import (
     WorkLocationCreateView,
     WorkLocationUpdateView,
     WorkLocationDeleteView,
+    office_attendance_settings,
 )
 
 
 urlpatterns = [
+    path("office-attendance-settings/", office_attendance_settings, name="office_attendance_settings"),
 
     # =====================================================
     # COMPANY

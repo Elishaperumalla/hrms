@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-3 text-primary">
+                <i class="bi bi-person-bounding-box" style="font-size: 2.5rem;"></i>
+            </div>
+
+            <h3 class="fw-bold mb-2">Register Your Face</h3>
+            <p class="text-muted mb-4">
+                Register your face securely to use face-verified attendance.
+                Choose a well-lit place and keep only your face visible.
+            </p>
+
+            {% if face_registered %}
+                <div class="alert alert-info">
+                    A face profile already exists. Submitting a new photo will replace your current registration.
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <label for="face_image" class="form-label fw-semibold">
+                    Capture a clear face photo
+                </label>
+                <input
+                    id="face_image"
+                    name="face_image"
+                    type="file"
+                    class="form-control mb-3"
+                    accept="image/*"
+                    capture="user"
+                    required
+                >
+
+                <div class="small text-muted mb-4">
+                    Your original enrollment photo is processed in memory and is not intentionally stored.
+                    An encrypted face template is stored for matching.
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Register Face
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary ms-2">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

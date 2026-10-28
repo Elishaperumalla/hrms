@@ -337,6 +337,22 @@ def change_password_view(request):
                 "Your password has been changed successfully.",
             )
 
+            # First-login password change: require face enrollment
+            # for every non-Super-Admin account without an active profile.
+            if not (
+                user.is_superuser
+                or getattr(user, "role", "") == "SUPER_ADMIN"
+            ):
+                from .models import EmployeeFaceProfile
+
+                face_registered = EmployeeFaceProfile.objects.filter(
+                    user=user,
+                    is_active=True,
+                ).exists()
+
+                if not face_registered:
+                    return redirect("face_enrollment")
+
             return redirect("dashboard")
 
     else:
@@ -658,3 +674,82 @@ def page_not_found(request, exception=None):
 
 def server_error(request):
     return render(request, "errors/500.html", status=500)
+
+# ============================================================
+# FACE ENROLLMENT
+# ============================================================
+
+@login_required
+def face_enrollment_view(request):
+    from django.contrib.auth.decorators import login_required as _login_required
+    from django.views.decorators.http import require_http_methods
+    from django.core.exceptions import PermissionDenied
+    from .models import EmployeeFaceProfile
+    from .face_service import (
+        FaceServiceError,
+        extract_embedding,
+        encrypt_embedding,
+        MODEL_VERSION,
+    )
+
+    user = request.user
+
+    # Super Admin is exempt from face enrollment.
+    if user.is_superuser or getattr(user, "role", "") == "SUPER_ADMIN":
+        messages.info(request, "Super Admin accounts do not require face registration.")
+        return redirect("dashboard")
+
+    profile = EmployeeFaceProfile.objects.filter(user=user).first()
+
+    if request.method == "POST":
+        uploaded = request.FILES.get("face_image")
+
+        if not uploaded:
+            messages.error(request, "Please capture a face photo first.")
+            return redirect("face_enrollment")
+
+        if uploaded.size > 5 * 1024 * 1024:
+            messages.error(request, "Image must be 5 MB or smaller.")
+            return redirect("face_enrollment")
+
+        try:
+            image_bytes = uploaded.read()
+            embedding = extract_embedding(image_bytes)
+            encrypted = encrypt_embedding(embedding)
+
+            EmployeeFaceProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                    "encrypted_template": encrypted,
+                    "model_version": MODEL_VERSION,
+                    "is_active": True,
+                },
+            )
+
+        except FaceServiceError as exc:
+            messages.error(request, str(exc))
+            return redirect("face_enrollment")
+        except Exception:
+            # Do not expose server details or image data to the browser.
+            messages.error(
+                request,
+                "Face registration could not be completed. Please retry or contact your administrator.",
+            )
+            return redirect("face_enrollment")
+        finally:
+            # Drop this request's reference to the raw uploaded bytes.
+            if "image_bytes" in locals():
+                del image_bytes
+            if uploaded:
+                uploaded.close()
+
+        messages.success(request, "Face registration completed successfully.")
+        return redirect("dashboard")
+
+    return render(
+        request,
+        "account/face_enrollment.html",
+        {
+            "face_registered": bool(profile and profile.is_active),
+        },
+    )

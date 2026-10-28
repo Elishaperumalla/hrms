@@ -43,6 +43,7 @@ class EmployeeForm(forms.ModelForm):
             "designation",
             "branch",
             "work_location",
+            "work_arrangement",
 
             # Role
             "role",

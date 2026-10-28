@@ -254,7 +254,194 @@
                 </div>
 
 
-                {% if form.errors %}
+                
+    <!-- Work Location GPS Coordinates -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                        GPS Location
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Capture the actual coordinates of this work location.
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="getWorkLocationGPS">
+                    <i class="bi bi-crosshair me-2"></i>
+                    Get Current Location
+                </button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ form.latitude.id_for_label }}"
+                           class="form-label fw-semibold">
+                        Latitude
+                    </label>
+                    {{ form.latitude }}
+                    {% for error in form.latitude.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="{{ form.longitude.id_for_label }}"
+                           class="form-label fw-semibold">
+                        Longitude
+                    </label>
+                    {{ form.longitude }}
+                    {% for error in form.longitude.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="workLocationGPSStatus"
+                 class="small mt-3"
+                 role="status"
+                 aria-live="polite"></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const button = document.getElementById("getWorkLocationGPS");
+        const status = document.getElementById("workLocationGPSStatus");
+        const latitude = document.getElementById("id_latitude");
+        const longitude = document.getElementById("id_longitude");
+
+        if (!button || !status || !latitude || !longitude) {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+            if (!navigator.geolocation) {
+                status.className = "small mt-3 text-danger";
+                status.textContent =
+                    "Your browser does not support location detection.";
+                return;
+            }
+
+            button.disabled = true;
+            status.className = "small mt-3 text-primary";
+            status.textContent =
+                "Requesting location permission and detecting GPS...";
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    latitude.value = position.coords.latitude.toFixed(7);
+                    longitude.value = position.coords.longitude.toFixed(7);
+
+                    status.className = "small mt-3 text-primary";
+                    status.textContent =
+                        "GPS captured. Fetching address details...";
+
+                    const setField = (name, value) => {
+                        const field = document.getElementById("id_" + name);
+                        if (field && value) {
+                            field.value = value;
+                            field.dispatchEvent(
+                                new Event("input", { bubbles: true })
+                            );
+                            field.dispatchEvent(
+                                new Event("change", { bubbles: true })
+                            );
+                        }
+                    };
+
+                    try {
+                        const url = new URL(
+                            "https://nominatim.openstreetmap.org/reverse"
+                        );
+                        url.searchParams.set("format", "jsonv2");
+                        url.searchParams.set("lat", position.coords.latitude);
+                        url.searchParams.set("lon", position.coords.longitude);
+                        url.searchParams.set("addressdetails", "1");
+                        url.searchParams.set("zoom", "18");
+
+                        const response = await fetch(url.toString(), {
+                            headers: { "Accept": "application/json" }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Reverse geocoding failed");
+                        }
+
+                        const data = await response.json();
+                        const a = data.address || {};
+
+                        const city =
+                            a.city || a.town || a.village ||
+                            a.municipality || a.city_district ||
+                            a.county || a.hamlet || "";
+
+                        const road = a.road || a.pedestrian ||
+                                     a.footway || "";
+                        const house = a.house_number || "";
+                        const area = a.neighbourhood || a.suburb ||
+                                     a.residential || a.quarter || "";
+
+                        const address = [
+                            [house, road].filter(Boolean).join(" "),
+                            area
+                        ].filter(Boolean).join(", ");
+
+                        setField("address", data.display_name || address || data.name || "");
+                        setField("city", city);
+                        setField("state", a.state || a.state_district || "");
+                        setField("country", a.country || "");
+                        setField("postal_code", a.postcode || "");
+                        // Location Name must match the City field exactly
+                        setField("name", city);
+
+
+                        status.className = "small mt-3 text-success";
+                        status.textContent =
+                            "GPS captured. Available address details filled. Review and save the form.";
+                    } catch (error) {
+                        console.error("Address lookup failed:", error);
+                        status.className = "small mt-3 text-warning";
+                        status.textContent =
+                            "Coordinates captured, but address lookup failed. Please check internet access and try again.";
+                    } finally {
+                        button.disabled = false;
+                    }
+                },
+                function (error) {
+                    status.className = "small mt-3 text-danger";
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        status.textContent =
+                            "Location permission denied. Allow location access in your browser and try again.";
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        status.textContent =
+                            "Your current location is unavailable. Check device location settings and try again.";
+                    } else if (error.code === error.TIMEOUT) {
+                        status.textContent =
+                            "Location request timed out. Please try again.";
+                    } else {
+                        status.textContent =
+                            "Could not retrieve your location. Please try again.";
+                    }
+
+                    button.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
+        });
+    })();
+    </script>
+
+{% if form.errors %}
 
                     <div class="alert alert-danger mt-3">
                         <i class="bi bi-exclamation-triangle me-2"></i>

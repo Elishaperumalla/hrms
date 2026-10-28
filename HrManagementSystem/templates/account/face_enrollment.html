@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-md-5">
+            <div class="mb-3 text-primary">
+                <i class="bi bi-person-bounding-box" style="font-size: 2.5rem;"></i>
+            </div>
+
+            <h3 class="fw-bold mb-2">Register Your Face</h3>
+            <p class="text-muted mb-4">
+                Register your face securely to use face-verified attendance.
+                Choose a well-lit place and keep only your face visible.
+            </p>
+
+            {% if face_registered %}
+                <div class="alert alert-info">
+                    A face profile already exists. Submitting a new photo will replace your current registration.
+                </div>
+            {% endif %}
+
+            <form id="faceEnrollmentForm" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <label class="form-label fw-semibold">
+                    Capture a clear face photo
+                </label>
+
+                <div class="rounded-3 bg-light p-2 mb-3 text-center">
+                    <video
+                        id="faceCamera"
+                        class="w-100 rounded-3 d-none"
+                        autoplay
+                        playsinline
+                        muted
+                        style="max-height: 420px; object-fit: contain; background: #111827;"
+                    ></video>
+
+                    <canvas id="faceCanvas" class="d-none"></canvas>
+
+                    <img
+                        id="facePreview"
+                        class="w-100 rounded-3 d-none"
+                        alt="Captured face preview"
+                        style="max-height: 420px; object-fit: contain;"
+                    >
+
+                    <div id="cameraPlaceholder" class="py-5 text-muted">
+                        <i class="bi bi-camera-video" style="font-size: 3rem;"></i>
+                        <p class="mb-0 mt-2">Open the camera to capture your face</p>
+                    </div>
+                </div>
+
+                <div id="cameraError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="cameraStatus" class="small text-muted mb-3">
+                    Allow camera access when your browser asks for permission.
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" id="openCamera" class="btn btn-outline-primary">
+                        <i class="bi bi-camera-video me-1"></i> Open Camera
+                    </button>
+
+                    <button type="button" id="capturePhoto" class="btn btn-primary d-none">
+                        <i class="bi bi-camera me-1"></i> Capture Photo
+                    </button>
+
+                    <button type="button" id="retakePhoto" class="btn btn-outline-secondary d-none">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Retake
+                    </button>
+                </div>
+
+                <input
+                    id="face_image"
+                    name="face_image"
+                    type="file"
+                    accept="image/*"
+                    class="form-control mb-3"
+                    required
+                >
+
+                <div class="small text-muted mb-4">
+                    Your original enrollment photo is processed in memory and is not intentionally stored.
+                    An encrypted face template is stored for matching.
+                </div>
+
+                <button type="submit" id="registerFace" class="btn btn-primary" disabled>
+                    <i class="bi bi-shield-check me-1"></i>
+                    Register Face
+                </button>
+
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary ms-2">
+                    Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const form = document.getElementById("faceEnrollmentForm");
+    const video = document.getElementById("faceCamera");
+    const canvas = document.getElementById("faceCanvas");
+    const preview = document.getElementById("facePreview");
+    const fileInput = document.getElementById("face_image");
+    const placeholder = document.getElementById("cameraPlaceholder");
+    const openButton = document.getElementById("openCamera");
+    const captureButton = document.getElementById("capturePhoto");
+    const retakeButton = document.getElementById("retakePhoto");
+    const submitButton = document.getElementById("registerFace");
+    const errorBox = document.getElementById("cameraError");
+    const statusBox = document.getElementById("cameraStatus");
+
+    let stream = null;
+    let captured = false;
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+    }
+
+    function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.remove("d-none");
+    }
+
+    function clearError() {
+        errorBox.textContent = "";
+        errorBox.classList.add("d-none");
+    }
+
+    function useCapturedPhoto(blob) {
+        const file = new File([blob], "face-enrollment.jpg", {
+            type: "image/jpeg",
+            lastModified: Date.now()
+        });
+
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        fileInput.files = transfer.files;
+
+        preview.src = URL.createObjectURL(blob);
+        preview.classList.remove("d-none");
+        video.classList.add("d-none");
+        placeholder.classList.add("d-none");
+
+        captured = true;
+        submitButton.disabled = false;
+        captureButton.classList.add("d-none");
+        retakeButton.classList.remove("d-none");
+        openButton.classList.remove("d-none");
+        statusBox.textContent = "Photo captured. Review it, then select Register Face.";
+        stopCamera();
+    }
+
+    openButton.addEventListener("click", async () => {
+        clearError();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showError("Camera is unavailable. Open this page using HTTPS in a supported browser.");
+            return;
+        }
+
+        stopCamera();
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    facingMode: "user",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            });
+
+            video.srcObject = stream;
+            video.classList.remove("d-none");
+            preview.classList.add("d-none");
+            placeholder.classList.add("d-none");
+            await video.play();
+
+            openButton.classList.add("d-none");
+            captureButton.classList.remove("d-none");
+            retakeButton.classList.add("d-none");
+            submitButton.disabled = true;
+            statusBox.textContent = "Center your face in the frame and look toward the camera.";
+        } catch (error) {
+            stopCamera();
+            showError(
+                error.name === "NotAllowedError"
+                    ? "Camera permission was denied. Allow camera access in your browser settings and try again."
+                    : "Could not open the camera. Check that another app is not using it, then try again."
+            );
+        }
+    });
+
+    captureButton.addEventListener("click", () => {
+        clearError();
+
+        if (!stream || !video.videoWidth || !video.videoHeight) {
+            showError("Camera is not ready yet. Please wait and try again.");
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            if (!blob) {
+                showError("Could not capture the photo. Please try again.");
+                return;
+            }
+            useCapturedPhoto(blob);
+        }, "image/jpeg", 0.92);
+    });
+
+    retakeButton.addEventListener("click", () => {
+        captured = false;
+        submitButton.disabled = true;
+        fileInput.value = "";
+        preview.classList.add("d-none");
+        retakeButton.classList.add("d-none");
+        openButton.classList.remove("d-none");
+        placeholder.classList.remove("d-none");
+        statusBox.textContent = "Open the camera to take another photo.";
+        clearError();
+    });
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files.length) {
+            captured = false;
+            stopCamera();
+            submitButton.disabled = false;
+            preview.classList.add("d-none");
+            video.classList.add("d-none");
+            placeholder.classList.remove("d-none");
+            captureButton.classList.add("d-none");
+            retakeButton.classList.add("d-none");
+            openButton.classList.remove("d-none");
+            statusBox.textContent = "A photo was selected from your device.";
+            clearError();
+        } else {
+            submitButton.disabled = !captured;
+        }
+    });
+
+    form.addEventListener("submit", event => {
+        if (!fileInput.files || !fileInput.files.length) {
+            event.preventDefault();
+            showError("Please capture a face photo or select an image first.");
+            return;
+        }
+
+        stopCamera();
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Registering...';
+    });
+
+    window.addEventListener("pagehide", stopCamera);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+<form method="POST"
+      action="{% url action_url %}"
+      class="border rounded-3 p-3"
+      data-gps-attendance-form>
+    {% csrf_token %}
+
+    <label class="form-label fw-semibold">Choose attendance location</label>
+    <div class="d-flex flex-wrap gap-3 mb-3">
+        <label class="border rounded-3 p-3 flex-fill" style="cursor:pointer; min-width:130px;">
+            <input class="form-check-input me-2" type="radio"
+                   name="attendance_mode" value="OFFICE" required>
+            <i class="bi bi-building me-1"></i>
+            <span class="fw-semibold">Office</span>
+            <div class="small text-muted mt-1">Must be within office radius</div>
+        </label>
+        <label class="border rounded-3 p-3 flex-fill" style="cursor:pointer; min-width:130px;">
+            <input class="form-check-input me-2" type="radio"
+                   name="attendance_mode" value="OUTSIDE" required>
+            <i class="bi bi-geo-alt me-1"></i>
+            <span class="fw-semibold">Outside</span>
+            <div class="small text-muted mt-1">GPS location will be recorded</div>
+        </label>
+    </div>
+
+    <input type="hidden" name="latitude" value="">
+    <input type="hidden" name="longitude" value="">
+    <input type="hidden" name="accuracy" value="">
+    <input type="hidden" name="address" value="">
+
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-outline-primary" data-gps-verify>
+            <i class="bi bi-crosshair me-1"></i> Verify GPS Location
+        </button>
+
+        <button type="submit" class="btn {{ button_class }}" data-gps-submit disabled>
+            {% if action_label == "Clock Out" %}
+                <i class="bi bi-box-arrow-right me-1"></i>
+            {% else %}
+                <i class="bi bi-box-arrow-in-right me-1"></i>
+            {% endif %}
+            {{ action_label }}
+        </button>
+    </div>
+
+    <div class="small mt-3 text-muted" data-gps-status role="status" aria-live="polite">
+        Select Office or Outside, then verify your current GPS location.
+    </div>
+</form>
+
+<script>
+(function () {
+    const form = document.currentScript.previousElementSibling;
+    if (!form || !form.matches('[data-gps-attendance-form]')) return;
+
+    const verifyButton = form.querySelector('[data-gps-verify]');
+    const submitButton = form.querySelector('[data-gps-submit]');
+    const status = form.querySelector('[data-gps-status]');
+    const modeInputs = Array.from(form.querySelectorAll('input[name="attendance_mode"]'));
+    const latitudeInput = form.querySelector('input[name="latitude"]');
+    const longitudeInput = form.querySelector('input[name="longitude"]');
+    const accuracyInput = form.querySelector('input[name="accuracy"]');
+    const addressInput = form.querySelector('input[name="address"]');
+    let verified = false;
+
+    function selectedMode() {
+        const checked = modeInputs.find(input => input.checked);
+        return checked ? checked.value : '';
+    }
+
+    function resetVerification(message) {
+        verified = false;
+        submitButton.disabled = true;
+        latitudeInput.value = '';
+        longitudeInput.value = '';
+        accuracyInput.value = '';
+        addressInput.value = '';
+        status.textContent = message;
+        status.className = 'small mt-3 text-muted';
+    }
+
+    modeInputs.forEach(input => {
+        input.addEventListener('change', () => {
+            resetVerification('Location selection changed. Verify your GPS again.');
+        });
+    });
+
+    verifyButton.addEventListener('click', () => {
+        if (!selectedMode()) {
+            status.textContent = 'Please select Office or Outside first.';
+            status.className = 'small mt-3 text-danger';
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            status.textContent = 'GPS is not supported by this browser.';
+            status.className = 'small mt-3 text-danger';
+            return;
+        }
+
+        verifyButton.disabled = true;
+        resetVerification('Getting your current GPS location… Please allow location access.');
+        verifyButton.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const coords = position.coords;
+                if (!Number.isFinite(coords.latitude) ||
+                    !Number.isFinite(coords.longitude) ||
+                    !Number.isFinite(coords.accuracy) ||
+                    coords.accuracy > 100) {
+                    status.textContent = 'GPS accuracy is too low. Move to an open area and try again.';
+                    status.className = 'small mt-3 text-danger';
+                    verifyButton.disabled = false;
+                    return;
+                }
+
+                latitudeInput.value = coords.latitude.toFixed(7);
+                longitudeInput.value = coords.longitude.toFixed(7);
+                accuracyInput.value = String(coords.accuracy);
+                addressInput.value = '';
+                verified = true;
+                submitButton.disabled = false;
+                verifyButton.disabled = false;
+
+                status.textContent =
+                    'GPS captured. Accuracy: ' + Math.round(coords.accuracy) +
+                    ' m. Office radius is checked securely by the server when you submit.';
+                status.className = 'small mt-3 text-success';
+            },
+            error => {
+                const messages = {
+                    1: 'Location permission was denied. Allow location access in your browser and retry.',
+                    2: 'Your location is unavailable. Check device location settings and retry.',
+                    3: 'GPS request timed out. Please retry.'
+                };
+                status.textContent = messages[error.code] || 'Could not verify GPS. Please retry.';
+                status.className = 'small mt-3 text-danger';
+                verifyButton.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+    });
+
+    form.addEventListener('submit', event => {
+        if (!verified || !selectedMode() ||
+            !latitudeInput.value || !longitudeInput.value || !accuracyInput.value) {
+            event.preventDefault();
+            status.textContent = 'Verify your GPS location before continuing.';
+            status.className = 'small mt-3 text-danger';
+        }
+    });
+})();
+</script>

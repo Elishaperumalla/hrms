@@ -116,3 +116,23 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Password Reset OTP"
+
+class EmployeeFaceProfile(models.Model):
+    """
+    Stores an employee's face enrollment template.
+    Face templates are encrypted before saving by the face service.
+    Raw enrollment photos must never be stored in this model.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="face_profile",
+    )
+    encrypted_template = models.BinaryField()
+    model_version = models.CharField(max_length=50, default="opencv-sface-2021dec")
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Face profile - {self.user.username}"

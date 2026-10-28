@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}
+
+    {% if object %}
+        Edit Branch
+    {% else %}
+        Add Branch
+    {% endif %}
+
+    - HRMS
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".gps-detect-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const form = button.closest("form");
+            const status = form.querySelector(".gps-detect-status");
+
+            const field = (name) =>
+                form.querySelector('[name="' + name + '"]');
+
+            const latitude = field("latitude");
+            const longitude = field("longitude");
+
+            function showStatus(message, isError = false) {
+                status.textContent = message;
+                status.classList.toggle("text-danger", isError);
+                status.classList.toggle("text-success", !isError);
+            }
+
+            if (!navigator.geolocation) {
+                showStatus("Geolocation is not supported by this browser.", true);
+                return;
+            }
+
+            button.disabled = true;
+            showStatus("Getting your current location...");
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    latitude.value = lat.toFixed(7);
+                    longitude.value = lon.toFixed(7);
+
+                    latitude.dispatchEvent(new Event("change", { bubbles: true }));
+                    longitude.dispatchEvent(new Event("change", { bubbles: true }));
+
+                    showStatus("Coordinates filled. Looking up address...");
+
+                    try {
+                        const url = new URL(
+                            "https://nominatim.openstreetmap.org/reverse"
+                        );
+                        url.searchParams.set("format", "jsonv2");
+                        url.searchParams.set("lat", lat);
+                        url.searchParams.set("lon", lon);
+                        url.searchParams.set("addressdetails", "1");
+
+                        const response = await fetch(url.toString(), {
+                            headers: { "Accept": "application/json" }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Address lookup failed");
+                        }
+
+                        const data = await response.json();
+                        const a = data.address || {};
+
+                        const addressField = field("address");
+                        const cityField = field("city");
+                        const stateField = field("state");
+                        const countryField = field("country");
+                        const postalField = field("postal_code");
+
+                        if (addressField && data.display_name) {
+                            addressField.value = data.display_name;
+                        }
+
+                        if (cityField) {
+                            cityField.value =
+                                a.city || a.town || a.village ||
+                                a.municipality || a.county || cityField.value;
+                        }
+
+                        if (stateField && a.state) {
+                            stateField.value = a.state;
+                        }
+
+                        if (countryField && a.country) {
+                            countryField.value = a.country;
+                        }
+
+                        if (postalField && a.postcode) {
+                            postalField.value = a.postcode;
+                        }
+
+                        showStatus(
+                            data.display_name
+                                ? "Coordinates and address filled successfully."
+                                : "Coordinates filled; address was unavailable."
+                        );
+                    } catch (error) {
+                        showStatus(
+                            "Coordinates filled. Enter the address manually if needed."
+                        );
+                    } finally {
+                        button.disabled = false;
+                    }
+                },
+                function (error) {
+                    const messages = {
+                        1: "Location permission denied. Allow location access in your browser.",
+                        2: "Current location unavailable. Try again near a window or outdoors.",
+                        3: "Location request timed out. Please try again."
+                    };
+
+                    showStatus(
+                        messages[error.code] || "Could not get your location.",
+                        true
+                    );
+                    button.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid px-0">
+
+    <!-- HEADER -->
+
+    <div class="mb-4">
+
+        <a
+            href="{% url 'branch_list' %}"
+            class="text-decoration-none"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Branches
+        </a>
+
+        <h3 class="fw-bold mt-3 mb-1">
+
+            {% if object %}
+                Edit Branch
+            {% else %}
+                Add Branch
+            {% endif %}
+
+        </h3>
+
+        <p class="text-muted mb-0">
+            Add or update your organization's branch information.
+        </p>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-body p-4">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+
+                {% endif %}
+
+
+                <!-- BASIC INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-building me-2 text-primary"></i>
+
+                    Branch Information
+
+                </h6>
+
+
+                <div class="row">
+
+                    <!-- COMPANY -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Company
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.company }}
+
+                        {% if form.company.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.company.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- BRANCH NAME -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Branch Name
+
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        {{ form.name }}
+
+                        {% if form.name.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.name.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- BRANCH CODE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Branch Code
+                        </label>
+
+                        {{ form.code }}
+
+                        {% if form.code.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.code.errors }}
+                            </div>
+
+                        {% endif %}
+
+                        <small class="text-muted">
+                            Example: TPT, HYD, BLR
+                        </small>
+
+                    </div>
+
+
+                    <!-- HEAD OFFICE -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label d-block">
+                            Branch Type
+                        </label>
+
+                        <div class="form-check mt-2">
+
+                            {{ form.is_head_office }}
+
+                            <label class="form-check-label">
+
+                                Head Office
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTIVE -->
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label d-block">
+                            Status
+                        </label>
+
+                        <div class="form-check mt-2">
+
+                            {{ form.is_active }}
+
+                            <label class="form-check-label">
+
+                                Active
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- CONTACT INFORMATION -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-telephone me-2 text-primary"></i>
+
+                    Contact Information
+
+                </h6>
+
+
+                <div class="row">
+
+                    <!-- PHONE -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Phone Number
+                        </label>
+
+                        {{ form.phone }}
+
+                        {% if form.phone.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.phone.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Email Address
+                        </label>
+
+                        {{ form.email }}
+
+                        {% if form.email.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.email.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- ADDRESS -->
+
+                <h6 class="fw-bold mb-3">
+
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>
+
+                    Branch Address
+
+                </h6>
+
+
+                <div class="row">
+
+                    <!-- ADDRESS -->
+
+                    <div class="col-md-12 mb-3">
+
+                        <label class="form-label">
+                            Address
+                        </label>
+
+                        {{ form.address }}
+
+                        {% if form.address.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.address.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- CITY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            City
+                        </label>
+
+                        {{ form.city }}
+
+                        {% if form.city.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.city.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- STATE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            State
+                        </label>
+
+                        {{ form.state }}
+
+                        {% if form.state.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.state.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- COUNTRY -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Country
+                        </label>
+
+                        {{ form.country }}
+
+                        {% if form.country.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.country.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- POSTAL CODE -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Postal Code
+                        </label>
+
+                        {{ form.postal_code }}
+
+                        {% if form.postal_code.errors %}
+
+                            <div class="text-danger small mt-1">
+                                {{ form.postal_code.errors }}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                
+                <!-- GPS ATTENDANCE CONFIGURATION -->
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-crosshair me-2 text-primary"></i>
+                    GPS Attendance Geofence
+                </h6>
+                <p class="text-muted small">
+                    Set the office coordinates and permitted radius. The default radius is 70 meters.
+                    You can enter coordinates manually or use the location button.
+                </p>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm gps-detect-btn">
+                        <i class="bi bi-geo-alt me-1"></i> Get Current Location
+                    </button>
+                    <span class="small text-muted gps-detect-status ms-2" aria-live="polite"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.latitude.id_for_label }}">Latitude</label>
+                        {{ form.latitude }}
+                        {% if form.latitude.errors %}<div class="text-danger small">{{ form.latitude.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.longitude.id_for_label }}">Longitude</label>
+                        {{ form.longitude }}
+                        {% if form.longitude.errors %}<div class="text-danger small">{{ form.longitude.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.radius_meters.id_for_label }}">Allowed Radius (meters)</label>
+                        {{ form.radius_meters }}
+                        {% if form.radius_meters.errors %}<div class="text-danger small">{{ form.radius_meters.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="alert alert-info py-2 small">
+                    Use the button while physically at the office. GPS can be less accurate indoors,
+                    especially on upper floors. Confirm the saved pin and radius before enabling attendance.
+                </div>
+                <!-- END GPS ATTENDANCE CONFIGURATION -->
+
+                <hr class="my-4">
+
+
+                <!-- FORM ERRORS -->
+
+                {% if form.errors %}
+
+                    <div class="alert alert-danger">
+
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+
+                        Please correct the errors above and try again.
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        {% if object %}
+                            Update Branch
+                        {% else %}
+                            Create Branch
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{% url 'branch_list' %}"
+                        class="btn btn-light"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

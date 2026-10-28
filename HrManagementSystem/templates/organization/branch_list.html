@@ -124,90 +124,44 @@
 
 
                                     <!-- CODE -->
-
                                     <td>
-
-                                        {% if branch.is_head_office %}
-
-                                            <span class="badge bg-primary-subtle text-primary">
-                                                <i class="bi bi-star-fill me-1"></i>
-                                                Head Office
-                                            </span>
-
-                                        {% else %}
-
-                                            <span class="badge bg-light text-dark border">
-                                                Branch
-                                            </span>
-
-                                        {% endif %}
-
-                                    </td>
-
-                                    <td>
-
                                         {% if branch.code %}
-
-                                            <span class="badge bg-light text-dark border">
-                                                {{ branch.code }}
-                                            </span>
-
+                                            <span class="badge bg-light text-dark border">{{ branch.code }}</span>
                                         {% else %}
-
-                                            <span class="text-muted">
-                                                —
-                                            </span>
-
+                                            <span class="text-muted">—</span>
                                         {% endif %}
-
                                     </td>
-
 
                                     <!-- COMPANY -->
-
                                     <td>
-
                                         {% if branch.company %}
-
                                             <i class="bi bi-building me-1 text-muted"></i>
-
                                             {{ branch.company.name }}
-
                                         {% else %}
-
-                                            <span class="text-muted">
-                                                Not assigned
-                                            </span>
-
+                                            <span class="text-muted">Not assigned</span>
                                         {% endif %}
-
                                     </td>
-
 
                                     <!-- LOCATION -->
-
                                     <td>
-
                                         {% if branch.city %}
-
                                             <i class="bi bi-geo-alt me-1 text-muted"></i>
-
-                                            {{ branch.city }}
-
-                                            {% if branch.state %}
-                                                , {{ branch.state }}
-                                            {% endif %}
-
+                                            {{ branch.city }}{% if branch.state %}, {{ branch.state }}{% endif %}
                                         {% else %}
-
-                                            <span class="text-muted">
-                                                Not specified
-                                            </span>
-
+                                            <span class="text-muted">Not specified</span>
                                         {% endif %}
-
                                     </td>
 
+                                    <!-- TYPE -->
+                                    <td>
+                                        {% if branch.is_head_office %}
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="bi bi-star-fill me-1"></i>Head Office
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border">Branch</span>
+                                        {% endif %}
+                                    </td>
 
                                     <!-- STATUS -->
 

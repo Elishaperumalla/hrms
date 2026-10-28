@@ -16,4 +16,5 @@ urlpatterns = [
     path("reset-password/",views.reset_password_view,name="reset_password"),
     
 
+    path("face-enrollment/", views.face_enrollment_view, name="face_enrollment"),
 ]

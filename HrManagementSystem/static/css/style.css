@@ -1576,3 +1576,74 @@ html.theme-dark .quick-setting-item:hover {
     }
 
 }
+
+/* GLOBAL HRMS LAYOUT — fixed sidebar and navbar */
+@media (min-width: 992px) {
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+    }
+
+    body > .d-flex.min-vh-100 {
+        height: 100vh;
+        min-height: 0;
+    }
+
+    body > .d-flex.min-vh-100 > .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    body > .d-flex.min-vh-100 > .main-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .main-wrapper > .top-navbar {
+        position: relative;
+        top: auto;
+        flex: 0 0 70px;
+        height: 70px;
+        min-height: 70px;
+        z-index: 1030;
+    }
+
+    .main-wrapper > .content-area {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
+    }
+}
+
+@media (max-width: 991.98px) {
+    body > .d-flex.min-vh-100 > .main-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        min-width: 0;
+    }
+
+    .main-wrapper > .top-navbar {
+        position: sticky;
+        top: 0;
+        flex: 0 0 70px;
+        z-index: 1030;
+    }
+
+    .main-wrapper > .content-area {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+}

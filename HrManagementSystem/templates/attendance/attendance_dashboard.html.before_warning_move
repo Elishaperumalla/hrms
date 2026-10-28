@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+
+{% block title %}
+Attendance Dashboard - HRMS
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                Attendance Dashboard
+            </h3>
+
+            <p class="text-muted mb-0">
+                Monitor attendance and manage daily working hours.
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{% url 'attendance_calendar' %}"
+                class="btn btn-light border"
+            >
+                <i class="bi bi-calendar3 me-1"></i>
+                Calendar
+            </a>
+
+            <a
+                href="{% url 'attendance_report' %}"
+                class="btn btn-light border"
+            >
+                <i class="bi bi-bar-chart me-1"></i>
+                Reports
+            </a>
+
+            {% if can_manage_attendance %}
+                <a
+                    href="{% url 'attendance_create' %}"
+                    class="btn btn-primary"
+                >
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Mark Attendance
+                </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TODAY ATTENDANCE -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card mb-4">
+
+        <div class="card-body">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-7">
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div
+                            class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
+                            style="width: 58px; height: 58px;"
+                        >
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+
+                        <div>
+
+                            <h5 class="fw-bold mb-1">
+                                Today's Attendance
+                            </h5>
+
+                            <p class="text-muted mb-0">
+                                {{ today|date:"l, d F Y" }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-lg-5 mt-3 mt-lg-0">
+
+                    {% if today_attendance %}
+                        <div class="d-flex justify-content-lg-end align-items-center gap-3">
+                            {% if today_attendance.status == "PRESENT" %}
+                                <div class="mt-4">
+                                    {% if not today_attendance.check_in %}
+                                        {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_in" action_label="Clock In" button_class="btn-success" locked_mode="" %}
+                                    {% elif not today_attendance.check_out %}
+                                        {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_out" action_label="Clock Out" button_class="btn-danger" locked_mode="" %}
+                                    {% else %}
+                                        <span class="text-success fw-semibold d-flex align-items-center">
+                                            <i class="bi bi-check-circle me-1"></i> Today's attendance completed
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <hr class="my-4">
+                        <div class="mt-4">
+                            <h6 class="fw-semibold mb-1">You haven't clocked in today.</h6>
+                            <p class="text-muted mb-3">Start your attendance for today.</p>
+                            {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_in" action_label="Clock In" button_class="btn-success" locked_mode="" %}
+                        </div>
+                    {% endif %}
+
+                </div>
+                </div>
+
+            </div>
+
+            {% if face_registration_required %}
+            <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mt-3" role="alert">
+                <div>
+                    <div class="fw-bold">
+                        <i class="bi bi-person-bounding-box me-1"></i>
+                        Face Registration Pending
+                    </div>
+                    <div class="small mt-1">
+                        Register your face before using face-verified attendance.
+                    </div>
+                </div>
+                <a href="{% url 'face_enrollment' %}" class="btn btn-primary flex-shrink-0">
+                    <i class="bi bi-shield-check me-1"></i> Register My Face
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- STATISTICS -->
+    <!-- ================================================= -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Employees
+                            </small>
+
+                            <h3 class="fw-bold mb-0">
+                                {{ total_employees }}
+                            </h3>
+
+                        </div>
+
+                        <i class="bi bi-people fs-3 text-primary"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Present Today
+                            </small>
+
+                            <h3 class="fw-bold mb-0 text-success">
+                                {{ present_today }}
+                            </h3>
+
+                        </div>
+
+                        <i class="bi bi-check-circle fs-3 text-success"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Absent Today
+                            </small>
+
+                            <h3 class="fw-bold mb-0 text-danger">
+                                {{ absent_today }}
+                            </h3>
+
+                        </div>
+
+                        <i class="bi bi-x-circle fs-3 text-danger"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card dashboard-card h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+
+                            <small class="text-muted">
+                                Attendance Rate
+                            </small>
+
+                            <h3 class="fw-bold mb-0">
+                                {{ attendance_percentage }}%
+                            </h3>
+
+                        </div>
+
+                        <i class="bi bi-graph-up-arrow fs-3 text-primary"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- SECONDARY STATISTICS -->
+    <!-- ================================================= -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card dashboard-card">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Late Arrivals
+                    </small>
+
+                    <h4 class="fw-bold mt-1 mb-0">
+                        {{ late_today }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card dashboard-card">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Half Days
+                    </small>
+
+                    <h4 class="fw-bold mt-1 mb-0">
+                        {{ half_day_today }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card dashboard-card">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        On Leave
+                    </small>
+
+                    <h4 class="fw-bold mt-1 mb-0">
+                        {{ on_leave_today }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card dashboard-card">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        Holiday / Week Off
+                    </small>
+
+                    <h4 class="fw-bold mt-1 mb-0">
+                        {{ holiday_today|add:week_off_today }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- RECENT ATTENDANCE -->
+    <!-- ================================================= -->
+
+    <div class="card dashboard-card">
+
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Recent Attendance
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Latest attendance records within your access scope.
+                    </p>
+
+                </div>
+
+                <a
+                    href="{% url 'attendance_list' %}"
+                    class="btn btn-sm btn-light border"
+                >
+                    View All
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body px-4">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Employee</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Work Hours</th>
+                            <th></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for record in recent_records %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ record.employee.get_full_name }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ record.employee.employee_id }}
+                                    </small>
+
+                                </td>
+
+                                <td>
+                                    {{ record.date|date:"d M Y" }}
+                                </td>
+
+                                <td>
+
+                                    {% if record.status == "PRESENT" %}
+
+                                        <span class="badge bg-success">
+                                            Present
+                                        </span>
+
+                                    {% elif record.status == "ABSENT" %}
+
+                                        <span class="badge bg-danger">
+                                            Absent
+                                        </span>
+
+                                    {% elif record.status == "HALF_DAY" %}
+
+                                        <span class="badge bg-warning text-dark">
+                                            Half Day
+                                        </span>
+
+                                    {% elif record.status == "ON_LEAVE" %}
+
+                                        <span class="badge bg-info">
+                                            On Leave
+                                        </span>
+
+                                    {% elif record.status == "HOLIDAY" %}
+
+                                        <span class="badge bg-primary">
+                                            Holiday
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            Week Off
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+                                    {{ record.check_in|time:"h:i A"|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ record.check_out|time:"h:i A"|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ record.work_hours|default:"0.00" }} hrs
+                                </td>
+
+                                <td class="text-end">
+
+                                    <a
+                                        href="{% url 'attendance_detail' record.pk %}"
+                                        class="btn btn-sm btn-light border"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="text-center py-5"
+                                >
+
+                                    <i class="bi bi-calendar-x fs-1 text-muted"></i>
+
+                                    <p class="text-muted mt-2 mb-0">
+                                        No attendance records found.
+                                    </p>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

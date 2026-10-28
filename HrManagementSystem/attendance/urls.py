@@ -96,6 +96,12 @@ urlpatterns = [
     # =====================================================
 
     path(
+        "face-verify/",
+        views.attendance_face_verify,
+        name="attendance_face_verify",
+    ),
+
+    path(
         "clock-in/",
         views.attendance_clock_in,
         name="attendance_clock_in",
@@ -105,5 +111,20 @@ urlpatterns = [
         "clock-out/",
         views.attendance_clock_out,
         name="attendance_clock_out",
+    ),
+
+    # =====================================================
+    # PRIVATE ATTENDANCE PHOTO GALLERY
+    # =====================================================
+
+    path(
+        "photos/",
+        views.attendance_photo_gallery,
+        name="attendance_photo_gallery",
+    ),
+    path(
+        "photos/<int:pk>/<str:photo_type>/",
+        views.attendance_private_photo,
+        name="attendance_private_photo",
     ),
 ]

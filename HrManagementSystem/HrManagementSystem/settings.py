@@ -244,6 +244,12 @@ STORAGES = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Private attendance photo storage (not served by Nginx or WhiteNoise).
+ATTENDANCE_PRIVATE_ROOT = Path(
+    "/home/ubuntu/hrms-private/attendance-photos"
+)
+
+
 
 # =========================================================
 # CUSTOM USER

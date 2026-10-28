@@ -29,6 +29,12 @@ class Employee(models.Model):
         TERMINATED = "TERMINATED", "Terminated"
         RETIRED = "RETIRED", "Retired"
 
+    class WorkArrangement(models.TextChoices):
+        ONSITE = "ONSITE", "Onsite"
+        REMOTE = "REMOTE", "Remote"
+        HYBRID = "HYBRID", "Hybrid"
+        CLIENT_SITE = "CLIENT_SITE", "Client Site"
+
     # ============================================================
     # USER ACCOUNT
     # ============================================================
@@ -45,6 +51,12 @@ class Employee(models.Model):
         max_length=20,
         choices=Role.choices,
         default=Role.EMPLOYEE,
+    )
+
+    work_arrangement = models.CharField(
+        max_length=20,
+        choices=WorkArrangement.choices,
+        default=WorkArrangement.ONSITE,
     )
 
     # ============================================================

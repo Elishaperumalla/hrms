@@ -11,6 +11,9 @@
 
     - HRMS
 
+
+
+
 {% endblock %}
 
 
@@ -246,6 +249,51 @@
                 <hr class="my-4">
 
 
+                
+                <!-- GPS ATTENDANCE CONFIGURATION -->
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-crosshair me-2 text-primary"></i>
+                    GPS Attendance Geofence
+                </h6>
+                <p class="text-muted small">
+                    Set the office coordinates and permitted radius. The default radius is 70 meters.
+                    You can enter coordinates manually or use the location button.
+                </p>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm gps-detect-btn">
+                        <i class="bi bi-geo-alt me-1"></i> Get Current Location
+                    </button>
+                    <span class="small text-muted gps-detect-status ms-2" aria-live="polite"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.latitude.id_for_label }}">Latitude</label>
+                        {{ form.latitude }}
+                        {% if form.latitude.errors %}<div class="text-danger small">{{ form.latitude.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.longitude.id_for_label }}">Longitude</label>
+                        {{ form.longitude }}
+                        {% if form.longitude.errors %}<div class="text-danger small">{{ form.longitude.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="{{ form.radius_meters.id_for_label }}">Allowed Radius (meters)</label>
+                        {{ form.radius_meters }}
+                        {% if form.radius_meters.errors %}<div class="text-danger small">{{ form.radius_meters.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="alert alert-info py-2 small">
+                    Use the button while physically at the office. GPS can be less accurate indoors,
+                    especially on upper floors. Confirm the saved pin and radius before enabling attendance.
+                </div>
+                <!-- END GPS ATTENDANCE CONFIGURATION -->
+
                 <!-- OTHER -->
 
                 <h6 class="fw-bold mb-3">
@@ -331,4 +379,130 @@
 
 </div>
 
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".gps-detect-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const form = button.closest("form");
+            const status = form.querySelector(".gps-detect-status");
+
+            const field = (name) =>
+                form.querySelector('[name="' + name + '"]');
+
+            const latitude = field("latitude");
+            const longitude = field("longitude");
+
+            function showStatus(message, isError = false) {
+                status.textContent = message;
+                status.classList.toggle("text-danger", isError);
+                status.classList.toggle("text-success", !isError);
+            }
+
+            if (!navigator.geolocation) {
+                showStatus("Geolocation is not supported by this browser.", true);
+                return;
+            }
+
+            button.disabled = true;
+            showStatus("Getting your current location...");
+
+            navigator.geolocation.getCurrentPosition(
+                async function (position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    latitude.value = lat.toFixed(7);
+                    longitude.value = lon.toFixed(7);
+
+                    latitude.dispatchEvent(new Event("change", { bubbles: true }));
+                    longitude.dispatchEvent(new Event("change", { bubbles: true }));
+
+                    showStatus("Coordinates filled. Looking up address...");
+
+                    try {
+                        const url = new URL(
+                            "https://nominatim.openstreetmap.org/reverse"
+                        );
+                        url.searchParams.set("format", "jsonv2");
+                        url.searchParams.set("lat", lat);
+                        url.searchParams.set("lon", lon);
+                        url.searchParams.set("addressdetails", "1");
+
+                        const response = await fetch(url.toString(), {
+                            headers: { "Accept": "application/json" }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Address lookup failed");
+                        }
+
+                        const data = await response.json();
+                        const a = data.address || {};
+
+                        const addressField = field("address");
+                        const cityField = field("city");
+                        const stateField = field("state");
+                        const countryField = field("country");
+                        const postalField = field("postal_code");
+
+                        if (addressField && data.display_name) {
+                            addressField.value = data.display_name;
+                        }
+
+                        if (cityField) {
+                            cityField.value =
+                                a.city || a.town || a.village ||
+                                a.municipality || a.county || cityField.value;
+                        }
+
+                        if (stateField && a.state) {
+                            stateField.value = a.state;
+                        }
+
+                        if (countryField && a.country) {
+                            countryField.value = a.country;
+                        }
+
+                        if (postalField && a.postcode) {
+                            postalField.value = a.postcode;
+                        }
+
+                        showStatus(
+                            data.display_name
+                                ? "Coordinates and address filled successfully."
+                                : "Coordinates filled; address was unavailable."
+                        );
+                    } catch (error) {
+                        showStatus(
+                            "Coordinates filled. Enter the address manually if needed."
+                        );
+                    } finally {
+                        button.disabled = false;
+                    }
+                },
+                function (error) {
+                    const messages = {
+                        1: "Location permission denied. Allow location access in your browser.",
+                        2: "Current location unavailable. Try again near a window or outdoors.",
+                        3: "Location request timed out. Please try again."
+                    };
+
+                    showStatus(
+                        messages[error.code] || "Could not get your location.",
+                        true
+                    );
+                    button.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -22,6 +22,8 @@ Attendance Dashboard - HRMS
             <p class="text-muted mb-0">
                 Monitor attendance and manage daily working hours.
             </p>
+
+
         </div>
 
         <div class="d-flex gap-2">
@@ -55,6 +57,23 @@ Attendance Dashboard - HRMS
         </div>
 
     </div>
+
+    {% if face_registration_required %}
+    <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4" role="alert">
+        <div>
+            <div class="fw-bold">
+                <i class="bi bi-person-bounding-box me-1"></i>
+                Face Registration Pending
+            </div>
+            <div class="small mt-1">
+                Register your face before using face-verified attendance.
+            </div>
+        </div>
+        <a href="{% url 'face_enrollment' %}" class="btn btn-primary flex-shrink-0">
+            <i class="bi bi-shield-check me-1"></i> Register My Face
+        </a>
+    </div>
+    {% endif %}
 
 
     <!-- ================================================= -->
@@ -98,274 +117,39 @@ Attendance Dashboard - HRMS
                 <div class="col-lg-5 mt-3 mt-lg-0">
 
                     {% if today_attendance %}
-
                         <div class="d-flex justify-content-lg-end align-items-center gap-3">
-
                             {% if today_attendance.status == "PRESENT" %}
-
-                                {% if today_attendance.check_in and not today_attendance.check_out %}
-
-                                    <span class="badge bg-success-subtle text-success px-3 py-2">
-                                        <i class="bi bi-circle-fill small me-1"></i>
-                                        Working
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-success px-3 py-2">
-                                        Present
-                                    </span>
-
-                                {% endif %}
-
-                            {% elif today_attendance.status == "HALF_DAY" %}
-
-                                <span class="badge bg-warning text-dark px-3 py-2">
-                                    Half Day
-                                </span>
-
-                            {% elif today_attendance.status == "ON_LEAVE" %}
-
-                                <span class="badge bg-info px-3 py-2">
-                                    On Leave
-                                </span>
-
-                            {% elif today_attendance.status == "HOLIDAY" %}
-
-                                <span class="badge bg-primary px-3 py-2">
-                                    Holiday
-                                </span>
-
-                            {% elif today_attendance.status == "WEEK_OFF" %}
-
-                                <span class="badge bg-secondary px-3 py-2">
-                                    Week Off
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge bg-danger px-3 py-2">
-                                    Absent
-                                </span>
-
+                                <div class="mt-4">
+                                    {% if not today_attendance.check_in %}
+                                        {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_in" action_label="Clock In" button_class="btn-success" locked_mode="" %}
+                                    {% elif not today_attendance.check_out %}
+                                        {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_out" action_label="Clock Out" button_class="btn-danger" locked_mode="" %}
+                                    {% else %}
+                                        <span class="text-success fw-semibold d-flex align-items-center">
+                                            <i class="bi bi-check-circle me-1"></i> Today's attendance completed
+                                        </span>
+                                    {% endif %}
+                                </div>
                             {% endif %}
-
                         </div>
-
                     {% else %}
-
-                        <div class="text-lg-end">
-
-                            <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
-                                Not Marked
-                            </span>
-
+                        <hr class="my-4">
+                        <div class="mt-4">
+                            <h6 class="fw-semibold mb-1">You haven't clocked in today.</h6>
+                            <p class="text-muted mb-3">Start your attendance for today.</p>
+                            {% include "attendance/_gps_clock_controls.html" with action_url="attendance_clock_in" action_label="Clock In" button_class="btn-success" locked_mode="" %}
                         </div>
-
                     {% endif %}
 
+                </div>
                 </div>
 
             </div>
 
 
-            {% if today_attendance %}
+                        
 
-                <hr class="my-4">
-
-                <div class="row g-3">
-
-                    <div class="col-md-3">
-
-                        <div class="border rounded p-3 h-100">
-
-                            <small class="text-muted d-block">
-                                Check In
-                            </small>
-
-                            <div class="fw-bold fs-5 mt-1">
-
-                                {% if today_attendance.check_in %}
-                                    {{ today_attendance.check_in|time:"h:i A" }}
-                                {% else %}
-                                    —
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-3">
-
-                        <div class="border rounded p-3 h-100">
-
-                            <small class="text-muted d-block">
-                                Check Out
-                            </small>
-
-                            <div class="fw-bold fs-5 mt-1">
-
-                                {% if today_attendance.check_out %}
-                                    {{ today_attendance.check_out|time:"h:i A" }}
-                                {% else %}
-                                    —
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-3">
-
-                        <div class="border rounded p-3 h-100">
-
-                            <small class="text-muted d-block">
-                                Work Hours
-                            </small>
-
-                            <div class="fw-bold fs-5 mt-1">
-
-                                {{ today_attendance.work_hours|default:"0.00" }} hrs
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-3">
-
-                        <div class="border rounded p-3 h-100">
-
-                            <small class="text-muted d-block">
-                                Late
-                            </small>
-
-                            <div class="fw-bold fs-5 mt-1">
-
-                                {% if today_attendance.late_minutes %}
-                                    {{ today_attendance.late_minutes }} min
-                                {% else %}
-                                    On Time
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {% if today_attendance.status == "PRESENT" %}
-
-                    <div class="mt-4 d-flex gap-2">
-
-                        {% if not today_attendance.check_in %}
-
-                            <form
-                                method="POST"
-                                action="{% url 'attendance_clock_in' %}"
-                            >
-
-                                {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-success"
-                                >
-                                    <i class="bi bi-box-arrow-in-right me-1"></i>
-                                    Clock In
-                                </button>
-
-                            </form>
-
-                        {% elif not today_attendance.check_out %}
-
-                            <form
-                                method="POST"
-                                action="{% url 'attendance_clock_out' %}"
-                            >
-
-                                {% csrf_token %}
-
-                                <button
-                                    type="submit"
-                                    class="btn btn-danger"
-                                >
-                                    <i class="bi bi-box-arrow-right me-1"></i>
-                                    Clock Out
-                                </button>
-
-                            </form>
-
-                        {% else %}
-
-                            <span class="text-success fw-semibold d-flex align-items-center">
-                                <i class="bi bi-check-circle me-1"></i>
-                                Today's attendance completed
-                            </span>
-
-                        {% endif %}
-
-                    </div>
-
-                {% endif %}
-
-            {% else %}
-
-                <hr class="my-4">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <div>
-
-                        <h6 class="fw-semibold mb-1">
-                            You haven't clocked in today.
-                        </h6>
-
-                        <p class="text-muted mb-0">
-                            Start your attendance for today.
-                        </p>
-
-                    </div>
-
-                    <form
-                        method="POST"
-                        action="{% url 'attendance_clock_in' %}"
-                    >
-
-                        {% csrf_token %}
-
-                        <button
-                            type="submit"
-                            class="btn btn-success"
-                        >
-                            <i class="bi bi-box-arrow-in-right me-1"></i>
-                            Clock In
-                        </button>
-
-                    </form>
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- STATISTICS -->
+            <!-- STATISTICS -->
     <!-- ================================================= -->
 
     <div class="row g-3 mb-4">

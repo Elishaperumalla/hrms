@@ -630,6 +630,18 @@
                     </div>
 
 
+                    <!-- Work Arrangement -->
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Work Arrangement</label>
+                        {{ form.work_arrangement }}
+                        {% if form.work_arrangement.errors %}
+                            <div class="text-danger small mt-1">{{ form.work_arrangement.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Choose Onsite, Remote, Hybrid, or Client Site.</small>
+                    </div>
+
+
                     <!-- Work Location -->
 
                     <div class="col-md-6 mb-3">

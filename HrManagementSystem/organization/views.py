@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
 from django.views.generic import (
     ListView,
     CreateView,
@@ -18,6 +20,7 @@ from .models import (
     Designation,
     Branch,
     WorkLocation,
+    OfficeAttendanceSettings,
 )
 
 from .forms import (
@@ -26,6 +29,7 @@ from .forms import (
     DesignationForm,
     BranchForm,
     WorkLocationForm,
+    OfficeAttendanceSettingsForm,
 )
 
 
@@ -654,3 +658,37 @@ class WorkLocationDeleteView(
         return super().form_valid(
             form
         )
+
+# =========================================================
+# OFFICE GPS ATTENDANCE SETTINGS - SUPER ADMIN ONLY
+# =========================================================
+
+@login_required
+def office_attendance_settings(request):
+    if not is_super_admin(request.user):
+        raise PermissionDenied(
+            "Only Super Admin can manage office GPS settings."
+        )
+
+    settings_obj, _ = OfficeAttendanceSettings.objects.get_or_create(
+        pk=1,
+        defaults={"name": "Main Office", "radius_meters": 100},
+    )
+
+    if request.method == "POST":
+        form = OfficeAttendanceSettingsForm(
+            request.POST,
+            instance=settings_obj,
+        )
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Office GPS settings saved successfully.")
+            return redirect("office_attendance_settings")
+    else:
+        form = OfficeAttendanceSettingsForm(instance=settings_obj)
+
+    return render(
+        request,
+        "organization/office_attendance_settings.html",
+        {"form": form, "office_settings": settings_obj},
+    )
